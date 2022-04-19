@@ -3,6 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher, executor
 from aiogram.types import BotCommand
 
+from handlers.callbacks import set_callback_handlers
 from handlers.messages import set_message_handlers
 from settings import BOT_TOKEN
 
@@ -22,6 +23,7 @@ async def set_commands(dp):
 async def on_startup(dp):
     await set_commands(dp)
     await set_message_handlers(dp)
+    await set_callback_handlers(dp)
 
 
 if __name__ == '__main__':

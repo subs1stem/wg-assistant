@@ -1,5 +1,6 @@
 from aiogram import types
 
+from modules.keyboards import main_menu_keyboard
 from settings import ADMIN_IDs
 
 
@@ -17,7 +18,7 @@ async def set_message_handlers(dp):
 
     @dp.message_handler(commands=['menu'])
     async def send_main_menu(message: types.Message):
-        await message.answer('Здесь будет главное меню')
+        await message.answer('Главное меню:', reply_markup=main_menu_keyboard())
 
     @dp.message_handler(content_types=types.ContentTypes.ANY)
     async def send_unknown_message(message: types.Message):
