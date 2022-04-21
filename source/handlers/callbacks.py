@@ -20,6 +20,20 @@ async def set_callback_handlers(dp):
                                        text='Главное меню:',
                                        reply_markup=main_menu_keyboard())
 
+    @dp.callback_query_handler(lambda query: query.data == 'reboot_server')
+    async def reboot_server(query: types.CallbackQuery):
+        await query.answer('Перезагружаю сервер...')
+        SSH().reboot()
+
+    @dp.callback_query_handler(lambda query: query.data == 'get_peers')
+    async def send_peers(query: types.CallbackQuery):
+        await query.answer('Запрашиваю список пиров...')
+        await dp.bot.edit_message_text(chat_id=query.from_user.id,
+                                       message_id=query.message.message_id,
+                                       text=f'`{SSH().get_peers()}`',
+                                       parse_mode=types.ParseMode.MARKDOWN_V2,
+                                       reply_markup=back_button('main_menu'))
+
     @dp.callback_query_handler(lambda query: query.data == 'get_raw_config')
     async def send_raw_config(query: types.CallbackQuery):
         await query.answer('Запрашиваю конфиг...')

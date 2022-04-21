@@ -9,5 +9,8 @@ def back_button(callback_data):
 
 def main_menu_keyboard():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton('Посмотреть конфиг ⚙', callback_data='get_raw_config'))
+    markup.row_width = 1
+    markup.add(InlineKeyboardButton('Список пиров 🤝', callback_data='get_peers'),
+               InlineKeyboardButton('Посмотреть конфиг ⚙', callback_data='get_raw_config'),
+               InlineKeyboardButton('Перезагрузить сервер 🔄', callback_data='reboot_server'))
     return markup
