@@ -15,7 +15,7 @@ dispatcher = Dispatcher(bot)
 
 async def set_commands(dp):
     await dp.bot.set_my_commands([
-        BotCommand('start', 'начало работы, авторизация'),
+        BotCommand('start', 'начало работы'),
         BotCommand('menu', 'главное меню'),
     ])
 

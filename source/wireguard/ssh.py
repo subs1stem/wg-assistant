@@ -24,7 +24,7 @@ class SSH:
 
     def __get_peer_names(self):
         names = {}
-        config = self.get_raw_config().split('\n')
+        config = self.get_config().split('\n')
         for i, item in enumerate(config):
             if item.startswith('#'):
                 name = config[i].replace('#', '', 1).strip()
@@ -41,22 +41,29 @@ class SSH:
 
     def get_peers(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
-        peers = ''
+        peers = {}
         names = self.__get_peer_names()
         for line in stdout.readlines():
+            line = line.replace('\n', '').strip()
             if line.startswith('peer'):
                 pub_key = line.split(':')[1].strip()
                 line = line.replace(pub_key, names[pub_key])
-            peers += line
+            try:
+                param, value = line.split(': ')
+            except ValueError:
+                continue
+            peers[param] = value
         return peers
 
-    def get_raw_config(self):
+    def get_config(self):
         _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
         config = ''
         for line in stdout.readlines():
+            if line.startswith('PrivateKey'):
+                line = 'PrivateKey = (hidden)\n'
             config += line
         return config
 
 
 if __name__ == '__main__':
-    pass
+    print(SSH().get_peers())
