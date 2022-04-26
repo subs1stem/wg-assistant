@@ -22,16 +22,6 @@ class SSH:
     def __del__(self):
         self.client.close()
 
-    def __get_peer_names(self):
-        names = {}
-        config = self.get_config().split('\n')
-        for i, item in enumerate(config):
-            if item.startswith('#'):
-                name = config[i].replace('#', '', 1).strip()
-                pub_key = config[i+1].split('=', 1)[1].strip()
-                names[pub_key] = name
-        return names
-
     def ping(self):
         _, stdout, _ = self.client.exec_command('ping -c 1 8.8.8.8', timeout=1)
         return bool(stdout.read())
@@ -39,31 +29,24 @@ class SSH:
     def reboot(self):
         self.client.exec_command('reboot')
 
+    def get_peer_name(self, pub_key):
+        config = self.get_config().split('\n')
+        return config
+
     def get_peers(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
-        peers = {}
-        names = self.__get_peer_names()
-        for line in stdout.readlines():
-            line = line.replace('\n', '').strip()
-            if line.startswith('peer'):
-                pub_key = line.split(':')[1].strip()
-                line = line.replace(pub_key, names[pub_key])
-            try:
-                param, value = line.split(': ')
-            except ValueError:
-                continue
-            peers[param] = value
-        return peers
+        return stdout.readlines()
 
     def get_config(self):
         _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
-        config = ''
+        config = []
         for line in stdout.readlines():
-            if line.startswith('PrivateKey'):
-                line = 'PrivateKey = (hidden)\n'
-            config += line
+            line = line.replace('\n', '')
+            if not line:
+                continue
+            config.append(line)
         return config
 
 
 if __name__ == '__main__':
-    print(SSH().get_peers())
+    print(SSH().get_config())
