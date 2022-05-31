@@ -1,6 +1,7 @@
 from aiogram import types
 
 from modules.keyboards import *
+from modules.messages import peers_message
 from settings import ADMIN_IDs
 from wireguard.ssh import SSH
 
@@ -38,8 +39,8 @@ async def set_callback_handlers(dp):
         await query.answer('Запрашиваю список пиров...')
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
-                                       text=f'`{SSH().get_peers()}`',
-                                       parse_mode=types.ParseMode.MARKDOWN_V2,
+                                       text=f'{peers_message()}',
+                                       parse_mode=types.ParseMode.HTML,
                                        reply_markup=back_button('wg_options'))
 
     @dp.callback_query_handler(lambda query: query.data == 'get_server_config')
@@ -47,6 +48,6 @@ async def set_callback_handlers(dp):
         await query.answer('Запрашиваю конфиг...')
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
-                                       text=f'`{SSH().get_config()}`',
-                                       parse_mode=types.ParseMode.MARKDOWN_V2,
+                                       text=f'<code>{SSH().get_raw_config()}</code>',
+                                       parse_mode=types.ParseMode.HTML,
                                        reply_markup=back_button('wg_options'))
