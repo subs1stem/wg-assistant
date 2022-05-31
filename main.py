@@ -1,6 +1,7 @@
 import logging
 
-from aiogram import Bot, Dispatcher, executor
+from aiogram import Bot, Dispatcher
+from aiogram.utils import executor
 from aiogram.types import BotCommand
 
 from handlers.callbacks import set_callback_handlers
