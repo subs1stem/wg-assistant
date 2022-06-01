@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
 from wireguard.ssh import SSH
 
 
@@ -11,7 +12,8 @@ def back_button(callback_data):
 def main_menu_keyboard():
     markup = InlineKeyboardMarkup()
     markup.row_width = 1
-    markup.add(InlineKeyboardButton('Параметры WireGuard 🌐', callback_data='wg_options'),
+    markup.add(InlineKeyboardButton('Добавить клиента 🆕', callback_data='add_peer'),
+               InlineKeyboardButton('Параметры WireGuard 🌐', callback_data='wg_options'),
                InlineKeyboardButton('Перезагрузить сервер 🔄', callback_data='reboot_server'))
     return markup
 

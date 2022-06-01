@@ -1,4 +1,5 @@
 from datetime import datetime
+from ipaddress import ip_interface
 
 from paramiko import SSHClient, AutoAddPolicy
 
@@ -41,7 +42,7 @@ class SSH:
 
     def get_listen_port(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} listen-port')
-        return stdout.readline()
+        return stdout.readline().strip()
 
     def get_endpoints(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} endpoints')
@@ -56,7 +57,7 @@ class SSH:
         allowed_ips = {}
         for line in stdout.readlines():
             key, value = line.split()
-            allowed_ips[key] = value
+            allowed_ips[key] = value.split('/')[0]
         return allowed_ips
 
     def get_latest_handshakes(self):
@@ -119,12 +120,57 @@ class SSH:
             config += line
         return config
 
+    def get_server_address(self):
+        _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
+        lines = stdout.readlines()
+        network = [s for s in lines if 'Address' in s][0].split('=')[1].strip()
+        return network
+
+    def get_available_ip(self):
+        server_address = self.get_server_address()
+        server_ip = format(ip_interface(server_address).ip)
+        network = ip_interface(server_address).network
+        reserved = list(self.get_allowed_ips().values())
+        reserved.append(server_ip)
+        hosts_iterator = (host for host in network.hosts() if str(host) not in reserved)
+        return next(hosts_iterator)
+
     def get_wg_status(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
         return bool(stdout.readline())
 
     def wg_change_state(self, state):
         self.client.exec_command(f'wg-quick {state} {self.wg_interface_name}')
+
+    def add_peer(self, peer_name):
+        _, stdout, _ = self.client.exec_command(f'wg genkey')
+        privkey = stdout.readline().strip()
+        _, stdout, _ = self.client.exec_command(f'echo "{privkey}" | wg pubkey')
+        pubkey = stdout.readline().strip()
+        peer_ip = f'{self.get_available_ip()}/32'
+        server_ip = format(ip_interface(self.get_server_address()).ip)
+        server_port = self.get_listen_port()
+        text = '[Peer]\n' \
+               f'# {peer_name}\n' \
+               f'PublicKey = {pubkey}\n' \
+               f'AllowedIPs = {peer_ip}\n'
+        self.client.exec_command(f'echo "{text}" >> {self.patch_to_conf}')
+        self.client.exec_command(f'wg-quick down {self.wg_interface_name} && wg-quick up {self.wg_interface_name}')
+        config = self.generate_client_config(privkey, peer_ip, server_ip, pubkey, self.host, server_port)
+        print(config)
+
+    @staticmethod
+    def generate_client_config(privkey, address, dns, pubkey, server_ip, server_port):
+        config = '[Interface]\n' \
+                 f'PrivateKey = {privkey}\n' \
+                 f'Address = {address}\n' \
+                 f'DNS = {dns}\n\n' \
+                 '[Peer]\n' \
+                 f'PublicKey = {pubkey}\n' \
+                 'AllowedIPs = 0.0.0.0/0\n' \
+                 f'Endpoint = {server_ip}:{server_port}\n' \
+                 'PersistentKeepalive = 30'
+        return config
 
     @staticmethod
     def convert_bytes(bytes_number):

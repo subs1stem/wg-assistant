@@ -1,7 +1,10 @@
 from aiogram import types
+from aiogram.dispatcher import FSMContext
 
+from modules.fsm_states import AddPeer
 from modules.keyboards import main_menu_keyboard
 from settings import ADMIN_IDs
+from wireguard.ssh import SSH
 
 
 async def set_message_handlers(dp):
@@ -19,6 +22,11 @@ async def set_message_handlers(dp):
     @dp.message_handler(commands=['menu'])
     async def send_main_menu(message: types.Message):
         await message.answer('Главное меню:', reply_markup=main_menu_keyboard())
+
+    @dp.message_handler(state=AddPeer.waiting_for_peer_name)
+    async def check_peer_name(message: types.Message, state: FSMContext):
+        SSH().add_peer(message.text)
+        await state.finish()
 
     @dp.message_handler(content_types=types.ContentTypes.ANY)
     async def send_unknown_message(message: types.Message):

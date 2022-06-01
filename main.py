@@ -1,8 +1,9 @@
 import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.utils import executor
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types import BotCommand
+from aiogram.utils import executor
 
 from handlers.callbacks import set_callback_handlers
 from handlers.messages import set_message_handlers
@@ -11,7 +12,7 @@ from settings import BOT_TOKEN
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=BOT_TOKEN)
-dispatcher = Dispatcher(bot)
+dispatcher = Dispatcher(bot, storage=MemoryStorage())
 
 
 async def set_commands(dp):

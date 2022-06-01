@@ -1,5 +1,6 @@
 from aiogram import types
 
+from modules.fsm_states import AddPeer
 from modules.keyboards import *
 from modules.messages import peers_message
 from settings import ADMIN_IDs
@@ -60,3 +61,11 @@ async def set_callback_handlers(dp):
         await dp.bot.edit_message_reply_markup(chat_id=query.from_user.id,
                                                message_id=query.message.message_id,
                                                reply_markup=wg_options_keyboard())
+
+    @dp.callback_query_handler(lambda query: query.data == 'add_peer')
+    async def add_peer(query: types.CallbackQuery):
+        await query.answer()
+        await dp.bot.edit_message_text(chat_id=query.from_user.id,
+                                       message_id=query.message.message_id,
+                                       text='Пришли мне имя клиента')
+        await AddPeer.waiting_for_peer_name.set()
