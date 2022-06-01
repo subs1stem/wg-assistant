@@ -23,7 +23,7 @@ async def set_callback_handlers(dp):
 
     @dp.callback_query_handler(lambda query: query.data == 'wg_options')
     async def send_wg_options(query: types.CallbackQuery):
-        await query.answer()
+        await query.answer('Загрузка...')
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
                                        text='Параметры WireGuard:',
@@ -51,3 +51,12 @@ async def set_callback_handlers(dp):
                                        text=f'<code>{SSH().get_raw_config()}</code>',
                                        parse_mode=types.ParseMode.HTML,
                                        reply_markup=back_button('wg_options'))
+
+    @dp.callback_query_handler(lambda query: query.data.startswith('wg_state'))
+    async def change_wg_state(query: types.CallbackQuery):
+        await query.answer('Выполняю...')
+        state = query.data.split('_')[-1]
+        SSH().wg_change_state(state)
+        await dp.bot.edit_message_reply_markup(chat_id=query.from_user.id,
+                                               message_id=query.message.message_id,
+                                               reply_markup=wg_options_keyboard())

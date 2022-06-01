@@ -119,6 +119,13 @@ class SSH:
             config += line
         return config
 
+    def get_wg_status(self):
+        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
+        return bool(stdout.readline())
+
+    def wg_change_state(self, state):
+        self.client.exec_command(f'wg-quick {state} {self.wg_interface_name}')
+
     @staticmethod
     def convert_bytes(bytes_number):
         bytes_number = int(bytes_number)
