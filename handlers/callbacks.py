@@ -1,4 +1,5 @@
 from aiogram import types
+from aiogram.dispatcher import FSMContext
 
 from modules.fsm_states import AddPeer
 from modules.keyboards import *
@@ -14,9 +15,10 @@ async def set_callback_handlers(dp):
         await dp.bot.send_message(chat_id=query.from_user.id,
                                   text='Доступ запрещён 🛑')
 
-    @dp.callback_query_handler(lambda query: query.data == 'main_menu')
-    async def send_main_menu(query: types.CallbackQuery):
+    @dp.callback_query_handler(lambda query: query.data == 'main_menu', state='*')
+    async def send_main_menu(query: types.CallbackQuery, state: FSMContext):
         await query.answer()
+        await state.reset_state()
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
                                        text='Главное меню:',
@@ -67,5 +69,6 @@ async def set_callback_handlers(dp):
         await query.answer()
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
-                                       text='Пришли мне имя клиента')
+                                       text='Пришли мне имя клиента',
+                                       reply_markup=cancel_button('main_menu'))
         await AddPeer.waiting_for_peer_name.set()

@@ -1,6 +1,8 @@
+import time
 from datetime import datetime
 from ipaddress import ip_interface
 
+import qrcode
 from paramiko import SSHClient, AutoAddPolicy
 
 from settings import *
@@ -34,7 +36,7 @@ class SSH:
 
     def get_pubkey(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} public-key')
-        return stdout.readline()
+        return stdout.readline().strip()
 
     def get_privkey(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} private-key')
@@ -94,6 +96,8 @@ class SSH:
         return peer_names
 
     def get_peers(self):
+        if not self.get_wg_status():
+            return False
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
         peer_names = self.get_peer_names()
         str_blocks = stdout.read().decode().split('\n\n')
@@ -147,6 +151,7 @@ class SSH:
         privkey = stdout.readline().strip()
         _, stdout, _ = self.client.exec_command(f'echo "{privkey}" | wg pubkey')
         pubkey = stdout.readline().strip()
+        server_pubkey = self.get_pubkey()
         peer_ip = f'{self.get_available_ip()}/32'
         server_ip = format(ip_interface(self.get_server_address()).ip)
         server_port = self.get_listen_port()
@@ -155,9 +160,12 @@ class SSH:
                f'PublicKey = {pubkey}\n' \
                f'AllowedIPs = {peer_ip}\n'
         self.client.exec_command(f'echo "{text}" >> {self.patch_to_conf}')
-        self.client.exec_command(f'wg-quick down {self.wg_interface_name} && wg-quick up {self.wg_interface_name}')
-        config = self.generate_client_config(privkey, peer_ip, server_ip, pubkey, self.host, server_port)
-        print(config)
+        self.client.exec_command(f'wg-quick down {self.wg_interface_name}')
+        time.sleep(1)
+        self.client.exec_command(f'wg-quick up {self.wg_interface_name}')
+        config = self.generate_client_config(privkey, peer_ip, server_ip, server_pubkey, self.host, server_port)
+        qr = self.make_qr(config)
+        return qr, config
 
     @staticmethod
     def generate_client_config(privkey, address, dns, pubkey, server_ip, server_port):
@@ -171,6 +179,11 @@ class SSH:
                  f'Endpoint = {server_ip}:{server_port}\n' \
                  'PersistentKeepalive = 30'
         return config
+
+    @staticmethod
+    def make_qr(text):
+        img = qrcode.make(text)
+        return img
 
     @staticmethod
     def convert_bytes(bytes_number):

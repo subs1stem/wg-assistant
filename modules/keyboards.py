@@ -9,6 +9,12 @@ def back_button(callback_data):
     return markup
 
 
+def cancel_button(callback_data):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton('Отменить ❌', callback_data=callback_data))
+    return markup
+
+
 def main_menu_keyboard():
     markup = InlineKeyboardMarkup()
     markup.row_width = 1

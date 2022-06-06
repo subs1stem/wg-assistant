@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
@@ -25,7 +27,14 @@ async def set_message_handlers(dp):
 
     @dp.message_handler(state=AddPeer.waiting_for_peer_name)
     async def check_peer_name(message: types.Message, state: FSMContext):
-        SSH().add_peer(message.text)
+        await message.answer_chat_action(action='upload_photo')
+        data = SSH().add_peer(message.text)
+        img_buf = BytesIO()
+        data[0].save(img_buf)
+        img_buf.seek(0)
+        await message.answer_photo(photo=img_buf.read(),
+                                   caption=data[1])
+        img_buf.close()
         await state.finish()
 
     @dp.message_handler(content_types=types.ContentTypes.ANY)
