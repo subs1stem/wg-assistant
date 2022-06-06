@@ -14,5 +14,5 @@ Then go to `/etc/wg-assistant/wg-assistant.conf` and edit the config file
 Finally, run the docker container:
 
 ```
-docker run -v /etc/wg-assistant:/etc/wg-assistant --name wg-assistant -d wg-assistant
+sudo docker run -v /etc/wg-assistant:/etc/wg-assistant --name wg-assistant -d wg-assistant
 ```
