@@ -44,7 +44,7 @@ async def set_callback_handlers(dp):
                                        message_id=query.message.message_id,
                                        text=f'{peers_message()}',
                                        parse_mode=types.ParseMode.HTML,
-                                       reply_markup=back_button('wg_options'))
+                                       reply_markup=peer_list_keyboard())
 
     @dp.callback_query_handler(lambda query: query.data == 'get_server_config')
     async def send_raw_config(query: types.CallbackQuery):

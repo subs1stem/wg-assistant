@@ -36,3 +36,11 @@ def wg_options_keyboard():
                wg_updown_btn,
                InlineKeyboardButton('⬅ Назад', callback_data='main_menu'))
     return markup
+
+
+def peer_list_keyboard():
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 1
+    markup.add(InlineKeyboardButton('Обновить 🔄', callback_data='get_peers'),
+               InlineKeyboardButton('⬅ Назад', callback_data='wg_options'))
+    return markup
