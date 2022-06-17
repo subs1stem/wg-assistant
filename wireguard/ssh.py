@@ -80,14 +80,14 @@ class SSH:
 
     def get_peer_names(self):
         _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
-        config = []
+        wg_config = []
         peer_names = {}
         for line in stdout.readlines():
-            config.append(line.strip())
-        for i, item in enumerate(config):
+            wg_config.append(line.strip())
+        for i, item in enumerate(wg_config):
             if item.startswith('PublicKey'):
                 pubkey = item.split('=', 1)[1].strip()
-                name = config[i - 1]
+                name = wg_config[i - 1]
                 if name.startswith('#'):
                     name = name.strip(' #')
                 else:
@@ -119,10 +119,10 @@ class SSH:
 
     def get_raw_config(self):
         _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
-        config = ''
+        wg_config = ''
         for line in stdout.readlines():
-            config += line
-        return config
+            wg_config += line
+        return wg_config
 
     def get_server_address(self):
         _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
@@ -163,13 +163,19 @@ class SSH:
         self.client.exec_command(f'wg-quick down {self.wg_interface_name}')
         time.sleep(1)
         self.client.exec_command(f'wg-quick up {self.wg_interface_name}')
-        config = self.generate_client_config(privkey, peer_ip, server_ip, server_pubkey, self.host, server_port)
-        qr = self.make_qr(config)
-        return qr, config
+        wg_config = self.generate_client_config(privkey, peer_ip, server_ip, server_pubkey, self.host, server_port)
+        qr = self.make_qr(wg_config)
+        return qr, wg_config
+
+    def delete_peer(self, peer_name):
+        pass
+
+    def disable_peer(self, peer_name):
+        pass
 
     @staticmethod
     def generate_client_config(privkey, address, dns, pubkey, server_ip, server_port):
-        config = '[Interface]\n' \
+        wg_config = '[Interface]\n' \
                  f'PrivateKey = {privkey}\n' \
                  f'Address = {address}\n' \
                  f'DNS = {dns}\n\n' \
@@ -178,7 +184,7 @@ class SSH:
                  'AllowedIPs = 0.0.0.0/0\n' \
                  f'Endpoint = {server_ip}:{server_port}\n' \
                  'PersistentKeepalive = 30'
-        return config
+        return wg_config
 
     @staticmethod
     def make_qr(text):

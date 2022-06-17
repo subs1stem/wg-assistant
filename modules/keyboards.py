@@ -40,7 +40,16 @@ def wg_options_keyboard():
 
 def peer_list_keyboard():
     markup = InlineKeyboardMarkup()
+    markup.row_width = 2
+    markup.add(InlineKeyboardButton('Отключить 😶', callback_data='off_peer'),
+               InlineKeyboardButton('Удалить 🗑️', callback_data='del_peer'))
     markup.row_width = 1
     markup.add(InlineKeyboardButton('Обновить 🔄', callback_data='get_peers'),
                InlineKeyboardButton('⬅ Назад', callback_data='wg_options'))
     return markup
+
+
+def peers_keyboard(callback_prefix):
+    peers = SSH().get_peer_names()
+    print(peers)
+    markup = InlineKeyboardMarkup()
