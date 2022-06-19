@@ -32,6 +32,7 @@ def wg_options_keyboard():
     markup = InlineKeyboardMarkup()
     markup.row_width = 1
     markup.add(InlineKeyboardButton('Список пиров 🤝', callback_data='get_peers'),
+               InlineKeyboardButton('Управление пирами 📝', callback_data='config_peers'),
                InlineKeyboardButton('Конфиг сервера ⚙', callback_data='get_server_config'),
                wg_updown_btn,
                InlineKeyboardButton('⬅ Назад', callback_data='main_menu'))
@@ -40,12 +41,16 @@ def wg_options_keyboard():
 
 def peer_list_keyboard():
     markup = InlineKeyboardMarkup()
-    markup.row_width = 2
-    markup.add(InlineKeyboardButton('Отключить 😶', callback_data='off_peer'),
-               InlineKeyboardButton('Удалить 🗑️', callback_data='del_peer'))
     markup.row_width = 1
     markup.add(InlineKeyboardButton('Обновить 🔄', callback_data='get_peers'),
                InlineKeyboardButton('⬅ Назад', callback_data='wg_options'))
+    return markup
+
+
+def config_peers_keyboard():
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton('Отключить 😶', callback_data='off_peer'),
+               InlineKeyboardButton('Удалить 🗑️', callback_data='del_peer'))
     return markup
 
 

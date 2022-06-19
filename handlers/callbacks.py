@@ -73,10 +73,10 @@ async def set_callback_handlers(dp):
                                        reply_markup=cancel_button('main_menu'))
         await AddPeer.waiting_for_peer_name.set()
 
-    @dp.callback_query_handler(lambda query: query.data == 'off_peer')
-    async def off_peer(query: types.CallbackQuery):
+    @dp.callback_query_handler(lambda query: query.data == 'config_peers')
+    async def config_peers(query: types.CallbackQuery):
         await query.answer()
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
-                                       text='Кого отключить?',
-                                       reply_markup=peers_keyboard('offpeer'))
+                                       text='Выбери клиента:',
+                                       reply_markup=peers_keyboard('off_peer'))
