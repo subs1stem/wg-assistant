@@ -54,7 +54,12 @@ def config_peers_keyboard():
     return markup
 
 
-def peers_keyboard(callback_prefix):
+def peers_keyboard():
     peers = SSH().get_peer_names()
-    print(peers)
     markup = InlineKeyboardMarkup()
+    markup.row_width = 2
+    for key in peers:
+        markup.insert(InlineKeyboardButton(f'{peers[key]}',
+                                           callback_data=f'peer:{peers[key]}:{key}'))
+    markup.add(InlineKeyboardButton('⬅ Назад', callback_data='wg_options'))
+    return markup
