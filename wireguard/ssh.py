@@ -5,6 +5,7 @@ from ipaddress import ip_interface
 import qrcode
 from paramiko import SSHClient, AutoAddPolicy
 
+from wireguard.config import Config
 from settings import *
 
 
@@ -146,6 +147,11 @@ class SSH:
     def wg_change_state(self, state):
         self.client.exec_command(f'wg-quick {state} {self.wg_interface_name}')
 
+    def wg_down_up(self):
+        self.wg_change_state('down')
+        time.sleep(1)
+        self.wg_change_state('up')
+
     def add_peer(self, peer_name):
         _, stdout, _ = self.client.exec_command(f'wg genkey')
         privkey = stdout.readline().strip()
@@ -160,18 +166,19 @@ class SSH:
                f'PublicKey = {pubkey}\n' \
                f'AllowedIPs = {peer_ip}\n'
         self.client.exec_command(f'echo "{text}" >> {self.patch_to_conf}')
-        self.client.exec_command(f'wg-quick down {self.wg_interface_name}')
-        time.sleep(1)
-        self.client.exec_command(f'wg-quick up {self.wg_interface_name}')
+        self.wg_down_up()
         wg_config = self.generate_client_config(privkey, peer_ip, server_ip, server_pubkey, self.host, server_port)
         qr = self.make_qr(wg_config)
         return qr, wg_config
+
+    def is_peer_disabled(self, peer_name):
+        pass
 
     def delete_peer(self, peer_name):
         pass
 
     def disable_peer(self, peer_name):
-        pass
+        Config(self.get_raw_config()).parse_config()
 
     @staticmethod
     def generate_client_config(privkey, address, dns, pubkey, server_ip, server_port):

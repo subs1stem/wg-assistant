@@ -63,3 +63,12 @@ def peers_keyboard():
                                            callback_data=f'peer:{peers[key]}:{key}'))
     markup.add(InlineKeyboardButton('⬅ Назад', callback_data='wg_options'))
     return markup
+
+
+def peer_action(pubkey):
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 2
+    markup.add(InlineKeyboardButton('Отключить 📵', callback_data=f'off_peer:{pubkey}'),
+               InlineKeyboardButton('Удалить ❌', callback_data=f'del_peer:{pubkey}'),
+               InlineKeyboardButton('⬅ Назад', callback_data='config_peers'))
+    return markup
