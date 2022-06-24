@@ -67,8 +67,8 @@ def peers_keyboard():
 
 def peer_action(pubkey):
     markup = InlineKeyboardMarkup()
-    markup.row_width = 2
-    markup.add(InlineKeyboardButton('Отключить 📵', callback_data=f'off_peer:{pubkey}'),
-               InlineKeyboardButton('Удалить ❌', callback_data=f'del_peer:{pubkey}'),
-               InlineKeyboardButton('⬅ Назад', callback_data='config_peers'))
+    markup.row_width = 1
+    markup.add(  # InlineKeyboardButton('Отключить 📵', callback_data=f'off_peer:{pubkey}'),
+        InlineKeyboardButton('Удалить ❌', callback_data=f'del_peer:{pubkey}'),
+        InlineKeyboardButton('⬅ Назад', callback_data='config_peers'))
     return markup

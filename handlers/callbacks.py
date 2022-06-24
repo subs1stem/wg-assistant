@@ -91,14 +91,22 @@ async def set_callback_handlers(dp):
                                        reply_markup=peer_action(pubkey),
                                        parse_mode=types.ParseMode.HTML)
 
-    @dp.callback_query_handler(lambda query: query.data.startswith('off_peer'))
-    async def off_peer(query: types.CallbackQuery):  # TODO
-        await query.answer('Отключаю...')
-        pubkey = query.data.split(':')[1]
-        SSH().disable_peer(pubkey)
+    # @dp.callback_query_handler(lambda query: query.data.startswith('off_peer'))
+    # async def off_peer(query: types.CallbackQuery):
+    #     await query.answer('Отключаю...')
+    #     pubkey = query.data.split(':')[1]
+    #     SSH().disable_peer(pubkey)
+    #     await dp.bot.edit_message_text(chat_id=query.from_user.id,
+    #                                    message_id=query.message.message_id,
+    #                                    text='Выбери клиента:',
+    #                                    reply_markup=peers_keyboard())
 
     @dp.callback_query_handler(lambda query: query.data.startswith('del_peer'))
-    async def del_peer(query: types.CallbackQuery):  # TODO
+    async def del_peer(query: types.CallbackQuery):
         await query.answer('Удаляю...')
         pubkey = query.data.split(':')[1]
-        print('Удалить ' + pubkey)
+        SSH().delete_peer(pubkey)
+        await dp.bot.edit_message_text(chat_id=query.from_user.id,
+                                       message_id=query.message.message_id,
+                                       text='Выбери клиента:',
+                                       reply_markup=peers_keyboard())

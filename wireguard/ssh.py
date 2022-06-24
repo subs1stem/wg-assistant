@@ -4,8 +4,8 @@ from ipaddress import ip_interface
 
 import qrcode
 from paramiko import SSHClient, AutoAddPolicy
+from wgconfig import WGConfig
 
-from wireguard.config import Config
 from settings import *
 
 
@@ -171,14 +171,26 @@ class SSH:
         qr = self.make_qr(wg_config)
         return qr, wg_config
 
+    def download_config(self):
+        self.client.open_sftp().get('/etc/wireguard/wg0.conf', '/tmp/wg0.conf')
+
+    def upload_config(self):
+        self.client.open_sftp().put('/tmp/wg0.conf', '/etc/wireguard/wg0.conf')
+
     def is_peer_disabled(self, peer_name):
         pass
 
-    def delete_peer(self, peer_name):
-        pass
+    def delete_peer(self, pubkey):
+        self.download_config()
+        wg_config = WGConfig('/tmp/wg0.conf')
+        wg_config.read_file()
+        wg_config.del_peer(pubkey)
+        wg_config.write_file()
+        self.upload_config()
+        self.wg_down_up()
 
-    def disable_peer(self, peer_name):
-        Config(self.get_raw_config()).parse_config()
+    def disable_peer(self, pubkey):
+        pass
 
     @staticmethod
     def generate_client_config(privkey, address, dns, pubkey, server_ip, server_port):
