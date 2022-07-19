@@ -84,10 +84,10 @@ async def set_callback_handlers(dp):
     @dp.callback_query_handler(lambda query: query.data.startswith('peer'))
     async def show_peer(query: types.CallbackQuery):
         await query.answer()
-        _, name, pubkey = query.data.split(':')
+        _, pubkey = query.data.split(':')
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
-                                       text=f'Что сделать с <b>"{name}"</b>?',
+                                       text=f'Выбери действие:',
                                        reply_markup=peer_action(pubkey),
                                        parse_mode=types.ParseMode.HTML)
 

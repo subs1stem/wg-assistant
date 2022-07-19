@@ -60,7 +60,7 @@ def peers_keyboard():
     markup.row_width = 2
     for key in peers:
         markup.insert(InlineKeyboardButton(f'{peers[key]}',
-                                           callback_data=f'peer:{peers[key]}:{key}'))
+                                           callback_data=f'peer:{key}'))
     markup.add(InlineKeyboardButton('⬅ Назад', callback_data='wg_options'))
     return markup
 
