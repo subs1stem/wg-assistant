@@ -159,7 +159,6 @@ class SSH:
         pubkey = stdout.readline().strip()
         server_pubkey = self.get_pubkey()
         peer_ip = f'{self.get_available_ip()}/32'
-        server_ip = format(ip_interface(self.get_server_address()).ip)
         server_port = self.get_listen_port()
         text = '[Peer]\n' \
                f'# {peer_name}\n' \
@@ -167,7 +166,7 @@ class SSH:
                f'AllowedIPs = {peer_ip}\n'
         self.client.exec_command(f'echo "{text}" >> {self.patch_to_conf}')
         self.wg_down_up()
-        wg_config = self.generate_client_config(privkey, peer_ip, server_ip, server_pubkey, self.host, server_port)
+        wg_config = self.generate_client_config(privkey, peer_ip, server_pubkey, self.host, server_port)
         qr = self.make_qr(wg_config)
         return qr, wg_config
 
@@ -193,16 +192,16 @@ class SSH:
         pass
 
     @staticmethod
-    def generate_client_config(privkey, address, dns, pubkey, server_ip, server_port):
+    def generate_client_config(privkey, address, pubkey, server_ip, server_port):
         wg_config = '[Interface]\n' \
-                 f'PrivateKey = {privkey}\n' \
-                 f'Address = {address}\n' \
-                 f'DNS = {dns}\n\n' \
-                 '[Peer]\n' \
-                 f'PublicKey = {pubkey}\n' \
-                 'AllowedIPs = 0.0.0.0/0\n' \
-                 f'Endpoint = {server_ip}:{server_port}\n' \
-                 'PersistentKeepalive = 30'
+                    f'PrivateKey = {privkey}\n' \
+                    f'Address = {address}\n' \
+                    f'DNS = 8.8.8.8\n\n' \
+                    '[Peer]\n' \
+                    f'PublicKey = {pubkey}\n' \
+                    'AllowedIPs = 0.0.0.0/0\n' \
+                    f'Endpoint = {server_ip}:{server_port}\n' \
+                    'PersistentKeepalive = 30'
         return wg_config
 
     @staticmethod
