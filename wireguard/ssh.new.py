@@ -1,14 +1,13 @@
 import time
 
 from paramiko import SSHClient, AutoAddPolicy
-from wgconfig import WGConfig
 
 from settings import *
+from wireguard import Wireguard
 
 
 class SSH:
     path_to_tmp_config = '/tmp/wg0.conf'
-    wg_config = WGConfig(path_to_tmp_config)
 
     def __init__(self):
         self.host = SSH_HOST
@@ -59,36 +58,31 @@ class SSH:
 
     def add_peer(self, peer_name):
         self.download_config()
-        self.wg_config.read_file()
+        Wireguard(self.path_to_tmp_config).add_peer('foo', peer_name)  # TODO: gen pubkey
+        self.upload_config()
+        self.wg_down_up()
 
     def delete_peer(self, pubkey):
         self.download_config()
-        self.wg_config.read_file()
-        self.wg_config.del_peer(pubkey)
-        self.wg_config.write_file()
+        Wireguard(self.path_to_tmp_config).delete_peer(pubkey)
         self.upload_config()
         self.wg_down_up()
 
     def enable_peer(self, pubkey):
         self.download_config()
-        self.wg_config.read_file()
-        self.wg_config.enable_peer(pubkey)
-        self.wg_config.write_file()
+        Wireguard(self.path_to_tmp_config).enable_peer(pubkey)
         self.upload_config()
         self.wg_down_up()
 
     def disable_peer(self, pubkey):
         self.download_config()
-        self.wg_config.read_file()
-        self.wg_config.disable_peer(pubkey)
-        self.wg_config.write_file()
+        Wireguard(self.path_to_tmp_config).disable_peer(pubkey)
         self.upload_config()
         self.wg_down_up()
 
     def get_peer_enabled(self, pubkey):
         self.download_config()
-        self.wg_config.read_file()
-        return self.wg_config.get_peer_enabled(pubkey)
+        return Wireguard(self.path_to_tmp_config).disable_peer(pubkey)
 
 
 if __name__ == '__main__':
