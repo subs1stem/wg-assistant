@@ -1,9 +1,9 @@
 import time
 
 from paramiko import SSHClient, AutoAddPolicy
+from wgconfig import WGConfig
 
 from settings import *
-from wireguard import Wireguard
 
 
 class SSH:
@@ -58,33 +58,45 @@ class SSH:
 
     def add_peer(self, peer_name):
         self.download_config()
-        Wireguard(self.path_to_tmp_config).add_peer('foo', peer_name)  # TODO: gen pubkey
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        wg_config.add_peer('foo', peer_name)  # TODO: gen pubkey
+        wg_config.write_file()
         self.upload_config()
         self.wg_down_up()
 
     def delete_peer(self, pubkey):
         self.download_config()
-        Wireguard(self.path_to_tmp_config).delete_peer(pubkey)
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        wg_config.del_peer(pubkey)
+        wg_config.write_file()
         self.upload_config()
         self.wg_down_up()
 
     def enable_peer(self, pubkey):
         self.download_config()
-        Wireguard(self.path_to_tmp_config).enable_peer(pubkey)
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        wg_config.enable_peer(pubkey)
+        wg_config.write_file()
         self.upload_config()
         self.wg_down_up()
 
     def disable_peer(self, pubkey):
         self.download_config()
-        Wireguard(self.path_to_tmp_config).disable_peer(pubkey)
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        wg_config.disable_peer(pubkey)
+        wg_config.write_file()
         self.upload_config()
         self.wg_down_up()
 
     def get_peer_enabled(self, pubkey):
         self.download_config()
-        return Wireguard(self.path_to_tmp_config).disable_peer(pubkey)
+        return WGConfig(self.path_to_tmp_config).get_peer_enabled(pubkey)
 
 
 if __name__ == '__main__':
     ssh = SSH()
-    ssh.delete_peer('U0cwkQJMZlUPtNQ7n1FpXoAQZ5rbCJ6gzUuW+9yqSy0=')
+    ssh.enable_peer('FRpa9xdgsb0n6KfQzCskSBwUWugFeGzzGJfqpg53WB0=')
