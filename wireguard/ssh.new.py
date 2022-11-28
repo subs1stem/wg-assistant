@@ -47,7 +47,7 @@ class SSH:
 
     def wg_down_up(self):
         self.wg_change_state('down')
-        time.sleep(1)
+        time.sleep(2)
         self.wg_change_state('up')
 
     def download_config(self):
@@ -56,11 +56,28 @@ class SSH:
     def upload_config(self):
         self.client.open_sftp().put(self.path_to_tmp_config, self.path_to_config)
 
+    def get_server_pubkey(self):
+        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} public-key')
+        return stdout.readline().strip()
+
+    def get_server_port(self):
+        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} listen-port')
+        return stdout.readline().strip()
+
+    def get_server_address(self):
+        _, stdout, _ = self.client.exec_command(f'cat {self.path_to_config}')
+        lines = stdout.readlines()
+        network = [s for s in lines if 'Address' in s][0].split('=')[1].strip()
+        return network
+
+    def get_next_ip(self):
+        pass
+
     def add_peer(self, peer_name):
         self.download_config()
         wg_config = WGConfig(self.path_to_tmp_config)
         wg_config.read_file()
-        wg_config.add_peer('foo', peer_name)  # TODO: gen pubkey
+        wg_config.add_peer('foo', '# ' + peer_name)  # TODO: gen pubkey
         wg_config.write_file()
         self.upload_config()
         self.wg_down_up()
@@ -96,7 +113,20 @@ class SSH:
         self.download_config()
         return WGConfig(self.path_to_tmp_config).get_peer_enabled(pubkey)
 
+    @staticmethod
+    def generate_client_config(privkey, address, pubkey, server_ip, server_port):
+        wg_config = '[Interface]\n' \
+                    f'PrivateKey = {privkey}\n' \
+                    f'Address = {address}\n' \
+                    f'DNS = 8.8.8.8\n\n' \
+                    '[Peer]\n' \
+                    f'PublicKey = {pubkey}\n' \
+                    'AllowedIPs = 0.0.0.0/0\n' \
+                    f'Endpoint = {server_ip}:{server_port}\n' \
+                    'PersistentKeepalive = 30'
+        return wg_config
+
 
 if __name__ == '__main__':
     ssh = SSH()
-    ssh.enable_peer('FRpa9xdgsb0n6KfQzCskSBwUWugFeGzzGJfqpg53WB0=')
+    print(ssh.get_server_address())
