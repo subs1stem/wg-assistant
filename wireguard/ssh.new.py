@@ -1,5 +1,7 @@
 import time
+from ipaddress import ip_interface
 
+import qrcode
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
 
@@ -70,17 +72,42 @@ class SSH:
         network = [s for s in lines if 'Address' in s][0].split('=')[1].strip()
         return network
 
-    def get_next_ip(self):
-        pass
+    def get_allowed_ips(self):  # TODO: delete?
+        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} allowed-ips')
+        allowed_ips = {}
+        for line in stdout.readlines():
+            key, value = line.split()
+            allowed_ips[key] = value.split('/')[0]
+        return allowed_ips
+
+    def get_next_available_ip(self):
+        server_address = self.get_server_address()
+        server_ip = format(ip_interface(server_address).ip)
+        network = ip_interface(server_address).network
+        reserved = list(self.get_allowed_ips().values())
+        reserved.append(server_ip)
+        hosts_iterator = (host for host in network.hosts() if str(host) not in reserved)
+        return next(hosts_iterator)
 
     def add_peer(self, peer_name):
+        _, stdout, _ = self.client.exec_command(f'wg genkey')
+        client_privkey = stdout.readline().strip()
+        _, stdout, _ = self.client.exec_command(f'echo "{client_privkey}" | wg pubkey')
+        client_pubkey = stdout.readline().strip()
+        server_pubkey = self.get_server_pubkey()
+        peer_ip = f'{self.get_next_available_ip()}/32'
+        server_port = self.get_server_port()
         self.download_config()
         wg_config = WGConfig(self.path_to_tmp_config)
         wg_config.read_file()
-        wg_config.add_peer('foo', '# ' + peer_name)  # TODO: gen pubkey
+        wg_config.add_peer(client_pubkey, '# ' + peer_name)  # TODO: gen pubkey
+        wg_config.add_attr(client_pubkey, 'AllowedIPs', peer_ip)
         wg_config.write_file()
         self.upload_config()
         self.wg_down_up()
+        wg_config = self.generate_client_config(client_privkey, peer_ip, server_pubkey, self.host, server_port)
+        qr = qrcode.make(wg_config)
+        return qr, wg_config
 
     def delete_peer(self, pubkey):
         self.download_config()
@@ -129,4 +156,4 @@ class SSH:
 
 if __name__ == '__main__':
     ssh = SSH()
-    print(ssh.get_server_address())
+    print(ssh.get_allowed_ips())
