@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 from ipaddress import ip_interface
 
 import qrcode
@@ -10,12 +9,14 @@ from settings import *
 
 
 class SSH:
+    path_to_tmp_config = '/tmp/wg0.conf'
+
     def __init__(self):
         self.host = SSH_HOST
         self.user = SSH_USER
         self.secret = SSH_SECRET
         self.port = SSH_PORT
-        self.patch_to_conf = PATH_TO_WG_CONF
+        self.path_to_config = PATH_TO_WG_CONFIG
         self.wg_interface_name = WG_INTERFACE_NAME
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
@@ -35,25 +36,41 @@ class SSH:
     def reboot(self):
         self.client.exec_command('reboot')
 
-    def get_pubkey(self):
+    def get_raw_config(self):
+        _, stdout, _ = self.client.exec_command(f'cat {self.path_to_config}')
+        return ''.join(stdout.readlines())
+
+    def get_wg_status(self):
+        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
+        return bool(stdout.readline())
+
+    def wg_change_state(self, state):
+        self.client.exec_command(f'wg-quick {state} {self.wg_interface_name}')
+
+    def wg_down_up(self):
+        self.wg_change_state('down')
+        time.sleep(2)
+        self.wg_change_state('up')
+
+    def download_config(self):
+        self.client.open_sftp().get(self.path_to_config, self.path_to_tmp_config)
+
+    def upload_config(self):
+        self.client.open_sftp().put(self.path_to_tmp_config, self.path_to_config)
+
+    def get_server_pubkey(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} public-key')
         return stdout.readline().strip()
 
-    def get_privkey(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} private-key')
-        return stdout.readline()
-
-    def get_listen_port(self):
+    def get_server_port(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} listen-port')
         return stdout.readline().strip()
 
-    def get_endpoints(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} endpoints')
-        endpoints = {}
-        for line in stdout.readlines():
-            key, value = line.split()
-            endpoints[key] = value
-        return endpoints
+    def get_server_address(self):
+        _, stdout, _ = self.client.exec_command(f'cat {self.path_to_config}')
+        lines = stdout.readlines()
+        network = [s for s in lines if 'Address' in s][0].split('=')[1].strip()
+        return network
 
     def get_allowed_ips(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} allowed-ips')
@@ -63,24 +80,17 @@ class SSH:
             allowed_ips[key] = value.split('/')[0]
         return allowed_ips
 
-    def get_latest_handshakes(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} latest-handshakes')
-        latest_handshakes = {}
-        for line in stdout.readlines():
-            key, value = line.split()
-            latest_handshakes[key] = datetime.fromtimestamp(int(value)).strftime('%d.%m.%Y, %H:%M:%S')
-        return latest_handshakes
-
-    def get_transfer(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} transfer')
-        transfer = {}
-        for line in stdout.readlines():
-            key, received, send = line.split()
-            transfer[key] = [self.convert_bytes(received), self.convert_bytes(send)]
-        return transfer
+    def get_next_available_ip(self):
+        server_address = self.get_server_address()
+        server_ip = format(ip_interface(server_address).ip)
+        network = ip_interface(server_address).network
+        reserved = list(self.get_allowed_ips().values())
+        reserved.append(server_ip)
+        hosts_iterator = (host for host in network.hosts() if str(host) not in reserved)
+        return next(hosts_iterator)
 
     def get_peer_names(self):
-        _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
+        _, stdout, _ = self.client.exec_command(f'cat {self.path_to_config}')
         wg_config = []
         peer_names = {}
         for line in stdout.readlines():
@@ -118,78 +128,56 @@ class SSH:
             peers[peer_name] = inside_dict
         return peers
 
-    def get_raw_config(self):
-        _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
-        wg_config = ''
-        for line in stdout.readlines():
-            wg_config += line
-        return wg_config
-
-    def get_server_address(self):
-        _, stdout, _ = self.client.exec_command(f'cat {self.patch_to_conf}')
-        lines = stdout.readlines()
-        network = [s for s in lines if 'Address' in s][0].split('=')[1].strip()
-        return network
-
-    def get_available_ip(self):
-        server_address = self.get_server_address()
-        server_ip = format(ip_interface(server_address).ip)
-        network = ip_interface(server_address).network
-        reserved = list(self.get_allowed_ips().values())
-        reserved.append(server_ip)
-        hosts_iterator = (host for host in network.hosts() if str(host) not in reserved)
-        return next(hosts_iterator)
-
-    def get_wg_status(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
-        return bool(stdout.readline())
-
-    def wg_change_state(self, state):
-        self.client.exec_command(f'wg-quick {state} {self.wg_interface_name}')
-
-    def wg_down_up(self):
-        self.wg_change_state('down')
-        time.sleep(1)
-        self.wg_change_state('up')
-
     def add_peer(self, peer_name):
         _, stdout, _ = self.client.exec_command(f'wg genkey')
-        privkey = stdout.readline().strip()
-        _, stdout, _ = self.client.exec_command(f'echo "{privkey}" | wg pubkey')
-        pubkey = stdout.readline().strip()
-        server_pubkey = self.get_pubkey()
-        peer_ip = f'{self.get_available_ip()}/32'
-        server_port = self.get_listen_port()
-        text = '[Peer]\n' \
-               f'# {peer_name}\n' \
-               f'PublicKey = {pubkey}\n' \
-               f'AllowedIPs = {peer_ip}\n'
-        self.client.exec_command(f'echo "{text}" >> {self.patch_to_conf}')
+        client_privkey = stdout.readline().strip()
+        _, stdout, _ = self.client.exec_command(f'echo "{client_privkey}" | wg pubkey')
+        client_pubkey = stdout.readline().strip()
+        server_pubkey = self.get_server_pubkey()
+        peer_ip = f'{self.get_next_available_ip()}/32'
+        server_port = self.get_server_port()
+        self.download_config()
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        wg_config.add_peer(client_pubkey, '# ' + peer_name)
+        wg_config.add_attr(client_pubkey, 'AllowedIPs', peer_ip)
+        wg_config.write_file()
+        self.upload_config()
         self.wg_down_up()
-        wg_config = self.generate_client_config(privkey, peer_ip, server_pubkey, self.host, server_port)
-        qr = self.make_qr(wg_config)
+        wg_config = self.generate_client_config(client_privkey, peer_ip, server_pubkey, self.host, server_port)
+        qr = qrcode.make(wg_config)
         return qr, wg_config
-
-    def download_config(self):
-        self.client.open_sftp().get('/etc/wireguard/wg0.conf', '/tmp/wg0.conf')
-
-    def upload_config(self):
-        self.client.open_sftp().put('/tmp/wg0.conf', '/etc/wireguard/wg0.conf')
-
-    def is_peer_disabled(self, peer_name):
-        pass
 
     def delete_peer(self, pubkey):
         self.download_config()
-        wg_config = WGConfig('/tmp/wg0.conf')
+        wg_config = WGConfig(self.path_to_tmp_config)
         wg_config.read_file()
         wg_config.del_peer(pubkey)
         wg_config.write_file()
         self.upload_config()
         self.wg_down_up()
 
+    def enable_peer(self, pubkey):
+        self.download_config()
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        wg_config.enable_peer(pubkey)
+        wg_config.write_file()
+        self.upload_config()
+        self.wg_down_up()
+
     def disable_peer(self, pubkey):
-        pass
+        self.download_config()
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        wg_config.disable_peer(pubkey)
+        wg_config.write_file()
+        self.upload_config()
+        self.wg_down_up()
+
+    def get_peer_enabled(self, pubkey):
+        self.download_config()
+        return WGConfig(self.path_to_tmp_config).get_peer_enabled(pubkey)
 
     @staticmethod
     def generate_client_config(privkey, address, pubkey, server_ip, server_port):
@@ -204,23 +192,7 @@ class SSH:
                     'PersistentKeepalive = 30'
         return wg_config
 
-    @staticmethod
-    def make_qr(text):
-        img = qrcode.make(text)
-        return img
-
-    @staticmethod
-    def convert_bytes(bytes_number):
-        bytes_number = int(bytes_number)
-        tags = ['B', 'KiB', 'MiB', 'GiB', 'TiB']
-        i = 0
-        double_bytes = bytes_number
-        while i < len(tags) and bytes_number >= 1024:
-            double_bytes = bytes_number / 1024.0
-            i = i + 1
-            bytes_number = bytes_number / 1024
-        return str(round(double_bytes, 2)) + ' ' + tags[i]
-
 
 if __name__ == '__main__':
-    pass
+    ssh = SSH()
+    print(ssh.get_allowed_ips())
