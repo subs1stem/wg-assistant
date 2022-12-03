@@ -90,20 +90,17 @@ class SSH:
         return next(hosts_iterator)
 
     def get_peer_names(self):
-        _, stdout, _ = self.client.exec_command(f'cat {self.path_to_config}')
-        wg_config = []
+        self.download_config()
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        peers = wg_config.peers
         peer_names = {}
-        for line in stdout.readlines():
-            wg_config.append(line.strip())
-        for i, item in enumerate(wg_config):
-            if item.startswith('PublicKey'):
-                pubkey = item.split('=', 1)[1].strip()
-                name = wg_config[i - 1]
-                if name.startswith('#'):
-                    name = name.strip(' #')
-                else:
-                    name = None
-                peer_names[pubkey] = name
+        for peer in peers:
+            name = None
+            for item in peers[peer]['_rawdata']:
+                if item.startswith('#'):
+                    name = item.replace('#', '').strip()
+            peer_names[peer] = name
         return peer_names
 
     def get_peers(self):
@@ -195,4 +192,4 @@ class SSH:
 
 if __name__ == '__main__':
     ssh = SSH()
-    print(ssh.get_allowed_ips())
+    print(ssh.get_peer_names())
