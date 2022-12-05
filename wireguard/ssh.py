@@ -49,7 +49,7 @@ class SSH:
 
     def wg_down_up(self):
         self.wg_change_state('down')
-        time.sleep(2)
+        time.sleep(3)
         self.wg_change_state('up')
 
     def download_config(self):
@@ -98,6 +98,7 @@ class SSH:
         for peer in peers:
             name = None
             for item in peers[peer]['_rawdata']:
+                item = item.replace('#!', '').strip()
                 if item.startswith('#'):
                     name = item.replace('#', '').strip()
             peer_names[peer] = name
@@ -174,7 +175,9 @@ class SSH:
 
     def get_peer_enabled(self, pubkey):
         self.download_config()
-        return WGConfig(self.path_to_tmp_config).get_peer_enabled(pubkey)
+        wg_config = WGConfig(self.path_to_tmp_config)
+        wg_config.read_file()
+        return wg_config.get_peer_enabled(pubkey)
 
     @staticmethod
     def generate_client_config(privkey, address, pubkey, server_ip, server_port):
@@ -191,5 +194,4 @@ class SSH:
 
 
 if __name__ == '__main__':
-    ssh = SSH()
-    print(ssh.get_peer_names())
+    pass

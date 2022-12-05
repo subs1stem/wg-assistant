@@ -66,9 +66,14 @@ def peers_keyboard():
 
 
 def peer_action(pubkey):
+    if SSH().get_peer_enabled(pubkey):
+        wg_disable_enable_btn = InlineKeyboardButton('Отключить 📵', callback_data=f'off_peer:{pubkey}')
+    else:
+        wg_disable_enable_btn = InlineKeyboardButton('Включить ✅', callback_data=f'on_peer:{pubkey}')
     markup = InlineKeyboardMarkup()
     markup.row_width = 1
-    markup.add(  # InlineKeyboardButton('Отключить 📵', callback_data=f'off_peer:{pubkey}'),
+    markup.add(
+        wg_disable_enable_btn,
         InlineKeyboardButton('Удалить ❌', callback_data=f'del_peer:{pubkey}'),
         InlineKeyboardButton('⬅ Назад', callback_data='config_peers'))
     return markup
