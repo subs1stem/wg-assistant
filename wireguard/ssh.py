@@ -23,8 +23,7 @@ class SSH:
         self.client.connect(hostname=self.host,
                             username=self.user,
                             password=self.secret,
-                            port=self.port,
-                            timeout=5)
+                            port=self.port)
 
     def __del__(self):
         self.client.close()
