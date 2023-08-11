@@ -1,15 +1,16 @@
+from os import environ
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from modules.fsm_states import AddPeer
 from modules.keyboards import *
 from modules.messages import peers_message
-from settings import ADMIN_IDs
 from wireguard.ssh import SSH
 
 
 async def set_callback_handlers(dp):
-    @dp.callback_query_handler(lambda query: query.from_user.id not in ADMIN_IDs)
+    @dp.callback_query_handler(lambda query: str(query.from_user.id) not in environ['ADMIN_ID'].split(','))
     async def send_access_warning(query: types.CallbackQuery):
         await query.answer()
         await dp.bot.send_message(chat_id=query.from_user.id,

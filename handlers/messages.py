@@ -1,16 +1,16 @@
 from io import BytesIO
+from os import environ
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from modules.fsm_states import AddPeer
 from modules.keyboards import main_menu_keyboard
-from settings import ADMIN_IDs
 from wireguard.ssh import SSH
 
 
 async def set_message_handlers(dp):
-    @dp.message_handler(lambda message: message.chat.id not in ADMIN_IDs)
+    @dp.message_handler(lambda message: str(message.chat.id) not in environ['ADMIN_ID'].split(','))
     async def send_auth_error(message: types.Message):
         await message.answer('Я тебя не знаю ⚠')
 

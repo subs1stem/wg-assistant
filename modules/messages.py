@@ -1,4 +1,5 @@
-from settings import WG_INTERFACE_NAME
+from os import environ
+
 from wireguard.ssh import SSH
 
 
@@ -9,7 +10,7 @@ def peers_message():
         return 'Интерфейс неактивен'
     message = ''
     for key in peers:
-        if key == WG_INTERFACE_NAME:
+        if key == environ['INTERFACE']:
             continue
         params = peers[key]
         message += f'<ins><b>{key}</b></ins>\n'

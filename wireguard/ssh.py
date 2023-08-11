@@ -1,23 +1,22 @@
 import time
 from ipaddress import ip_interface
+from os import environ
 
 import qrcode
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
-
-from settings import *
 
 
 class SSH:
     path_to_tmp_config = '/tmp/wg0.conf'
 
     def __init__(self):
-        self.host = SSH_HOST
-        self.user = SSH_USER
-        self.secret = SSH_SECRET
-        self.port = SSH_PORT
-        self.path_to_config = PATH_TO_WG_CONFIG
-        self.wg_interface_name = WG_INTERFACE_NAME
+        self.host = environ['HOST']
+        self.user = environ['USERNAME']
+        self.secret = environ['PASSWORD']
+        self.port = int(environ['PORT'])
+        self.path_to_config = environ['PATH_TO_CONFIG']
+        self.wg_interface_name = environ['INTERFACE']
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.client.connect(hostname=self.host,

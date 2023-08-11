@@ -1,15 +1,17 @@
+from os import environ
+
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from aiogram.utils import executor
+from dotenv import load_dotenv
 
 from handlers.callbacks import set_callback_handlers
 from handlers.messages import set_message_handlers
-from settings import BOT_TOKEN
 
-# logging.basicConfig(level=logging.INFO)
+load_dotenv()
 
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=environ['TOKEN'])
 dispatcher = Dispatcher(bot, storage=MemoryStorage())
 
 

@@ -1,3 +1,6 @@
 venv
-config
-install.sh
+.env.example
+.git
+.gitignore
+.idea
+**/__pycache__/
