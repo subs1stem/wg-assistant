@@ -1,3 +1,6 @@
+import json
+from os import environ
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from wireguard.ssh import SSH
@@ -16,6 +19,15 @@ def cancel_button(callback_data):
 
 
 def main_menu_keyboard():
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 1
+    servers = json.loads(environ['SERVERS'])
+    for server in servers:
+        markup.insert(InlineKeyboardButton(server, callback_data=f'server:{server}'))
+    return markup
+
+
+def server_keyboard():
     markup = InlineKeyboardMarkup()
     markup.row_width = 1
     markup.add(InlineKeyboardButton('Добавить клиента 🆕', callback_data='add_peer'),
