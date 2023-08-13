@@ -1,7 +1,6 @@
-from os import environ
-
 from aiogram import types
-from aiogram.dispatcher import FSMContext
+from aiogram.enums import ParseMode
+from aiogram.fsm.context import FSMContext
 
 from modules.fsm_states import AddPeer
 from modules.keyboards import *
@@ -19,7 +18,7 @@ async def set_callback_handlers(dp):
     @dp.callback_query_handler(lambda query: query.data == 'main_menu', state='*')
     async def send_main_menu(query: types.CallbackQuery, state: FSMContext):
         await query.answer()
-        await state.reset_state()
+        await state.clear()
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
                                        text='Главное меню:',
@@ -44,7 +43,7 @@ async def set_callback_handlers(dp):
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
                                        text=f'{peers_message()}',
-                                       parse_mode=types.ParseMode.HTML,
+                                       parse_mode=ParseMode.HTML,
                                        reply_markup=peer_list_keyboard())
 
     @dp.callback_query_handler(lambda query: query.data == 'get_server_config')
@@ -53,7 +52,7 @@ async def set_callback_handlers(dp):
         await dp.bot.edit_message_text(chat_id=query.from_user.id,
                                        message_id=query.message.message_id,
                                        text=f'<code>{SSH().get_raw_config()}</code>',
-                                       parse_mode=types.ParseMode.HTML,
+                                       parse_mode=ParseMode.HTML,
                                        reply_markup=back_button('wg_options'))
 
     @dp.callback_query_handler(lambda query: query.data.startswith('wg_state'))
@@ -90,7 +89,7 @@ async def set_callback_handlers(dp):
                                        message_id=query.message.message_id,
                                        text=f'Выбери действие:',
                                        reply_markup=peer_action(pubkey),
-                                       parse_mode=types.ParseMode.HTML)
+                                       parse_mode=ParseMode.HTML)
 
     @dp.callback_query_handler(lambda query: query.data.startswith('off_peer'))
     async def off_peer(query: types.CallbackQuery):
