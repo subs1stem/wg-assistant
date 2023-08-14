@@ -6,8 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
-from handlers.callbacks import set_callback_handlers
-from handlers.messages import set_message_handlers
+from handlers import messages
 
 load_dotenv()
 
@@ -21,14 +20,13 @@ async def set_commands(dp):
 
 async def on_startup(dp):
     await set_commands(dp)
-    await set_message_handlers(dp)
-    await set_callback_handlers(dp)
 
 
 async def main():
     bot = Bot(token=environ['TOKEN'])
-    dispatcher = Dispatcher(storage=MemoryStorage())
-    await dispatcher.start_polling(bot)
+    dp = Dispatcher(storage=MemoryStorage())
+    dp.include_routers(messages.router)
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
