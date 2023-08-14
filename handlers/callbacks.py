@@ -16,7 +16,7 @@ async def access_warning(callback: types.CallbackQuery):
                                   text='Доступ запрещён 🛑')
 
 
-@router.callback_query(lambda callback: callback.data == 'main_menu', state='*')
+@router.callback_query(lambda callback: callback.data == 'main_menu')
 async def main_menu(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
