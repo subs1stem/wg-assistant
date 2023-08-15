@@ -1,5 +1,4 @@
 import json
-from os import environ
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -21,7 +20,8 @@ def cancel_button(callback_data):
 def main_menu_keyboard():
     kb = InlineKeyboardBuilder()
     kb.row_width = 1
-    servers = json.loads(environ['SERVERS'])
+    with open('servers.json') as f:
+        servers = json.load(f)
     for server in servers:
         kb.button(text=server, callback_data=f'server:{server}')
     return kb.as_markup()

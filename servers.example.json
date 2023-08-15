@@ -1,0 +1,18 @@
+{
+  "alpha": {
+    "host": "127.0.0.1",
+    "port": 22,
+    "username": "root",
+    "password": "toor",
+    "pathToConfig": "/etc/wireguard/wg0.conf",
+    "interface": "wg0"
+  },
+  "beta": {
+    "host": "127.0.0.2",
+    "port": 22,
+    "username": "root",
+    "password": "toor",
+    "pathToConfig": "/etc/wireguard/wg0.conf",
+    "interface": "wg0"
+  }
+}
