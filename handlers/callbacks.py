@@ -1,5 +1,3 @@
-from os import environ
-
 from aiogram import types, Router
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
@@ -12,19 +10,13 @@ from wireguard.ssh import SSH
 router = Router()
 
 
-@router.callback_query(lambda callback: str(callback.from_user.id) not in environ['ADMIN_ID'].split(','))
-async def access_warning(callback: types.CallbackQuery):
-    await callback.message.answer(chat_id=callback.from_user.id,
-                                  text='Доступ запрещён 🛑')
-
-
 @router.callback_query(lambda callback: callback.data == 'main_menu')
 async def main_menu(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Главное меню:',
-                                         reply_markup=main_menu_keyboard())
+                                         reply_markup=main_menu_kb())
 
 
 @router.callback_query(lambda callback: callback.data == 'wg_options')

@@ -17,7 +17,7 @@ def cancel_button(callback_data):
     return kb.as_markup()
 
 
-def main_menu_keyboard():
+def main_menu_kb():
     kb = InlineKeyboardBuilder()
     kb.row_width = 1
     with open('servers.json') as f:

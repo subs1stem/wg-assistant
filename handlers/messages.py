@@ -1,35 +1,14 @@
 from io import BytesIO
-from os import environ
 
 from aiogram import Router
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.types.input_file import BufferedInputFile
 
 from modules.fsm_states import AddPeer
-from modules.keyboards import main_menu_keyboard
 from wireguard.ssh import SSH
 
 router = Router()
-
-
-@router.message(lambda message: str(message.chat.id) not in environ['ADMIN_ID'].split(','))
-async def auth_error(message: Message):
-    await message.answer('Я тебя не знаю ⚠')
-
-
-@router.message(Command('start'))
-async def welcome(message: Message):
-    username = message.chat.username
-    if not username:
-        username = '%username%'
-    await message.answer(f'Привет, {username}! 👋')
-
-
-@router.message(Command('menu'))
-async def main_menu(message: Message):
-    await message.answer('Главное меню:', reply_markup=main_menu_keyboard())
 
 
 @router.message(AddPeer.waiting_for_peer_name)
