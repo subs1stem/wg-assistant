@@ -2,7 +2,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from modules.keyboards import main_menu_kb
+from modules.keyboards import servers_kb
 
 router = Router()
 
@@ -15,6 +15,6 @@ async def welcome(message: Message):
     await message.answer(f'Привет, {username}! 👋')
 
 
-@router.message(Command('menu'))
-async def main_menu(message: Message):
-    await message.answer('Главное меню:', reply_markup=main_menu_kb())
+@router.message(Command('servers'))
+async def servers(message: Message):
+    await message.answer('Список серверов:', reply_markup=servers_kb())

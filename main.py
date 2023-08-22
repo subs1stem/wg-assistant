@@ -22,7 +22,7 @@ async def main():
 
     await bot.set_my_commands([
         BotCommand(command='start', description='начало работы'),
-        BotCommand(command='menu', description='главное меню'),
+        BotCommand(command='servers', description='список серверов'),
     ])
 
     await dp.start_polling(bot)

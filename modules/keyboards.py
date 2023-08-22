@@ -17,7 +17,7 @@ def cancel_button(callback_data):
     return kb.as_markup()
 
 
-def main_menu_kb():
+def servers_kb():
     kb = InlineKeyboardBuilder()
     kb.row_width = 1
     with open('servers.json') as f:
@@ -46,7 +46,7 @@ def wg_options_keyboard():
         kb.button(text='Опустить интерфейс ⬇', callback_data='wg_state_down')
     else:
         kb.button(text='Поднять интерфейс ⬆', callback_data='wg_state_up')
-    kb.button(text='⬅ Назад', callback_data='main_menu')
+    kb.button(text='⬅ Назад', callback_data='servers')
     return kb.as_markup()
 
 

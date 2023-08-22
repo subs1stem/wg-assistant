@@ -10,13 +10,13 @@ from wireguard.ssh import SSH
 router = Router()
 
 
-@router.callback_query(lambda callback: callback.data == 'main_menu')
-async def main_menu(callback: types.CallbackQuery, state: FSMContext):
+@router.callback_query(lambda callback: callback.data == 'servers')
+async def servers(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
-                                         text='Главное меню:',
-                                         reply_markup=main_menu_kb())
+                                         text='Список серверов:',
+                                         reply_markup=servers_kb())
 
 
 @router.callback_query(lambda callback: callback.data == 'wg_options')
@@ -70,7 +70,7 @@ async def add_peer(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Пришли мне имя клиента',
-                                         reply_markup=cancel_button('main_menu'))
+                                         reply_markup=cancel_button('servers'))
     await AddPeer.waiting_for_peer_name.set()
 
 
