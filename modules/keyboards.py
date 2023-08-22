@@ -1,5 +1,3 @@
-import json
-
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from wireguard.ssh import SSH
@@ -17,13 +15,12 @@ def cancel_button(callback_data):
     return kb.as_markup()
 
 
-def servers_kb():
+def servers_kb(servers):
     kb = InlineKeyboardBuilder()
-    kb.row_width = 1
-    with open('servers.json') as f:
-        servers = json.load(f)
+
     for server in servers:
         kb.button(text=server, callback_data=f'server:{server}')
+
     return kb.as_markup()
 
 
