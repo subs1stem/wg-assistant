@@ -18,8 +18,8 @@ def cancel_button(callback_data):
 def servers_kb(servers):
     kb = InlineKeyboardBuilder()
 
-    for server in servers:
-        kb.button(text=server, callback_data=f'server:{server}')
+    for serverName, serverParams in servers.items():
+        kb.button(text=serverName, callback_data=f'server:{serverName}')
 
     return kb.as_markup()
 
