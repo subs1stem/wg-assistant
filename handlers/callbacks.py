@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from data.servers import get_server_list
 from modules.fsm_states import AddPeer
+from modules.fsm_states import CurrentServer
 from modules.keyboards import *
 from modules.messages import peers_message
 from wireguard.ssh import SSH
@@ -19,6 +20,15 @@ async def servers(callback: types.CallbackQuery, state: FSMContext):
                                          message_id=callback.message.message_id,
                                          text='Список серверов:',
                                          reply_markup=servers_kb(server_list))
+
+
+@router.callback_query(CurrentServer.waiting_for_server)
+async def server_menu(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await state.set_data({
+        # TODO
+    })
+    print(await state.get_data())
 
 
 @router.callback_query(lambda callback: callback.data == 'wg_options')

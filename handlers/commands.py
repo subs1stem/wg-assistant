@@ -22,4 +22,4 @@ async def welcome(message: Message):
 async def servers(message: Message, state: FSMContext):
     server_list = await get_server_list()
     await message.answer('Список серверов:', reply_markup=servers_kb(server_list))
-    await state.set_state(CurrentServer.waiting_for_server_name)
+    await state.set_state(CurrentServer.waiting_for_server)

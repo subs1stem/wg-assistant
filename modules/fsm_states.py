@@ -6,4 +6,4 @@ class AddPeer(StatesGroup):
 
 
 class CurrentServer(StatesGroup):
-    waiting_for_server_name = State()
+    waiting_for_server = State()
