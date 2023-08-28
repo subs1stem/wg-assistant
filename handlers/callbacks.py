@@ -12,6 +12,14 @@ from wireguard.ssh import SSH
 router = Router()
 
 
+@router.callback_query(CurrentServer.waiting_for_server)
+async def server_menu(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    server_name = callback.data.split(':')[1]
+    await state.set_data(ServersFile().get_server_by_name(server_name))
+    print(await state.get_data())
+
+
 @router.callback_query(lambda callback: callback.data == 'servers')
 async def servers(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
@@ -20,15 +28,6 @@ async def servers(callback: types.CallbackQuery, state: FSMContext):
                                          message_id=callback.message.message_id,
                                          text='Список серверов:',
                                          reply_markup=servers_kb(server_names))
-
-
-@router.callback_query(CurrentServer.waiting_for_server)
-async def server_menu(callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer()
-    await state.set_data({
-        # TODO
-    })
-    print(await state.get_data())
 
 
 @router.callback_query(lambda callback: callback.data == 'wg_options')
