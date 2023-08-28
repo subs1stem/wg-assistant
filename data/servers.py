@@ -1,14 +1,27 @@
 import json
 import os
 
-import aiofiles
 
+class ServersFile:
+    def __init__(self, filename: str = 'servers.json'):
+        self.file_path = os.path.join(os.getcwd(), filename)
+        self.servers = None
 
-async def get_server_list():
-    file_path = os.path.join(os.getcwd(), 'servers.json')
+    def _load_servers(self):
+        with open(self.file_path) as f:
+            self.servers = json.load(f)
 
-    async with aiofiles.open(file_path, mode='r') as f:
-        content = await f.read()
+    def get_all_servers(self) -> dict:
+        if self.servers is None:
+            self._load_servers()
+        return self.servers
 
-    servers = json.loads(content)
-    return servers
+    def get_server_names(self) -> list:
+        if self.servers is None:
+            self._load_servers()
+        return list(self.servers.keys())
+
+    def get_server_by_name(self, name: str) -> dict:
+        if self.servers is None:
+            self._load_servers()
+        return self.servers.get(name)

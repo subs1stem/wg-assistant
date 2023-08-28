@@ -2,7 +2,7 @@ from aiogram import types, Router
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 
-from data.servers import get_server_list
+from data.servers import ServersFile
 from modules.fsm_states import AddPeer
 from modules.fsm_states import CurrentServer
 from modules.keyboards import *
@@ -15,11 +15,11 @@ router = Router()
 @router.callback_query(lambda callback: callback.data == 'servers')
 async def servers(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
-    server_list = await get_server_list()
+    server_names = ServersFile().get_server_names()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Список серверов:',
-                                         reply_markup=servers_kb(server_list))
+                                         reply_markup=servers_kb(server_names))
 
 
 @router.callback_query(CurrentServer.waiting_for_server)
