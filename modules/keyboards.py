@@ -3,13 +3,13 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from wireguard.ssh import SSH
 
 
-def back_button(callback_data):
+def back_btn(callback_data):
     kb = InlineKeyboardBuilder()
     kb.button(text='⬅ Назад', callback_data=callback_data)
     return kb.as_markup()
 
 
-def cancel_button(callback_data):
+def cancel_btn(callback_data):
     kb = InlineKeyboardBuilder()
     kb.button(text='Отменить ❌', callback_data=callback_data)
     return kb.as_markup()
@@ -21,19 +21,19 @@ def servers_kb(servers):
     for name in servers:
         kb.button(text=name, callback_data=f'server:{name}')
 
-    return kb.as_markup()
+    return kb.adjust(1).as_markup()
 
 
-def server_keyboard():
+def server_options_kb():
     kb = InlineKeyboardBuilder()
     kb.row_width = 1
     kb.button(text='Добавить клиента 🆕', callback_data='add_peer')
     kb.button(text='Параметры WireGuard 🌐', callback_data='wg_options')
     kb.button(text='Перезагрузить сервер 🔄', callback_data='reboot_server')
-    return kb.as_markup()
+    return kb.adjust(1).as_markup()
 
 
-def wg_options_keyboard():
+def wg_options_kb():
     kb = InlineKeyboardBuilder()
     kb.row_width = 1
     kb.button(text='Список пиров 🤝', callback_data='get_peers')
@@ -47,7 +47,7 @@ def wg_options_keyboard():
     return kb.as_markup()
 
 
-def peer_list_keyboard():
+def peer_list_kb():
     kb = InlineKeyboardBuilder()
     kb.row_width = 1
     kb.button(text='Обновить 🔄', callback_data='get_peers')
@@ -55,14 +55,14 @@ def peer_list_keyboard():
     return kb.as_markup()
 
 
-def config_peers_keyboard():
+def config_peers_kb():
     kb = InlineKeyboardBuilder()
     kb.button(text='Отключить 😶', callback_data='off_peer')
     kb.button(text='Удалить 🗑️', callback_data='del_peer')
     return kb.as_markup()
 
 
-def peers_keyboard():
+def peers_kb():
     peers = SSH().get_peer_names()
     kb = InlineKeyboardBuilder()
     kb.row_width = 2
@@ -72,7 +72,7 @@ def peers_keyboard():
     return kb.as_markup()
 
 
-def peer_action(pubkey):
+def peer_action_kb(pubkey):
     kb = InlineKeyboardBuilder()
     kb.row_width = 1
     if SSH().get_peer_enabled(pubkey):

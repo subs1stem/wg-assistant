@@ -1,5 +1,4 @@
 from aiogram import types, Router
-from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 
 from data.servers import ServersFile
@@ -17,7 +16,11 @@ async def server_menu(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     server_name = callback.data.split(':')[1]
     await state.set_data(ServersFile().get_server_by_name(server_name))
-    print(await state.get_data())
+    await state.set_state(CurrentServer.working_with_server)
+    await callback.bot.edit_message_text(chat_id=callback.from_user.id,
+                                         message_id=callback.message.message_id,
+                                         text=f'Сервер <b>{server_name}</b>',
+                                         reply_markup=server_options_kb())
 
 
 @router.callback_query(lambda callback: callback.data == 'servers')
@@ -36,7 +39,7 @@ async def wg_options(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Параметры WireGuard:',
-                                         reply_markup=wg_options_keyboard())
+                                         reply_markup=wg_options_kb())
 
 
 @router.callback_query(lambda callback: callback.data == 'reboot_server')
@@ -51,8 +54,7 @@ async def peers(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text=f'{peers_message()}',
-                                         parse_mode=ParseMode.HTML,
-                                         reply_markup=peer_list_keyboard())
+                                         reply_markup=peer_list_kb())
 
 
 @router.callback_query(lambda callback: callback.data == 'get_server_config')
@@ -61,8 +63,7 @@ async def raw_config(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text=f'<code>{SSH().get_raw_config()}</code>',
-                                         parse_mode=ParseMode.HTML,
-                                         reply_markup=back_button('wg_options'))
+                                         reply_markup=back_btn('wg_options'))
 
 
 @router.callback_query(lambda callback: callback.data.startswith('wg_state'))
@@ -72,7 +73,7 @@ async def change_wg_state(callback: types.CallbackQuery):
     SSH().wg_change_state(state)
     await callback.bot.edit_message_reply_markup(chat_id=callback.from_user.id,
                                                  message_id=callback.message.message_id,
-                                                 reply_markup=wg_options_keyboard())
+                                                 reply_markup=wg_options_kb())
 
 
 @router.callback_query(lambda callback: callback.data == 'add_peer')
@@ -81,7 +82,7 @@ async def add_peer(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Пришли мне имя клиента',
-                                         reply_markup=cancel_button('servers'))
+                                         reply_markup=cancel_btn('servers'))
     await AddPeer.waiting_for_peer_name.set()
 
 
@@ -91,7 +92,7 @@ async def config_peers(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Выбери клиента:',
-                                         reply_markup=peers_keyboard())
+                                         reply_markup=peers_kb())
 
 
 @router.callback_query(lambda callback: callback.data.startswith('peer'))
@@ -101,8 +102,7 @@ async def show_peer(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text=f'Выбери действие:',
-                                         reply_markup=peer_action(pubkey),
-                                         parse_mode=ParseMode.HTML)
+                                         reply_markup=peer_action_kb(pubkey))
 
 
 @router.callback_query(lambda callback: callback.data.startswith('off_peer'))
@@ -113,7 +113,7 @@ async def off_peer(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Выбери клиента:',
-                                         reply_markup=peers_keyboard())
+                                         reply_markup=peers_kb())
 
 
 @router.callback_query(lambda callback: callback.data.startswith('on_peer'))
@@ -124,7 +124,7 @@ async def on_peer(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Выбери клиента:',
-                                         reply_markup=peers_keyboard())
+                                         reply_markup=peers_kb())
 
 
 @router.callback_query(lambda callback: callback.data.startswith('del_peer'))
@@ -135,4 +135,4 @@ async def del_peer(callback: types.CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Выбери клиента:',
-                                         reply_markup=peers_keyboard())
+                                         reply_markup=peers_kb())
