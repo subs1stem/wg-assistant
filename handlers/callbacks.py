@@ -48,12 +48,15 @@ async def reboot_server(callback: types.CallbackQuery):
     SSH().reboot()
 
 
-@router.callback_query(lambda callback: callback.data == 'get_peers')
-async def peers(callback: types.CallbackQuery):
+@router.callback_query(CurrentServer.working_with_server, lambda callback: callback.data == 'get_peers')
+async def peers(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer('Запрашиваю список пиров...')
+    server_data = state.get_data()
+    print(server_data)
+    peer_list = SSH().get_peers()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
-                                         text=f'{peers_message()}',
+                                         text=f'{peers_message(peer_list)}',
                                          reply_markup=peer_list_kb())
 
 

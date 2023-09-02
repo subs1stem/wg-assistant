@@ -1,11 +1,7 @@
 from os import environ
 
-from wireguard.ssh import SSH
 
-
-def peers_message():
-    ssh = SSH()
-    peers = ssh.get_peers()
+def peers_message(peers):
     if not peers:
         return 'Интерфейс неактивен'
     message = ''
