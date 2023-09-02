@@ -1,6 +1,5 @@
 import time
 from ipaddress import ip_interface
-from os import environ
 
 import qrcode
 from paramiko import SSHClient, AutoAddPolicy
@@ -10,18 +9,18 @@ from wgconfig import WGConfig
 class SSH:
     path_to_tmp_config = '/tmp/wg0.conf'
 
-    def __init__(self):
-        self.host = environ['HOST']
-        self.user = environ['USERNAME']
-        self.secret = environ['PASSWORD']
-        self.port = int(environ['PORT'])
-        self.path_to_config = environ['PATH_TO_CONFIG']
-        self.wg_interface_name = environ['INTERFACE']
+    def __init__(self, host, port, username, password, path_to_config='/etc/wireguard/wg0.conf', interface='wg0'):
+        self.host = host
+        self.port = int(port)
+        self.username = username
+        self.password = password
+        self.path_to_config = path_to_config
+        self.interface = interface
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.client.connect(hostname=self.host,
-                            username=self.user,
-                            password=self.secret,
+                            username=self.username,
+                            password=self.password,
                             port=self.port)
 
     def __del__(self):
@@ -39,11 +38,11 @@ class SSH:
         return ''.join(stdout.readlines())
 
     def get_wg_status(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
+        _, stdout, _ = self.client.exec_command(f'wg show {self.interface}')
         return bool(stdout.readline())
 
     def wg_change_state(self, state):
-        self.client.exec_command(f'wg-quick {state} {self.wg_interface_name}')
+        self.client.exec_command(f'wg-quick {state} {self.interface}')
 
     def wg_down_up(self):
         self.wg_change_state('down')
@@ -57,11 +56,11 @@ class SSH:
         self.client.open_sftp().put(self.path_to_tmp_config, self.path_to_config)
 
     def get_server_pubkey(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} public-key')
+        _, stdout, _ = self.client.exec_command(f'wg show {self.interface} public-key')
         return stdout.readline().strip()
 
     def get_server_port(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} listen-port')
+        _, stdout, _ = self.client.exec_command(f'wg show {self.interface} listen-port')
         return stdout.readline().strip()
 
     def get_server_address(self):
@@ -71,7 +70,7 @@ class SSH:
         return network
 
     def get_allowed_ips(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name} allowed-ips')
+        _, stdout, _ = self.client.exec_command(f'wg show {self.interface} allowed-ips')
         allowed_ips = {}
         for line in stdout.readlines():
             key, value = line.split()
@@ -105,7 +104,7 @@ class SSH:
     def get_peers(self):
         if not self.get_wg_status():
             return False
-        _, stdout, _ = self.client.exec_command(f'wg show {self.wg_interface_name}')
+        _, stdout, _ = self.client.exec_command(f'wg show {self.interface}')
         peer_names = self.get_peer_names()
         str_blocks = stdout.read().decode().split('\n\n')
         peers = {}
