@@ -1,18 +1,21 @@
-from aiogram import types, Router
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery
 
 from data.servers import ServersFile
 from modules.fsm_states import AddPeer
 from modules.fsm_states import CurrentServer
 from modules.keyboards import *
 from modules.messages import peers_message
+from modules.middlewares import ServerConnectionMiddleware
 from wireguard.ssh import SSH
 
 router = Router()
+router.callback_query.middleware(ServerConnectionMiddleware())
 
 
 @router.callback_query(lambda callback: callback.data == 'servers')
-async def server_list(callback: types.CallbackQuery, state: FSMContext):
+async def server_list(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     server_names = ServersFile().get_server_names()
     await state.set_state(CurrentServer.waiting_for_server)
@@ -23,7 +26,7 @@ async def server_list(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(CurrentServer.waiting_for_server)
-async def server_menu(callback: types.CallbackQuery, state: FSMContext):
+async def server_menu(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     server_name = callback.data.split(':')[1]
     await state.set_data(ServersFile().get_server_by_name(server_name))
@@ -35,7 +38,7 @@ async def server_menu(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(lambda callback: callback.data == 'wg_options')
-async def wg_options(callback: types.CallbackQuery):
+async def wg_options(callback: CallbackQuery):
     await callback.answer('Загрузка...')
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
@@ -44,13 +47,13 @@ async def wg_options(callback: types.CallbackQuery):
 
 
 @router.callback_query(lambda callback: callback.data == 'reboot_server')
-async def reboot_server(callback: types.CallbackQuery):
+async def reboot_server(callback: CallbackQuery):
     await callback.answer('Перезагружаю сервер...')
     SSH().reboot()
 
 
 @router.callback_query(CurrentServer.working_with_server, lambda callback: callback.data == 'get_peers')
-async def peers(callback: types.CallbackQuery, state: FSMContext):
+async def peers(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Запрашиваю список пиров...')
     server_data = state.get_data()
     print(server_data)
@@ -62,7 +65,7 @@ async def peers(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(lambda callback: callback.data == 'get_server_config')
-async def raw_config(callback: types.CallbackQuery):
+async def raw_config(callback: CallbackQuery):
     await callback.answer('Запрашиваю конфиг...')
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
@@ -71,7 +74,7 @@ async def raw_config(callback: types.CallbackQuery):
 
 
 @router.callback_query(lambda callback: callback.data.startswith('wg_state'))
-async def change_wg_state(callback: types.CallbackQuery):
+async def change_wg_state(callback: CallbackQuery):
     await callback.answer('Выполняю...')
     state = callback.data.split('_')[-1]
     SSH().wg_change_state(state)
@@ -81,7 +84,7 @@ async def change_wg_state(callback: types.CallbackQuery):
 
 
 @router.callback_query(lambda callback: callback.data == 'add_peer')
-async def add_peer(callback: types.CallbackQuery):
+async def add_peer(callback: CallbackQuery):
     await callback.answer()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
@@ -91,7 +94,7 @@ async def add_peer(callback: types.CallbackQuery):
 
 
 @router.callback_query(lambda callback: callback.data == 'config_peers')
-async def config_peers(callback: types.CallbackQuery):
+async def config_peers(callback: CallbackQuery):
     await callback.answer('Запрашиваю список пиров...')
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
@@ -100,7 +103,7 @@ async def config_peers(callback: types.CallbackQuery):
 
 
 @router.callback_query(lambda callback: callback.data.startswith('peer'))
-async def show_peer(callback: types.CallbackQuery):
+async def show_peer(callback: CallbackQuery):
     await callback.answer()
     _, pubkey = callback.data.split(':')
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
@@ -110,7 +113,7 @@ async def show_peer(callback: types.CallbackQuery):
 
 
 @router.callback_query(lambda callback: callback.data.startswith('off_peer'))
-async def off_peer(callback: types.CallbackQuery):
+async def off_peer(callback: CallbackQuery):
     await callback.answer('Отключаю...')
     pubkey = callback.data.split(':')[1]
     SSH().disable_peer(pubkey)
@@ -121,7 +124,7 @@ async def off_peer(callback: types.CallbackQuery):
 
 
 @router.callback_query(lambda callback: callback.data.startswith('on_peer'))
-async def on_peer(callback: types.CallbackQuery):
+async def on_peer(callback: CallbackQuery):
     await callback.answer('Включаю...')
     pubkey = callback.data.split(':')[1]
     SSH().enable_peer(pubkey)
@@ -132,7 +135,7 @@ async def on_peer(callback: types.CallbackQuery):
 
 
 @router.callback_query(lambda callback: callback.data.startswith('del_peer'))
-async def del_peer(callback: types.CallbackQuery):
+async def del_peer(callback: CallbackQuery):
     await callback.answer('Удаляю...')
     pubkey = callback.data.split(':')[1]
     SSH().delete_peer(pubkey)
