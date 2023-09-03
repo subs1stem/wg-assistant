@@ -30,6 +30,7 @@ def server_options_kb():
     kb.button(text='Добавить клиента 🆕', callback_data='add_peer')
     kb.button(text='Параметры WireGuard 🌐', callback_data='wg_options')
     kb.button(text='Перезагрузить сервер 🔄', callback_data='reboot_server')
+    kb.button(text='⬅ К списку серверов', callback_data='servers')
     return kb.adjust(1).as_markup()
 
 

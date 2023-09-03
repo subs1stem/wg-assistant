@@ -11,6 +11,17 @@ from wireguard.ssh import SSH
 router = Router()
 
 
+@router.callback_query(lambda callback: callback.data == 'servers')
+async def server_list(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    server_names = ServersFile().get_server_names()
+    await state.set_state(CurrentServer.waiting_for_server)
+    await callback.bot.edit_message_text(chat_id=callback.from_user.id,
+                                         message_id=callback.message.message_id,
+                                         text='Список серверов:',
+                                         reply_markup=servers_kb(server_names))
+
+
 @router.callback_query(CurrentServer.waiting_for_server)
 async def server_menu(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
@@ -21,16 +32,6 @@ async def server_menu(callback: types.CallbackQuery, state: FSMContext):
                                          message_id=callback.message.message_id,
                                          text=f'Сервер <b>{server_name}</b>',
                                          reply_markup=server_options_kb())
-
-
-@router.callback_query(lambda callback: callback.data == 'servers')
-async def servers(callback: types.CallbackQuery, state: FSMContext):
-    await state.clear()
-    server_names = ServersFile().get_server_names()
-    await callback.bot.edit_message_text(chat_id=callback.from_user.id,
-                                         message_id=callback.message.message_id,
-                                         text='Список серверов:',
-                                         reply_markup=servers_kb(server_names))
 
 
 @router.callback_query(lambda callback: callback.data == 'wg_options')

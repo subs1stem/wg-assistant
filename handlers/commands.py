@@ -20,6 +20,7 @@ async def welcome(message: Message):
 
 @router.message(Command('servers'))
 async def servers(message: Message, state: FSMContext):
+    await state.clear()
     server_names = ServersFile().get_server_names()
-    await message.answer('Список серверов:', reply_markup=servers_kb(server_names))
     await state.set_state(CurrentServer.waiting_for_server)
+    await message.answer('Список серверов:', reply_markup=servers_kb(server_names))
