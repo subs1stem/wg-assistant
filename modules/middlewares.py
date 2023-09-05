@@ -3,6 +3,8 @@ from typing import Callable, Dict, Awaitable, Any
 from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery
 
+from data.servers import ServersFile
+
 
 class ServerConnectionMiddleware(BaseMiddleware):
     async def __call__(
@@ -12,6 +14,8 @@ class ServerConnectionMiddleware(BaseMiddleware):
             data: Dict[str, Any]
     ) -> Any:
         if data['raw_state'] == 'CurrentServer:waiting_for_server':
-            pass
+            server_name = event.data.split(':')[1]
+            server_data = ServersFile().get_server_by_name(server_name)
+            await data['state'].set_data({'server_name': server_name} | server_data)
 
         return await handler(event, data)

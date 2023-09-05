@@ -28,8 +28,7 @@ async def server_list(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(CurrentServer.waiting_for_server)
 async def server_menu(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
-    server_name = callback.data.split(':')[1]
-    await state.set_data(ServersFile().get_server_by_name(server_name))
+    server_name = (await state.get_data())['server_name']
     await state.set_state(CurrentServer.working_with_server)
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
