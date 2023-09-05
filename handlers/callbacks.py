@@ -1,6 +1,7 @@
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
+from aiogram.utils.callback_answer import CallbackAnswerMiddleware
 
 from data.servers import ServersFile
 from modules.fsm_states import AddPeer
@@ -11,6 +12,7 @@ from modules.middlewares import ServerConnectionMiddleware
 from wireguard.ssh import SSH
 
 router = Router()
+router.callback_query.middleware(CallbackAnswerMiddleware())
 router.callback_query.middleware(ServerConnectionMiddleware())
 
 
@@ -27,7 +29,6 @@ async def server_list(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(CurrentServer.waiting_for_server)
 async def server_menu(callback: CallbackQuery, state: FSMContext):
-    await callback.answer()
     server_name = (await state.get_data())['server_name']
     await state.set_state(CurrentServer.working_with_server)
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
@@ -84,7 +85,6 @@ async def change_wg_state(callback: CallbackQuery):
 
 @router.callback_query(lambda callback: callback.data == 'add_peer')
 async def add_peer(callback: CallbackQuery):
-    await callback.answer()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Пришли мне имя клиента',
@@ -103,7 +103,6 @@ async def config_peers(callback: CallbackQuery):
 
 @router.callback_query(lambda callback: callback.data.startswith('peer'))
 async def show_peer(callback: CallbackQuery):
-    await callback.answer()
     _, pubkey = callback.data.split(':')
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
