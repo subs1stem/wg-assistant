@@ -4,7 +4,7 @@
     "port": 22,
     "username": "root",
     "password": "toor",
-    "pathToConfig": "/etc/wireguard/wg0.conf",
+    "config": "/etc/wireguard/wg0.conf",
     "interface": "wg0"
   },
   "beta": {
@@ -12,7 +12,7 @@
     "port": 22,
     "username": "root",
     "password": "toor",
-    "pathToConfig": "/etc/wireguard/wg0.conf",
+    "config": "/etc/wireguard/wg0.conf",
     "interface": "wg0"
   }
 }

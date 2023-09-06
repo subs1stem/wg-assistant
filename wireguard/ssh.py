@@ -9,12 +9,12 @@ from wgconfig import WGConfig
 class SSH:
     path_to_tmp_config = '/tmp/wg0.conf'
 
-    def __init__(self, host, port, username, password, path_to_config='/etc/wireguard/wg0.conf', interface='wg0'):
+    def __init__(self, host, port, username, password, config='/etc/wireguard/wg0.conf', interface='wg0'):
         self.host = host
         self.port = int(port)
         self.username = username
         self.password = password
-        self.path_to_config = path_to_config
+        self.config = config
         self.interface = interface
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
@@ -34,7 +34,7 @@ class SSH:
         self.client.exec_command('reboot')
 
     def get_raw_config(self):
-        _, stdout, _ = self.client.exec_command(f'cat {self.path_to_config}')
+        _, stdout, _ = self.client.exec_command(f'cat {self.config}')
         return ''.join(stdout.readlines())
 
     def get_wg_status(self):
@@ -50,10 +50,10 @@ class SSH:
         self.wg_change_state('up')
 
     def download_config(self):
-        self.client.open_sftp().get(self.path_to_config, self.path_to_tmp_config)
+        self.client.open_sftp().get(self.config, self.path_to_tmp_config)
 
     def upload_config(self):
-        self.client.open_sftp().put(self.path_to_tmp_config, self.path_to_config)
+        self.client.open_sftp().put(self.path_to_tmp_config, self.config)
 
     def get_server_pubkey(self):
         _, stdout, _ = self.client.exec_command(f'wg show {self.interface} public-key')
@@ -64,7 +64,7 @@ class SSH:
         return stdout.readline().strip()
 
     def get_server_address(self):
-        _, stdout, _ = self.client.exec_command(f'cat {self.path_to_config}')
+        _, stdout, _ = self.client.exec_command(f'cat {self.config}')
         lines = stdout.readlines()
         network = [s for s in lines if 'Address' in s][0].split('=')[1].strip()
         return network

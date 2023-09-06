@@ -4,6 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery
 
 from data.servers import ServersFile
+from wireguard.ssh import SSH
 
 
 class ServerConnectionMiddleware(BaseMiddleware):
@@ -16,6 +17,7 @@ class ServerConnectionMiddleware(BaseMiddleware):
         if data['raw_state'] == 'CurrentServer:waiting_for_server':
             server_name = event.data.split(':')[1]
             server_data = ServersFile().get_server_by_name(server_name)
-            await data['state'].set_data({'server_name': server_name} | server_data)
+            server = SSH(**server_data)
+            await data['state'].set_data({'server_name': server_name, 'server': server})
 
         return await handler(event, data)

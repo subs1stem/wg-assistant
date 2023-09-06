@@ -38,12 +38,13 @@ async def server_menu(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(lambda callback: callback.data == 'wg_options')
-async def wg_options(callback: CallbackQuery):
+async def wg_options(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Загрузка...')
+    interface_is_up = (await state.get_data())['server'].get_wg_status()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text='Параметры WireGuard:',
-                                         reply_markup=wg_options_kb())
+                                         reply_markup=wg_options_kb(interface_is_up))
 
 
 @router.callback_query(lambda callback: callback.data == 'reboot_server')

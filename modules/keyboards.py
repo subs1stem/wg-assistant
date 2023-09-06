@@ -34,18 +34,18 @@ def server_options_kb():
     return kb.adjust(1).as_markup()
 
 
-def wg_options_kb():
+def wg_options_kb(interface_is_up):
     kb = InlineKeyboardBuilder()
     kb.row_width = 1
     kb.button(text='Список пиров 🤝', callback_data='get_peers')
     kb.button(text='Управление пирами 📝', callback_data='config_peers')
     kb.button(text='Конфиг сервера ⚙', callback_data='get_server_config')
-    if SSH().get_wg_status():
+    if interface_is_up:
         kb.button(text='Опустить интерфейс ⬇', callback_data='wg_state_down')
     else:
         kb.button(text='Поднять интерфейс ⬆', callback_data='wg_state_up')
     kb.button(text='⬅ Назад', callback_data='servers')
-    return kb.as_markup()
+    return kb.adjust(1).as_markup()
 
 
 def peer_list_kb():
