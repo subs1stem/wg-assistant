@@ -30,20 +30,11 @@ async def server_list(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(CurrentServer.waiting_for_server)
 async def server_menu(callback: CallbackQuery, state: FSMContext):
     server_name = (await state.get_data())['server_name']
+    interface_is_up = (await state.get_data())['server'].get_wg_status()
     await state.set_state(CurrentServer.working_with_server)
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text=f'Сервер <b>{server_name}</b>',
-                                         reply_markup=server_options_kb())
-
-
-@router.callback_query(lambda callback: callback.data == 'wg_options')
-async def wg_options(callback: CallbackQuery, state: FSMContext):
-    await callback.answer('Загрузка...')
-    interface_is_up = (await state.get_data())['server'].get_wg_status()
-    await callback.bot.edit_message_text(chat_id=callback.from_user.id,
-                                         message_id=callback.message.message_id,
-                                         text='Параметры WireGuard:',
                                          reply_markup=wg_options_kb(interface_is_up))
 
 
