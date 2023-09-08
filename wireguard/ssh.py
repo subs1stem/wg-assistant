@@ -18,10 +18,14 @@ class SSH:
         self.interface = interface
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
-        self.client.connect(hostname=self.host,
-                            username=self.username,
-                            password=self.password,
-                            port=self.port)
+
+        try:
+            self.client.connect(hostname=self.host,
+                                username=self.username,
+                                password=self.password,
+                                port=self.port)
+        except Exception:
+            raise ConnectionError('Error connecting to WireGuard server')
 
     def __del__(self):
         self.client.close()
