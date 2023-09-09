@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.callback_answer import CallbackAnswerMiddleware
@@ -16,7 +16,7 @@ router.callback_query.middleware(CallbackAnswerMiddleware())
 router.callback_query.middleware(ServerConnectionMiddleware())
 
 
-@router.callback_query(lambda callback: callback.data == 'servers')
+@router.callback_query(F.data == 'servers')
 async def server_list(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     server_names = ServersFile().get_server_names()
@@ -38,25 +38,23 @@ async def server_menu(callback: CallbackQuery, state: FSMContext):
                                          reply_markup=wg_options_kb(interface_is_up))
 
 
-@router.callback_query(lambda callback: callback.data == 'reboot_server')
+@router.callback_query(F.data == 'reboot_server')
 async def reboot_server(callback: CallbackQuery):
     await callback.answer('Перезагружаю сервер...')
     SSH().reboot()
 
 
-@router.callback_query(CurrentServer.working_with_server, lambda callback: callback.data == 'get_peers')
+@router.callback_query(CurrentServer.working_with_server, F.data == 'get_peers')
 async def peers(callback: CallbackQuery, state: FSMContext):
-    await callback.answer('Запрашиваю список пиров...')
-    server_data = state.get_data()
-    print(server_data)
-    peer_list = SSH().get_peers()
+    await callback.answer('Запрашиваю состояние пиров...')
+    peer_list = (await state.get_data())['server'].get_peers()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
                                          text=f'{peers_message(peer_list)}',
                                          reply_markup=peer_list_kb())
 
 
-@router.callback_query(lambda callback: callback.data == 'get_server_config')
+@router.callback_query(F.data == 'get_server_config')
 async def raw_config(callback: CallbackQuery):
     await callback.answer('Запрашиваю конфиг...')
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
@@ -65,7 +63,7 @@ async def raw_config(callback: CallbackQuery):
                                          reply_markup=back_btn('wg_options'))
 
 
-@router.callback_query(lambda callback: callback.data.startswith('wg_state'))
+@router.callback_query(F.data.startswith('wg_state'))
 async def change_wg_state(callback: CallbackQuery):
     await callback.answer('Выполняю...')
     state = callback.data.split('_')[-1]
@@ -75,7 +73,7 @@ async def change_wg_state(callback: CallbackQuery):
                                                  reply_markup=wg_options_kb())
 
 
-@router.callback_query(lambda callback: callback.data == 'add_peer')
+@router.callback_query(F.data == 'add_peer')
 async def add_peer(callback: CallbackQuery):
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
@@ -84,7 +82,7 @@ async def add_peer(callback: CallbackQuery):
     await AddPeer.waiting_for_peer_name.set()
 
 
-@router.callback_query(lambda callback: callback.data == 'config_peers')
+@router.callback_query(F.data == 'config_peers')
 async def config_peers(callback: CallbackQuery):
     await callback.answer('Запрашиваю список пиров...')
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
@@ -93,7 +91,7 @@ async def config_peers(callback: CallbackQuery):
                                          reply_markup=peers_kb())
 
 
-@router.callback_query(lambda callback: callback.data.startswith('peer'))
+@router.callback_query(F.data.startswith('peer'))
 async def show_peer(callback: CallbackQuery):
     _, pubkey = callback.data.split(':')
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
@@ -102,7 +100,7 @@ async def show_peer(callback: CallbackQuery):
                                          reply_markup=peer_action_kb(pubkey))
 
 
-@router.callback_query(lambda callback: callback.data.startswith('off_peer'))
+@router.callback_query(F.data.startswith('off_peer'))
 async def off_peer(callback: CallbackQuery):
     await callback.answer('Отключаю...')
     pubkey = callback.data.split(':')[1]
@@ -113,7 +111,7 @@ async def off_peer(callback: CallbackQuery):
                                          reply_markup=peers_kb())
 
 
-@router.callback_query(lambda callback: callback.data.startswith('on_peer'))
+@router.callback_query(F.data.startswith('on_peer'))
 async def on_peer(callback: CallbackQuery):
     await callback.answer('Включаю...')
     pubkey = callback.data.split(':')[1]
@@ -124,7 +122,7 @@ async def on_peer(callback: CallbackQuery):
                                          reply_markup=peers_kb())
 
 
-@router.callback_query(lambda callback: callback.data.startswith('del_peer'))
+@router.callback_query(F.data.startswith('del_peer'))
 async def del_peer(callback: CallbackQuery):
     await callback.answer('Удаляю...')
     pubkey = callback.data.split(':')[1]

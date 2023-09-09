@@ -26,7 +26,6 @@ def servers_kb(servers):
 
 def wg_options_kb(interface_is_up):
     kb = InlineKeyboardBuilder()
-    kb.row_width = 1
     kb.button(text='Состояние пиров 📝', callback_data='get_peers')
     kb.button(text='Управление 🎛', callback_data='config_peers')
     kb.button(text='Конфигурация ⚙️', callback_data='get_server_config')
@@ -41,10 +40,9 @@ def wg_options_kb(interface_is_up):
 
 def peer_list_kb():
     kb = InlineKeyboardBuilder()
-    kb.row_width = 1
     kb.button(text='Обновить 🔄', callback_data='get_peers')
     kb.button(text='⬅ Назад', callback_data='wg_options')
-    return kb.as_markup()
+    return kb.adjust(1).as_markup()
 
 
 def config_peers_kb():

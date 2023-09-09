@@ -14,7 +14,7 @@ class ServerConnectionMiddleware(BaseMiddleware):
             event: CallbackQuery,
             data: Dict[str, Any]
     ) -> Any:
-        if data.get('raw_state') == 'CurrentServer:waiting_for_server':
+        if event.data.startswith('server:'):
             server_name = event.data.split(':')[1]
             server_data = ServersFile().get_server_by_name(server_name)
 

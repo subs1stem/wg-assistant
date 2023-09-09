@@ -1,13 +1,11 @@
-from os import environ
-
-
 def peers_message(peers):
     if not peers:
         return 'Интерфейс неактивен'
     message = ''
     for key in peers:
-        if key == environ['INTERFACE']:
-            continue
+        # TODO: remove interface from message
+        # if key == environ['INTERFACE']:
+        #     continue
         params = peers[key]
         message += f'<ins><b>{key}</b></ins>\n'
         try:
