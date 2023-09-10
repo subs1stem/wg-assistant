@@ -11,7 +11,7 @@ router = Router()
 
 
 @router.message(Command('start'))
-async def welcome(message: Message):
+async def send_welcome(message: Message):
     username = message.chat.username
     if not username:
         username = '%username%'
@@ -19,7 +19,7 @@ async def welcome(message: Message):
 
 
 @router.message(Command('servers'))
-async def servers(message: Message, state: FSMContext):
+async def send_servers(message: Message, state: FSMContext):
     await state.clear()
     server_names = ServersFile().get_server_names()
     await state.set_state(CurrentServer.waiting_for_server)

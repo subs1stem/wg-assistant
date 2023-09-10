@@ -3,9 +3,6 @@ def peers_message(peers):
         return 'Интерфейс неактивен'
     message = ''
     for key in peers:
-        # TODO: remove interface from message
-        # if key == environ['INTERFACE']:
-        #     continue
         params = peers[key]
         message += f'<ins><b>{key}</b></ins>\n'
         try:

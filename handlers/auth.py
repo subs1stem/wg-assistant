@@ -7,10 +7,10 @@ router = Router()
 
 
 @router.message(lambda message: str(message.chat.id) not in environ['ADMIN_ID'].split(','))
-async def auth_error(message: Message):
+async def send_auth_error(message: Message):
     await message.answer('Я Вас не знаю ⚠')
 
 
 @router.callback_query(lambda callback: str(callback.from_user.id) not in environ['ADMIN_ID'].split(','))
-async def access_denied(callback: CallbackQuery):
+async def send_access_denied(callback: CallbackQuery):
     await callback.answer(text='Вы были заблокированы 🛑', show_alert=True)

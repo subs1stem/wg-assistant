@@ -115,6 +115,8 @@ class SSH:
         for block in str_blocks:
             unit = block.split('\n  ')
             key = unit.pop(0).split(':')[1].strip()
+            if key == self.interface:
+                continue
             try:
                 peer_name = peer_names[key]
             except KeyError:

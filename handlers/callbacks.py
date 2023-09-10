@@ -17,7 +17,7 @@ router.callback_query.middleware(ServerConnectionMiddleware())
 
 
 @router.callback_query(F.data == 'servers')
-async def server_list(callback: CallbackQuery, state: FSMContext):
+async def send_server_list(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     server_names = ServersFile().get_server_names()
     await state.set_state(CurrentServer.waiting_for_server)
@@ -28,7 +28,7 @@ async def server_list(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(CurrentServer.waiting_for_server)
-async def server_menu(callback: CallbackQuery, state: FSMContext):
+async def send_server_menu(callback: CallbackQuery, state: FSMContext):
     server_name = (await state.get_data())['server_name']
     interface_is_up = (await state.get_data())['server'].get_wg_status()
     await state.set_state(CurrentServer.working_with_server)
@@ -39,13 +39,13 @@ async def server_menu(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == 'reboot_server')
-async def reboot_server(callback: CallbackQuery):
+async def reboot_server(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Перезагружаю сервер...')
-    SSH().reboot()
+    (await state.get_data())['server'].reboot()
 
 
 @router.callback_query(CurrentServer.working_with_server, F.data == 'get_peers')
-async def peers(callback: CallbackQuery, state: FSMContext):
+async def send_peer_list(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Запрашиваю состояние пиров...')
     peer_list = (await state.get_data())['server'].get_peers()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
@@ -54,12 +54,13 @@ async def peers(callback: CallbackQuery, state: FSMContext):
                                          reply_markup=peer_list_kb())
 
 
-@router.callback_query(F.data == 'get_server_config')
-async def raw_config(callback: CallbackQuery):
+@router.callback_query(CurrentServer.working_with_server, F.data == 'get_server_config')
+async def send_raw_config(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Запрашиваю конфиг...')
+    raw_config = (await state.get_data())['server'].get_raw_config()
     await callback.bot.edit_message_text(chat_id=callback.from_user.id,
                                          message_id=callback.message.message_id,
-                                         text=f'<code>{SSH().get_raw_config()}</code>',
+                                         text=f'<code>{raw_config}</code>',
                                          reply_markup=back_btn('wg_options'))
 
 
