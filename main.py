@@ -12,8 +12,9 @@ load_dotenv()
 
 
 async def main():
+    admin_list = [int(admin_id) for admin_id in environ['ADMIN_ID'].split(',')]
     bot = Bot(token=environ['TOKEN'], parse_mode='HTML')
-    dp = Dispatcher(storage=MemoryStorage())
+    dp = Dispatcher(storage=MemoryStorage(), admin_list=admin_list)
 
     dp.include_routers(auth.router,
                        commands.router,
