@@ -6,7 +6,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
-from handlers import auth, commands, callbacks, messages
+from handlers import commands, callbacks, messages
+from modules.middlewares import AuthCheckMiddleware
 
 load_dotenv()
 
@@ -16,8 +17,10 @@ async def main():
     bot = Bot(token=environ['TOKEN'], parse_mode='HTML')
     dp = Dispatcher(storage=MemoryStorage(), admin_list=admin_list)
 
-    dp.include_routers(auth.router,
-                       commands.router,
+    dp.update.middleware(AuthCheckMiddleware())
+    # dp.update.filter(MagicData(~F.event.from_user.id.in_(admin_list)))
+
+    dp.include_routers(commands.router,
                        callbacks.router,
                        messages.router)
 
