@@ -30,9 +30,9 @@ def wg_options_kb(interface_is_up):
     kb.button(text='Управление 🎛', callback_data='config_peers')
     kb.button(text='Конфигурация ⚙️', callback_data='get_server_config')
     if interface_is_up:
-        kb.button(text='Опустить ⬇️', callback_data='wg_state_down')
+        kb.button(text='Опустить ⬇️', callback_data='wg_state:down')
     else:
-        kb.button(text='Поднять ⬆️', callback_data='wg_state_up')
+        kb.button(text='Поднять ⬆️', callback_data='wg_state:up')
     kb.button(text='Перезагрузить 🔄', callback_data='reboot_server')
     kb.button(text='⬅ К списку серверов', callback_data='servers')
     return kb.adjust(1, 2).as_markup()
