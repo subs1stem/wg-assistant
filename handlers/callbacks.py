@@ -20,11 +20,10 @@ router.callback_query.middleware(ServerConnectionMiddleware())
 async def send_server_list(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     server_names = ServersFile().get_server_names()
-    await state.set_state(CurrentServer.waiting_for_server)
     await callback.message.edit_text(text='Список серверов:', reply_markup=servers_kb(server_names))
 
 
-@router.callback_query(CurrentServer.waiting_for_server)
+@router.callback_query(F.data.startswith('server:'))
 async def send_server_menu(callback: CallbackQuery, state: FSMContext):
     server_name = (await state.get_data())['server_name']
     interface_is_up = (await state.get_data())['server'].get_wg_status()
@@ -57,8 +56,7 @@ async def change_wg_state(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Выполняю...')
     wg_state = callback.data.split(':')[-1]
     (await state.get_data())['server'].wg_change_state(wg_state)
-    interface_is_up = True if wg_state == 'up' else 'down'
-    # TODO: error when shutting down
+    interface_is_up = wg_state == 'up'
     await callback.message.edit_reply_markup(reply_markup=wg_options_kb(interface_is_up))
 
 

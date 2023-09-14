@@ -30,9 +30,9 @@ def wg_options_kb(interface_is_up):
     kb.button(text='Управление 🎛', callback_data='config_peers')
     kb.button(text='Конфигурация ⚙️', callback_data='get_server_config')
     if interface_is_up:
-        kb.button(text='Опустить ⬇️', callback_data='wg_state:down')
+        kb.button(text='Отключить ⬇️', callback_data='wg_state:down')
     else:
-        kb.button(text='Поднять ⬆️', callback_data='wg_state:up')
+        kb.button(text='Включить ⬆️', callback_data='wg_state:up')
     kb.button(text='Перезагрузить 🔄', callback_data='reboot_server')
     kb.button(text='⬅ К списку серверов', callback_data='servers')
     return kb.adjust(1, 2).as_markup()
@@ -41,7 +41,7 @@ def wg_options_kb(interface_is_up):
 def peer_list_kb():
     kb = InlineKeyboardBuilder()
     kb.button(text='Обновить 🔄', callback_data='get_peers')
-    kb.button(text='⬅ Назад', callback_data='wg_options')
+    kb.button(text='⬅ Назад', callback_data='server:')
     return kb.adjust(1).as_markup()
 
 
