@@ -1,4 +1,4 @@
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton
 
 from wireguard.ssh import SSH
 
@@ -52,14 +52,14 @@ def config_peers_kb():
     return kb.as_markup()
 
 
-def peers_kb():
-    peers = SSH().get_peer_names()
+def peers_kb(peer_names):
     kb = InlineKeyboardBuilder()
     kb.row_width = 2
     kb.button(text='Добавить клиента 🆕', callback_data='add_peer')
-    for key in peers:
-        kb.button(f'{peers[key]}', callback_data=f'peer:{key}')
-    kb.button(text='⬅️ Назад', callback_data='wg_options')
+    for key in peer_names:
+        kb.button(text=f'{peer_names[key]}', callback_data=f'peer:{key}')
+    kb.adjust(1, 2)
+    kb.row(InlineKeyboardButton(text='⬅️ Назад', callback_data='server:'), width=1)
     return kb.as_markup()
 
 

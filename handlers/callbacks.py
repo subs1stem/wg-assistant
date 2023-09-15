@@ -46,9 +46,9 @@ async def send_peer_list(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(CurrentServer.working_with_server, F.data == 'get_server_config')
 async def send_raw_config(callback: CallbackQuery, state: FSMContext):
-    await callback.answer('Запрашиваю конфиг...')
+    await callback.answer('Запрашиваю конфигурацию...')
     raw_config = (await state.get_data())['server'].get_raw_config()
-    await callback.message.edit_text(text=f'<code>{raw_config}</code>', reply_markup=back_btn('wg_options'))
+    await callback.message.edit_text(text=f'<code>{raw_config}</code>', reply_markup=back_btn('server:'))
 
 
 @router.callback_query(F.data.startswith('wg_state'))
@@ -67,9 +67,10 @@ async def add_peer(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == 'config_peers')
-async def config_peers(callback: CallbackQuery):
+async def config_peers(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Запрашиваю список пиров...')
-    await callback.message.edit_text(text='Выбери клиента:', reply_markup=peers_kb())
+    peer_names = (await state.get_data())['server'].get_peer_names()
+    await callback.message.edit_text(text='Выбери клиента:', reply_markup=peers_kb(peer_names))
 
 
 @router.callback_query(F.data.startswith('peer'))
