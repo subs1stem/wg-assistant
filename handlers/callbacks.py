@@ -4,8 +4,7 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.callback_answer import CallbackAnswerMiddleware
 
 from data.servers import ServersFile
-from modules.fsm_states import AddPeer
-from modules.fsm_states import CurrentServer
+from modules.fsm_states import AddPeer, CurrentServer
 from modules.keyboards import *
 from modules.messages import peers_message
 from modules.middlewares import ServerConnectionMiddleware
@@ -61,9 +60,9 @@ async def change_wg_state(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == 'add_peer')
-async def add_peer(callback: CallbackQuery):
-    await callback.message.edit_text(text='Пришли мне имя клиента', reply_markup=cancel_btn('servers'))
-    await AddPeer.waiting_for_peer_name.set()
+async def add_peer(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(text='Пришли мне имя клиента', reply_markup=cancel_btn('config_peers'))
+    await state.set_state(AddPeer.waiting_for_peer_name)
 
 
 @router.callback_query(F.data == 'config_peers')
