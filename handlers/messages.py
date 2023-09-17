@@ -16,12 +16,16 @@ router.message.middleware(ChatActionMiddleware())
 @router.message(AddPeer.waiting_for_peer_name, flags={'long_operation': 'upload_photo'})
 async def check_peer_name(message: Message, state: FSMContext):
     data = (await state.get_data())['server'].add_peer(message.text)
-    img_buf = BytesIO()
-    data[0].save(img_buf)
-    img_buf.seek(0)
-    await message.answer_photo(photo=BufferedInputFile(img_buf.read(), 'qr'),
-                               caption=data[1])
-    img_buf.close()
+
+    with BytesIO() as img_buf:
+        data[0].save(img_buf)
+        img_buf.seek(0)
+
+        await message.answer_photo(
+            photo=BufferedInputFile(img_buf.read(), 'qr'),
+            caption=data[1]
+        )
+
     await state.clear()
 
 

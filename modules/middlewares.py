@@ -34,12 +34,11 @@ class ChatActionMiddleware(BaseMiddleware):
             data: Dict[str, Any]
     ) -> Any:
         long_operation_type = get_flag(data, 'long_operation')
-        print(long_operation_type)  # TODO: something wrong
 
         if not long_operation_type:
             return await handler(event, data)
 
-        async with ChatActionSender(action=long_operation_type, chat_id=event.chat.id):
+        async with ChatActionSender(bot=data['bot'], action=long_operation_type, chat_id=event.chat.id):
             return await handler(event, data)
 
 
