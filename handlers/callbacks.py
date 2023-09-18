@@ -73,9 +73,10 @@ async def config_peers(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith('peer'))
-async def show_peer(callback: CallbackQuery):
+async def show_peer(callback: CallbackQuery, state: FSMContext):
     _, pubkey = callback.data.split(':')
-    await callback.message.edit_text(text=f'Выбери действие:', reply_markup=peer_action_kb(pubkey))
+    peer_is_enabled = (await state.get_data())['server'].get_peer_enabled(pubkey)
+    await callback.message.edit_text(text=f'Выбери действие:', reply_markup=peer_action_kb(pubkey, peer_is_enabled))
 
 
 @router.callback_query(F.data.startswith('off_peer'))

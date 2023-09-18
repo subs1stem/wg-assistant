@@ -1,7 +1,5 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton
 
-from wireguard.ssh import SSH
-
 
 def back_btn(callback_data):
     kb = InlineKeyboardBuilder()
@@ -45,31 +43,22 @@ def peer_list_kb():
     return kb.adjust(1).as_markup()
 
 
-def config_peers_kb():
+def peers_kb(peers):
     kb = InlineKeyboardBuilder()
-    kb.button(text='Отключить 😶', callback_data='off_peer')
-    kb.button(text='Удалить 🗑️', callback_data='del_peer')
-    return kb.as_markup()
-
-
-def peers_kb(peer_names):
-    kb = InlineKeyboardBuilder()
-    kb.row_width = 2
     kb.button(text='Добавить клиента 🆕', callback_data='add_peer')
-    for key in peer_names:
-        kb.button(text=f'{peer_names[key]}', callback_data=f'peer:{key}')
+    for pubkey, name in peers.items():
+        kb.button(text=f'{name}', callback_data=f'peer:{pubkey}')
     kb.adjust(1, 2)
     kb.row(InlineKeyboardButton(text='⬅️ Назад', callback_data='server:'), width=1)
     return kb.as_markup()
 
 
-def peer_action_kb(pubkey):
+def peer_action_kb(pubkey, peer_is_enabled):
     kb = InlineKeyboardBuilder()
-    kb.row_width = 1
-    if SSH().get_peer_enabled(pubkey):
+    if peer_is_enabled:
         kb.button(text='Отключить 📵', callback_data=f'off_peer:{pubkey}')
     else:
         kb.button(text='Включить ✅', callback_data=f'on_peer:{pubkey}')
     kb.button(text='Удалить 🗑', callback_data=f'del_peer:{pubkey}')
     kb.button(text='⬅️ Назад', callback_data='config_peers')
-    return kb.as_markup()
+    return kb.adjust(2, 1).as_markup()

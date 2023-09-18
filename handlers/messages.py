@@ -14,7 +14,7 @@ router.message.middleware(ChatActionMiddleware())
 
 
 @router.message(AddPeer.waiting_for_peer_name)
-@flags.chat_action(action='upload_photo')
+@flags.chat_action(action='upload_photo')  # TODO: something's wrong with this
 async def check_peer_name(message: Message, state: FSMContext):
     data = (await state.get_data())['server'].add_peer(message.text)
 
