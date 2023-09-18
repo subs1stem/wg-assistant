@@ -1,19 +1,20 @@
 from io import BytesIO
 
-from aiogram import Router
+from aiogram import Router, flags
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.types.input_file import BufferedInputFile
+from aiogram.utils.chat_action import ChatActionMiddleware
 
 from modules.fsm_states import AddPeer
-from modules.middlewares import ChatActionMiddleware
 
 router = Router()
 
 router.message.middleware(ChatActionMiddleware())
 
 
-@router.message(AddPeer.waiting_for_peer_name, flags={'long_operation': 'upload_photo'})
+@router.message(AddPeer.waiting_for_peer_name)
+@flags.chat_action(action='upload_photo')
 async def check_peer_name(message: Message, state: FSMContext):
     data = (await state.get_data())['server'].add_peer(message.text)
 
