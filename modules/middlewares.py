@@ -17,6 +17,8 @@ class AuthCheckMiddleware(BaseMiddleware):
         user_id = data.get('event_from_user').id
         admin_list = data.get('admin_list')
 
+        data.update(await data['state'].get_data())  # TODO: I dont like it
+
         if user_id not in admin_list:
             if event.message is None:
                 return event.callback_query.answer('Вы были заблокированы 🛑', show_alert=True)
@@ -41,5 +43,6 @@ class ServerConnectionMiddleware(BaseMiddleware):
             except ConnectionError:
                 return await event.answer(f'Не удалось подключиться к серверу "{server_name}" ⚠️', show_alert=True)
 
-        data.update(await data['state'].get_data())
+        data.update(await data['state'].get_data())  # TODO: I dont like it
+
         return await handler(event, data)
