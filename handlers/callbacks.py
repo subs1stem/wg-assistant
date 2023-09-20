@@ -8,6 +8,7 @@ from modules.fsm_states import AddPeer, CurrentServer
 from modules.keyboards import *
 from modules.messages import peers_message
 from modules.middlewares import ServerConnectionMiddleware
+from wireguard.ssh import SSH
 
 router = Router()
 router.callback_query.middleware(CallbackAnswerMiddleware())
@@ -22,38 +23,37 @@ async def send_server_list(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith('server:'))
-async def send_server_menu(callback: CallbackQuery, state: FSMContext):
-    server_name = (await state.get_data())['server_name']
-    interface_is_up = (await state.get_data())['server'].get_wg_status()
+async def send_server_menu(callback: CallbackQuery, state: FSMContext, server: SSH, server_name: str):
+    interface_is_up = server.get_wg_status()
     await state.set_state(CurrentServer.working_with_server)
     await callback.message.edit_text(text=f'Сервер <b>{server_name}</b>', reply_markup=wg_options_kb(interface_is_up))
 
 
 @router.callback_query(F.data == 'reboot_server')
-async def reboot_server(callback: CallbackQuery, state: FSMContext):
+async def reboot_server(callback: CallbackQuery, server: SSH):
     await callback.answer('Перезагружаю сервер...')
-    (await state.get_data())['server'].reboot()
+    server.reboot()
 
 
 @router.callback_query(CurrentServer.working_with_server, F.data == 'get_peers')
-async def send_peer_list(callback: CallbackQuery, state: FSMContext):
+async def send_peer_list(callback: CallbackQuery, server: SSH):
     await callback.answer('Запрашиваю состояние пиров...')
-    peer_list = (await state.get_data())['server'].get_peers()
+    peer_list = server.get_peers()
     await callback.message.edit_text(text=f'{peers_message(peer_list)}', reply_markup=peer_list_kb())
 
 
 @router.callback_query(CurrentServer.working_with_server, F.data == 'get_server_config')
-async def send_raw_config(callback: CallbackQuery, state: FSMContext):
+async def send_raw_config(callback: CallbackQuery, server: SSH):
     await callback.answer('Запрашиваю конфигурацию...')
-    raw_config = (await state.get_data())['server'].get_raw_config()
+    raw_config = server.get_raw_config()
     await callback.message.edit_text(text=f'<code>{raw_config}</code>', reply_markup=back_btn('server:'))
 
 
 @router.callback_query(F.data.startswith('wg_state'))
-async def change_wg_state(callback: CallbackQuery, state: FSMContext):
+async def change_wg_state(callback: CallbackQuery, server: SSH):
     await callback.answer('Выполняю...')
     wg_state = callback.data.split(':')[-1]
-    (await state.get_data())['server'].wg_change_state(wg_state)
+    server.wg_change_state(wg_state)
     interface_is_up = wg_state == 'up'
     await callback.message.edit_reply_markup(reply_markup=wg_options_kb(interface_is_up))
 
@@ -65,34 +65,34 @@ async def add_peer(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == 'config_peers')
-async def config_peers(callback: CallbackQuery, state: FSMContext):
+async def config_peers(callback: CallbackQuery, server: SSH):
     await callback.answer('Запрашиваю список пиров...')
-    peer_names = (await state.get_data())['server'].get_peer_names()
+    peer_names = server.get_peer_names()
     await callback.message.edit_text(text='Выбери клиента:', reply_markup=peers_kb(peer_names))
 
 
 @router.callback_query(F.data.startswith('peer'))
-async def show_peer(callback: CallbackQuery, state: FSMContext):
+async def show_peer(callback: CallbackQuery, server: SSH):
     _, pubkey = callback.data.split(':')
-    peer_is_enabled = (await state.get_data())['server'].get_peer_enabled(pubkey)
+    peer_is_enabled = server.get_peer_enabled(pubkey)
     await callback.message.edit_text(text=f'Выбери действие:', reply_markup=peer_action_kb(pubkey, peer_is_enabled))
 
 
 @router.callback_query(F.data.startswith('selected_peer'))
-async def process_peer_action(callback: CallbackQuery, state: FSMContext):
+async def process_peer_action(callback: CallbackQuery, server: SSH):
     _, action, pubkey = callback.data.split(':')
 
     match action:
         case 'off':
             await callback.answer('Отключаю...')
-            (await state.get_data())['server'].disable_peer(pubkey)
+            server.disable_peer(pubkey)
         case 'on':
             await callback.answer('Включаю...')
-            (await state.get_data())['server'].enable_peer(pubkey)
+            server.enable_peer(pubkey)
         case 'del':
             await callback.answer('Удаляю...')
-            (await state.get_data())['server'].delete_peer(pubkey)
+            server.delete_peer(pubkey)
         case _:
             await callback.answer('Неизвестное действие!', show_alert=True)
 
-    await config_peers(callback, state)
+    await config_peers(callback, server)

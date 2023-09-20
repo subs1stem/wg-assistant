@@ -41,4 +41,5 @@ class ServerConnectionMiddleware(BaseMiddleware):
             except ConnectionError:
                 return await event.answer(f'Не удалось подключиться к серверу "{server_name}" ⚠️', show_alert=True)
 
+        data.update(await data['state'].get_data())
         return await handler(event, data)

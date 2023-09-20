@@ -7,6 +7,7 @@ from aiogram.types.input_file import BufferedInputFile
 from aiogram.utils.chat_action import ChatActionMiddleware
 
 from modules.fsm_states import AddPeer
+from wireguard.ssh import SSH
 
 router = Router()
 
@@ -15,8 +16,8 @@ router.message.middleware(ChatActionMiddleware())
 
 @router.message(AddPeer.waiting_for_peer_name)
 @flags.chat_action(action='upload_photo')  # TODO: something's wrong with this
-async def check_peer_name(message: Message, state: FSMContext):
-    data = (await state.get_data())['server'].add_peer(message.text)
+async def check_peer_name(message: Message, state: FSMContext, server: SSH):
+    data = server.add_peer(message.text)
 
     with BytesIO() as img_buf:
         data[0].save(img_buf)
