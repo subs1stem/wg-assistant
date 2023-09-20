@@ -8,7 +8,6 @@ from modules.fsm_states import AddPeer, CurrentServer
 from modules.keyboards import *
 from modules.messages import peers_message
 from modules.middlewares import ServerConnectionMiddleware
-from wireguard.ssh import SSH
 
 router = Router()
 router.callback_query.middleware(CallbackAnswerMiddleware())
@@ -79,25 +78,21 @@ async def show_peer(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(text=f'Выбери действие:', reply_markup=peer_action_kb(pubkey, peer_is_enabled))
 
 
-@router.callback_query(F.data.startswith('off_peer'))
-async def off_peer(callback: CallbackQuery):
-    await callback.answer('Отключаю...')
-    pubkey = callback.data.split(':')[1]
-    SSH().disable_peer(pubkey)
-    await callback.message.edit_text(text='Выбери клиента:', reply_markup=peers_kb())
+@router.callback_query(F.data.startswith('selected_peer'))
+async def process_peer_action(callback: CallbackQuery, state: FSMContext):
+    _, action, pubkey = callback.data.split(':')
 
+    match action:
+        case 'off':
+            await callback.answer('Отключаю...')
+            (await state.get_data())['server'].disable_peer(pubkey)
+        case 'on':
+            await callback.answer('Включаю...')
+            (await state.get_data())['server'].enable_peer(pubkey)
+        case 'del':
+            await callback.answer('Удаляю...')
+            (await state.get_data())['server'].delete_peer(pubkey)
+        case _:
+            await callback.answer('Неизвестное действие!', show_alert=True)
 
-@router.callback_query(F.data.startswith('on_peer'))
-async def on_peer(callback: CallbackQuery):
-    await callback.answer('Включаю...')
-    pubkey = callback.data.split(':')[1]
-    SSH().enable_peer(pubkey)
-    await callback.message.edit_text(text='Выбери клиента:', reply_markup=peers_kb())
-
-
-@router.callback_query(F.data.startswith('del_peer'))
-async def del_peer(callback: CallbackQuery):
-    await callback.answer('Удаляю...')
-    pubkey = callback.data.split(':')[1]
-    SSH().delete_peer(pubkey)
-    await callback.message.edit_text(text='Выбери клиента:', reply_markup=peers_kb())
+    await config_peers(callback, state)

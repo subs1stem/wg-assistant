@@ -56,9 +56,9 @@ def peers_kb(peers):
 def peer_action_kb(pubkey, peer_is_enabled):
     kb = InlineKeyboardBuilder()
     if peer_is_enabled:
-        kb.button(text='Отключить 📵', callback_data=f'off_peer:{pubkey}')
+        kb.button(text='Отключить 📵', callback_data=f'selected_peer:off:{pubkey}')
     else:
-        kb.button(text='Включить ✅', callback_data=f'on_peer:{pubkey}')
-    kb.button(text='Удалить 🗑', callback_data=f'del_peer:{pubkey}')
+        kb.button(text='Включить ✅', callback_data=f'selected_peer:on:{pubkey}')
+    kb.button(text='Удалить 🗑', callback_data=f'selected_peer:del:{pubkey}')
     kb.button(text='⬅️ Назад', callback_data='config_peers')
     return kb.adjust(2, 1).as_markup()
