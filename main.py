@@ -2,7 +2,7 @@ import asyncio
 from os import environ
 
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 from redis.asyncio import Redis
@@ -21,7 +21,7 @@ redis = Redis(
 async def main():
     admin_list = [int(admin_id) for admin_id in environ['ADMIN_ID'].split(',')]
     bot = Bot(token=environ['TOKEN'], parse_mode='HTML')
-    dp = Dispatcher(storage=RedisStorage(redis), admin_list=admin_list)
+    dp = Dispatcher(storage=MemoryStorage(), admin_list=admin_list)
 
     dp.update.middleware(AuthCheckMiddleware())
     # dp.update.filter(MagicData(~F.event.from_user.id.in_(admin_list)))

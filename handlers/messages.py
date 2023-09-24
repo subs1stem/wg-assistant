@@ -6,6 +6,7 @@ from aiogram.types import Message
 from aiogram.types.input_file import BufferedInputFile
 
 from modules.fsm_states import AddPeer
+from modules.keyboards import back_btn
 from wireguard.ssh import SSH
 
 router = Router()
@@ -22,7 +23,8 @@ async def check_peer_name(message: Message, state: FSMContext, server: SSH):
 
         await message.answer_photo(
             photo=BufferedInputFile(img_buf.read(), 'qr'),
-            caption=data[1]
+            caption=data[1],
+            reply_markup=back_btn('config_peers'),
         )
 
     await state.clear()
