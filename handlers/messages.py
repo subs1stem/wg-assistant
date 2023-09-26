@@ -7,13 +7,13 @@ from aiogram.types.input_file import BufferedInputFile
 
 from modules.fsm_states import AddPeer
 from modules.keyboards import back_btn
-from wireguard.ssh import SSH
+from wireguard.linux import Linux
 
 router = Router()
 
 
 @router.message(AddPeer.waiting_for_peer_name)
-async def check_peer_name(message: Message, state: FSMContext, server: SSH):
+async def check_peer_name(message: Message, state: FSMContext, server: Linux):
     await message.bot.send_chat_action(message.chat.id, action='upload_photo')
     data = server.add_peer(message.text)
 

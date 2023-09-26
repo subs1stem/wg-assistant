@@ -5,17 +5,11 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
-from redis.asyncio import Redis
 
 from handlers import commands, callbacks, messages
 from modules.middlewares import AuthCheckMiddleware
 
 load_dotenv()
-
-redis = Redis(
-    host=environ['REDIS_HOST'],
-    port=int(environ['REDIS_PORT']),
-)
 
 
 async def main():

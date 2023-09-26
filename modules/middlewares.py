@@ -4,7 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, CallbackQuery
 
 from data.servers import ServersFile
-from wireguard.ssh import SSH
+from wireguard.linux import Linux
 
 
 class AuthCheckMiddleware(BaseMiddleware):
@@ -38,7 +38,7 @@ class ServerConnectionMiddleware(BaseMiddleware):
             server_data = ServersFile().get_server_by_name(server_name)
 
             try:
-                server = SSH(**server_data)
+                server = Linux(**server_data)
                 await data['state'].set_data({'server_name': server_name, 'server': server})
             except ConnectionError:
                 return await event.answer(f'Не удалось подключиться к серверу "{server_name}" ⚠️', show_alert=True)

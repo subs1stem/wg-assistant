@@ -6,7 +6,7 @@ from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
 
 
-class SSH:
+class Linux:
     path_to_tmp_config = '/tmp/wg0.conf'
 
     def __init__(self, host, port, username, password, config='/etc/wireguard/wg0.conf', interface='wg0'):
