@@ -39,7 +39,7 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def change_state(self) -> None:
+    def change_state(self, state: bool) -> None:
         """Change the state of the WireGuard interface."""
 
     @abstractmethod
@@ -55,23 +55,23 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def add_peer(self) -> None:
+    def add_peer(self, name: str) -> None:
         """Add a new peer to the WireGuard server."""
 
     @abstractmethod
-    def del_peer(self) -> None:
+    def del_peer(self, pubkey: str) -> None:
         """Delete a peer from the WireGuard server."""
 
     @abstractmethod
-    def enable_peer(self) -> None:
+    def enable_peer(self, pubkey: str) -> None:
         """Enable a peer on the WireGuard server."""
 
     @abstractmethod
-    def disable_peer(self) -> None:
+    def disable_peer(self, pubkey: str) -> None:
         """Disable a peer on the WireGuard server."""
 
     @abstractmethod
-    def get_peer_enabled(self) -> bool:
+    def get_peer_enabled(self, pubkey: str) -> bool:
         """
         Checks whether the peer is enabled.
 
