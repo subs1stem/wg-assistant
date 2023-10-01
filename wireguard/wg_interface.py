@@ -2,11 +2,15 @@ from abc import ABC, abstractmethod
 
 
 class WGInterface(ABC):
-    """Abstract base class for a WireGuard interface."""
+    """Abstract base class for a WireGuard server."""
 
     @abstractmethod
     def connect(self) -> None:
-        """Connect to the WireGuard interface."""
+        """Connect to the WireGuard server.
+
+        Raises:
+            ConnectionError: If the connection to the WireGuard server host fails.
+        """
 
     @abstractmethod
     def reboot_host(self) -> None:
