@@ -1,11 +1,13 @@
 from asyncio import sleep
 
 from paramiko import SSHClient, AutoAddPolicy
+from wgconfig import WGConfig
 
 from wireguard.wireguard import WireGuard
 
 
 class Linux(WireGuard):
+    """A class for a WireGuard server deployed on a Linux host."""
 
     def __init__(
             self,
@@ -16,6 +18,20 @@ class Linux(WireGuard):
             config: str = '/etc/wireguard/wg0.conf',
             interface: str = 'wg0',
     ) -> None:
+        """Initialize a new instance of Linux WireGuard client.
+
+        Args:
+            server (str): The server address.
+            port (int): The port number for the connection.
+            username (str): The username for authentication.
+            password (str): The password for authentication.
+            config (str, optional): The path to the WireGuard configuration file.
+                Defaults to '/etc/wireguard/wg0.conf'.
+            interface (str, optional): The WireGuard interface name. Defaults to 'wg0'.
+
+        Returns:
+            None
+        """
         super().__init__(server, port, username, password)
 
         self.config = config
@@ -23,9 +39,7 @@ class Linux(WireGuard):
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
 
-        self.connect()
-
-    def __del__(self):
+    def __del__(self) -> None:
         self.client.close()
 
     def connect(self) -> None:
@@ -35,7 +49,7 @@ class Linux(WireGuard):
                                 password=self.password,
                                 port=self.port)
         except Exception:
-            raise ConnectionError('Error connecting to WireGuard server')
+            raise ConnectionError('Error connecting to WireGuard server host')
 
     def reboot_host(self) -> None:
         self.client.exec_command('reboot')
