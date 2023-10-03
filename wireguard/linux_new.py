@@ -2,10 +2,10 @@ from asyncio import sleep
 
 from paramiko import SSHClient, AutoAddPolicy
 
-from wireguard.wg_interface import WGInterface
+from wireguard.wireguard import WireGuard
 
 
-class WGLinux(WGInterface):
+class Linux(WireGuard):
 
     def __init__(
             self,
@@ -16,14 +16,14 @@ class WGLinux(WGInterface):
             config: str = '/etc/wireguard/wg0.conf',
             interface: str = 'wg0',
     ) -> None:
-        self.server = server
-        self.port = port
-        self.username = username
-        self.password = password
+        super().__init__(server, port, username, password)
+
         self.config = config
         self.interface = interface
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
+
+        self.connect()
 
     def __del__(self):
         self.client.close()

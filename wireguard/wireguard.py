@@ -1,12 +1,63 @@
 from abc import ABC, abstractmethod
 
 
-class WGInterface(ABC):
+class WireGuard(ABC):
     """Abstract base class for a WireGuard server."""
+
+    def __init__(
+            self,
+            server: str,
+            port: int,
+            username: str,
+            password: str
+    ) -> None:
+        """Initialize a new instance of WireGuard client.
+
+        Args:
+            server (str): The server address.
+            port (int): The port number for the connection.
+            username (str): The username for authentication.
+            password (str): The password for authentication.
+
+        Returns:
+            None
+        """
+        self.server = server
+        self.port = port
+        self.username = username
+        self.password = password
+
+    @staticmethod
+    def get_client_config(privkey, address, pubkey, server_ip, server_port):
+        """Generate a WireGuard client configuration.
+
+        Args:
+            privkey (str): The private key of the client.
+            address (str): The client's assigned IP address.
+            pubkey (str): The public key of the server.
+            server_ip (str): The IP address of the WireGuard server.
+            server_port (int): The port number of the WireGuard server.
+
+        Returns:
+            str: A WireGuard configuration string with the provided parameters.
+        """
+        wg_config = '[Interface]\n' \
+                    f'PrivateKey = {privkey}\n' \
+                    f'Address = {address}\n' \
+                    f'DNS = 8.8.8.8\n\n' \
+                    '[Peer]\n' \
+                    f'PublicKey = {pubkey}\n' \
+                    'AllowedIPs = 0.0.0.0/0\n' \
+                    f'Endpoint = {server_ip}:{server_port}\n' \
+                    'PersistentKeepalive = 30'
+        return wg_config
 
     @abstractmethod
     def connect(self) -> None:
         """Connect to the WireGuard server.
+
+        Returns:
+            None
 
         Raises:
             ConnectionError: If the connection to the WireGuard server host fails.
@@ -14,7 +65,11 @@ class WGInterface(ABC):
 
     @abstractmethod
     def reboot_host(self) -> None:
-        """Reboot the host system."""
+        """Reboot the host system.
+
+        Returns:
+            None
+        """
 
     @abstractmethod
     def get_config_raw(self) -> str:
@@ -30,11 +85,18 @@ class WGInterface(ABC):
 
         Args:
             enabled (bool): True to enable, False to disable.
+
+        Returns:
+            None
         """
 
     @abstractmethod
     def restart(self) -> None:
-        """Restart the WireGuard server."""
+        """Restart the WireGuard server.
+
+        Returns:
+            None
+        """
 
     @abstractmethod
     def get_peers(self) -> list:
@@ -50,6 +112,9 @@ class WGInterface(ABC):
 
         Args:
             name (str): The name of the new peer.
+
+        Returns:
+            None
         """
 
     @abstractmethod
@@ -58,6 +123,9 @@ class WGInterface(ABC):
 
         Args:
             pubkey (str): The public key of the peer to be deleted.
+
+        Returns:
+            None
         """
 
     @abstractmethod
@@ -66,6 +134,9 @@ class WGInterface(ABC):
 
         Args:
             pubkey (str): The public key of the peer to be enabled.
+
+        Returns:
+            None
         """
 
     @abstractmethod
@@ -74,6 +145,9 @@ class WGInterface(ABC):
 
         Args:
             pubkey (str): The public key of the peer to be disabled.
+
+        Returns:
+            None
         """
 
     @abstractmethod

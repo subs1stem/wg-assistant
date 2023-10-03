@@ -1,7 +1,7 @@
-from wireguard.wg_interface import WGInterface
+from wireguard.wireguard import WireGuard
 
 
-class WGMikrotik(WGInterface):
+class Mikrotik(WireGuard):
 
     def connect(self) -> None:
         pass
