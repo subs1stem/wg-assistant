@@ -3,11 +3,13 @@ from asyncio import sleep
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
 
-from wireguard.wireguard import WireGuard
+from wireguard import WireGuard
 
 
 class Linux(WireGuard):
     """A class for a WireGuard server deployed on a Linux host."""
+
+    tmp_config = '/tmp/wg0.conf'
 
     def __init__(
             self,
@@ -38,9 +40,16 @@ class Linux(WireGuard):
         self.interface = interface
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
+        self.connect()
 
     def __del__(self) -> None:
         self.client.close()
+
+    def _download_config(self):
+        self.client.open_sftp().get(self.config, self.tmp_config)
+
+    def _upload_config(self):
+        self.client.open_sftp().put(self.tmp_config, self.config)
 
     def connect(self) -> None:
         try:
@@ -83,4 +92,7 @@ class Linux(WireGuard):
         pass
 
     def get_peer_enabled(self, pubkey: str) -> bool:
-        pass
+        self._download_config()
+        wg_config = WGConfig(self.tmp_config)
+        wg_config.read_file()
+        return wg_config.get_peer_enabled(pubkey)
