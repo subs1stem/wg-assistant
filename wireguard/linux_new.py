@@ -1,4 +1,5 @@
-from asyncio import sleep
+from functools import wraps
+from time import sleep
 
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
@@ -42,6 +43,8 @@ class Linux(WireGuard):
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.connect()
 
+        self.wg_config = WGConfig(self.tmp_config)
+
     def __del__(self) -> None:
         self.client.close()
 
@@ -50,6 +53,26 @@ class Linux(WireGuard):
 
     def _upload_config(self):
         self.client.open_sftp().put(self.tmp_config, self.config)
+
+    @staticmethod
+    def _config_operation(rewrite_config: bool = False):
+        def decorator(method):
+            @wraps(method)
+            def wrapper(self, *args, **kwargs):
+                self._download_config()
+                self.wg_config.read_file()
+                result = method(self, *args, **kwargs)
+
+                if rewrite_config:
+                    self.wg_config.write_file()
+                    self._upload_config()
+                    self.restart()
+
+                return result
+
+            return wrapper
+
+        return decorator
 
     def connect(self) -> None:
         try:
@@ -82,17 +105,18 @@ class Linux(WireGuard):
     def add_peer(self, name: str) -> None:
         pass
 
+    @_config_operation(rewrite_config=True)
     def del_peer(self, pubkey: str) -> None:
-        pass
+        self.wg_config.del_peer(pubkey)
 
+    @_config_operation(rewrite_config=True)
     def enable_peer(self, pubkey: str) -> None:
-        pass
+        self.wg_config.enable_peer(pubkey)
 
+    @_config_operation(rewrite_config=True)
     def disable_peer(self, pubkey: str) -> None:
-        pass
+        self.wg_config.disable_peer(pubkey)
 
+    @_config_operation()
     def get_peer_enabled(self, pubkey: str) -> bool:
-        self._download_config()
-        wg_config = WGConfig(self.tmp_config)
-        wg_config.read_file()
-        return wg_config.get_peer_enabled(pubkey)
+        return self.wg_config.get_peer_enabled(pubkey)
