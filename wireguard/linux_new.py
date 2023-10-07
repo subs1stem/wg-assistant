@@ -1,5 +1,6 @@
 from functools import wraps
 from time import sleep
+from typing import Callable, Any
 
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
@@ -48,17 +49,42 @@ class Linux(WireGuard):
     def __del__(self) -> None:
         self.client.close()
 
-    def _download_config(self):
+    def _download_config(self) -> None:
+        """Download the WireGuard server configuration file to the local temporary file.
+
+        Returns:
+            None
+        """
         self.client.open_sftp().get(self.config, self.tmp_config)
 
-    def _upload_config(self):
+    def _upload_config(self) -> None:
+        """Upload the local temporary WireGuard configuration file to the remote host.
+
+        Returns:
+            None
+        """
         self.client.open_sftp().put(self.tmp_config, self.config)
 
     @staticmethod
-    def _config_operation(rewrite_config: bool = False):
-        def decorator(method):
+    def _config_operation(rewrite_config: bool = False) -> Callable[..., Any]:
+        """Decorator for performing configuration-related operations.
+
+        This decorator is used to wrap methods that involve configuration operations.
+        It can download the configuration file, read it, execute the wrapped method,
+        and optionally rewrite the configuration file and trigger a restart.
+
+        Args:
+            rewrite_config (bool, optional): Whether to rewrite the configuration file
+                and trigger a restart the WireGuard server after executing the wrapped method.
+                Defaults to False.
+
+        Returns:
+            Callable[..., Any]: A decorated method that handles configuration operations.
+        """
+
+        def decorator(method: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(method)
-            def wrapper(self, *args, **kwargs):
+            def wrapper(self, *args, **kwargs) -> Any:
                 self._download_config()
                 self.wg_config.read_file()
                 result = method(self, *args, **kwargs)
