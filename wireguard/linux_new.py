@@ -125,8 +125,29 @@ class Linux(WireGuard):
         sleep(3)
         self.set_wg_enabled(True)
 
-    def get_peers(self) -> list:
-        pass
+    def get_peers(self) -> dict:
+        # if not self.get_wg_status():
+        #     return False
+        _, stdout, _ = self.client.exec_command(f'wg show {self.interface}')
+        # peer_names = self.get_peer_names()
+        str_blocks = stdout.read().decode().split('\n\n')
+        peers = {}
+        for block in str_blocks:
+            unit = block.split('\n  ')
+            key = unit.pop(0).split(':')[1].strip()
+            if key == self.interface:
+                continue
+            # try:
+            #     peer_name = peer_names[key]
+            # except KeyError:
+            #     peer_name = key
+            # peers[peer_name] = None
+            inside_dict = {}
+            for item in unit:
+                inside_key, inside_value = item.split(':', 1)
+                inside_dict[inside_key.strip()] = inside_value.strip()
+            peers[key] = inside_dict
+        return peers
 
     def add_peer(self, name: str) -> None:
         pass
