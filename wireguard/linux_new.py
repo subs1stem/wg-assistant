@@ -5,7 +5,7 @@ from typing import Callable, Any
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
 
-from wireguard import WireGuard
+from wireguard.wireguard import WireGuard
 
 
 class Linux(WireGuard):
@@ -112,7 +112,7 @@ class Linux(WireGuard):
     def reboot_host(self) -> None:
         self.client.exec_command('reboot')
 
-    def get_config_raw(self) -> str:
+    def get_config(self) -> str:
         _, stdout, _ = self.client.exec_command(f'cat {self.config}')
         return ''.join(stdout.readlines())
 

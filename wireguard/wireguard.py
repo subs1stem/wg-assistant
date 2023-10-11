@@ -72,8 +72,8 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def get_config_raw(self) -> str:
-        """Get the raw configuration of the WireGuard server.
+    def get_config(self) -> str:
+        """Get the configuration of the WireGuard server.
 
         Returns:
             str: The raw configuration as a string.
