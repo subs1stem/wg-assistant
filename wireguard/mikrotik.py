@@ -9,7 +9,7 @@ class Mikrotik(WireGuard):
     def reboot_host(self) -> None:
         pass
 
-    def get_config(self) -> str:
+    def get_config(self, as_dict: bool = False) -> str | dict:
         pass
 
     def set_wg_enabled(self, enabled: bool) -> None:

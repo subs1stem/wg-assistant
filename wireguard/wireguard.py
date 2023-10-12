@@ -72,11 +72,15 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def get_config(self) -> str:
-        """Get the configuration of the WireGuard server.
+    def get_config(self, as_dict: bool = False) -> str | dict:
+        """Get the WireGuard server configuration.
+
+        Args:
+            as_dict (bool, optional): If True, return the configuration as a dictionary.
+                If False (default), return it as a string.
 
         Returns:
-            str: The raw configuration as a string.
+            str | dict: The WireGuard server configuration.
         """
 
     @abstractmethod

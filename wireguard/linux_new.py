@@ -100,6 +100,17 @@ class Linux(WireGuard):
 
         return decorator
 
+    @staticmethod
+    def parse_config_to_dict(config: str) -> dict:
+        """Parse a WireGuard server configuration string and convert it into a dictionary.
+
+        Args:
+            config (str): The WireGuard server configuration as a string.
+
+        Returns:
+            dict: A dictionary representation of the WireGuard server configuration.
+        """
+
     def connect(self) -> None:
         try:
             self.client.connect(hostname=self.server,
@@ -112,9 +123,10 @@ class Linux(WireGuard):
     def reboot_host(self) -> None:
         self.client.exec_command('reboot')
 
-    def get_config(self) -> str:
+    def get_config(self, as_dict: bool = False) -> str | dict:
         _, stdout, _ = self.client.exec_command(f'cat {self.config}')
-        return ''.join(stdout.readlines())
+        config = ''.join(stdout.readlines())
+        return self.parse_config_to_dict(config) if as_dict else config
 
     def set_wg_enabled(self, enabled: bool) -> None:
         state = 'up' if enabled else 'down'
