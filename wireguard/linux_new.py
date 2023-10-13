@@ -110,6 +110,22 @@ class Linux(WireGuard):
         Returns:
             dict: A dictionary representation of the WireGuard server configuration.
         """
+        config_dict = {}
+        now_section_name = 'Interface'
+        now_section_content = {}
+
+        for line in config.splitlines():
+            if line.startswith('# '):
+                config_dict[now_section_name] = now_section_content
+                now_section_content = {}
+                now_section_name = line.lstrip('# ').rstrip()
+
+            elif line and not line.startswith('['):
+                key, value = (item.strip() for item in line.split(' = '))
+                now_section_content[key] = value
+
+        config_dict[now_section_name] = now_section_content
+        return config_dict
 
     def connect(self) -> None:
         try:
