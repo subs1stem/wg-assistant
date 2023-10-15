@@ -1,7 +1,8 @@
 from functools import wraps
 from time import sleep
-from typing import Callable, Any
+from typing import Callable, Any, Tuple, Optional
 
+import qrcode
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
 
@@ -65,6 +66,20 @@ class Linux(WireGuard):
         """
         self.client.open_sftp().put(self.tmp_config, self.config)
 
+    def _generate_key_pair(self) -> Tuple[str, str]:
+        """Generate a WireGuard private-public key pair using an SSH connection.
+
+        Returns:
+            Tuple[str, str]: A tuple containing the private key and public key strings.
+        """
+        _, stdout, _ = self.client.exec_command(f'wg genkey')
+        privkey = stdout.readline().strip()
+
+        _, stdout, _ = self.client.exec_command(f'echo "{privkey}" | wg pubkey')
+        pubkey = stdout.readline().strip()
+
+        return privkey, pubkey
+
     @staticmethod
     def _config_operation(rewrite_config: bool = False) -> Callable[..., Any]:
         """Decorator for performing configuration-related operations.
@@ -127,6 +142,29 @@ class Linux(WireGuard):
         config_dict[now_section_name] = now_section_content
         return config_dict
 
+    @staticmethod
+    def find_next_available_ip(config: dict) -> Optional[str]:
+        """Find the next available IP address based on the provided configuration.
+
+        Args:
+            config (dict): A dictionary containing network configuration data.
+
+        Returns:
+            Optional[str]: The next available IP address in the format 'X.X.X.X/32',
+            or None if there are no available IP addresses.
+        """
+        ip_addresses = [config[key]['AllowedIPs'] for key in config if key != 'Interface']
+        prefix = ip_addresses[0].split('/')[0].split('.')[:-1]
+        network_prefix = ".".join(prefix)  # Use the network prefix from the configuration
+        ip_integers = [int(ip.split('/')[0].split('.')[-1]) for ip in ip_addresses]
+        max_ip_integer = max(ip_integers)
+        next_ip_integer = max_ip_integer + 1
+        if next_ip_integer <= 255:
+            next_ip_address = f'{network_prefix}.{next_ip_integer}/32'
+            return next_ip_address
+        else:
+            return None
+
     def connect(self) -> None:
         try:
             self.client.connect(hostname=self.server,
@@ -172,8 +210,28 @@ class Linux(WireGuard):
 
         return peers
 
-    def add_peer(self, name: str) -> None:
-        pass
+    @_config_operation(rewrite_config=True)
+    def add_peer(self, name: str):
+        # TODO: check and add docstring
+        privkey, pubkey = self._generate_key_pair()
+
+        config = self.get_config(as_dict=True)
+        server_port = config.get('Interface').get('ListenPort')
+        peer_ip = self.find_next_available_ip(config)
+
+        self.wg_config.add_peer(pubkey, '# ' + name)
+        self.wg_config.add_attr(pubkey, 'AllowedIPs', peer_ip)
+
+        client_config = self.get_client_config(
+            privkey=privkey,
+            address=peer_ip,
+            pubkey=pubkey,
+            server_ip=self.server,
+            server_port=server_port,
+        )
+
+        qr = qrcode.make(client_config)
+        return qr, client_config
 
     @_config_operation(rewrite_config=True)
     def del_peer(self, pubkey: str) -> None:
