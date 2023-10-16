@@ -211,14 +211,6 @@ class Linux(WireGuard):
 
     @_config_operation(rewrite_config=True)
     def add_peer(self, name: str) -> str:
-        """Adds a WireGuard peer to the configuration.
-
-        Args:
-            name (str): The name of the peer.
-
-        Returns:
-            str: The WireGuard client configuration for the new peer.
-        """
         privkey, pubkey = self._generate_key_pair()
 
         config = self.get_config(as_dict=True)

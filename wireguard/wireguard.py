@@ -103,7 +103,7 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def get_peers(self) -> list:
+    def get_peers(self) -> dict:
         """Get a list of all configured peers.
 
         Returns:
@@ -111,14 +111,14 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def add_peer(self, name: str) -> None:
+    def add_peer(self, name: str) -> str:
         """Add a new peer to the WireGuard server.
 
         Args:
-            name (str): The name of the new peer.
+            name (str): The name of the peer.
 
         Returns:
-            None
+            str: The WireGuard client configuration for the new peer.
         """
 
     @abstractmethod
