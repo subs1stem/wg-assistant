@@ -2,7 +2,6 @@ from functools import wraps
 from time import sleep
 from typing import Callable, Any, Tuple, Optional
 
-import qrcode
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
 
@@ -211,8 +210,15 @@ class Linux(WireGuard):
         return peers
 
     @_config_operation(rewrite_config=True)
-    def add_peer(self, name: str):
-        # TODO: check and add docstring
+    def add_peer(self, name: str) -> str:
+        """Adds a WireGuard peer to the configuration.
+
+        Args:
+            name (str): The name of the peer.
+
+        Returns:
+            str: The WireGuard client configuration for the new peer.
+        """
         privkey, pubkey = self._generate_key_pair()
 
         config = self.get_config(as_dict=True)
@@ -230,8 +236,7 @@ class Linux(WireGuard):
             server_port=server_port,
         )
 
-        qr = qrcode.make(client_config)
-        return qr, client_config
+        return client_config
 
     @_config_operation(rewrite_config=True)
     def del_peer(self, pubkey: str) -> None:
