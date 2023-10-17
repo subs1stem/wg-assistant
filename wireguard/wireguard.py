@@ -95,6 +95,14 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
+    def get_wg_enabled(self) -> bool:
+        """Get the status of the WireGuard interface.
+
+        Returns:
+            bool: True if the WireGuard interface is enabled, False if it's disabled.
+        """
+
+    @abstractmethod
     def restart(self) -> None:
         """Restart the WireGuard server.
 
@@ -122,7 +130,7 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def del_peer(self, pubkey: str) -> None:
+    def delete_peer(self, pubkey: str) -> None:
         """Delete a peer from the WireGuard server.
 
         Args:

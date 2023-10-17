@@ -15,6 +15,9 @@ class Mikrotik(WireGuard):
     def set_wg_enabled(self, enabled: bool) -> None:
         pass
 
+    def get_wg_enabled(self) -> bool:
+        pass
+
     def restart(self) -> None:
         pass
 
@@ -24,7 +27,7 @@ class Mikrotik(WireGuard):
     def add_peer(self, name: str) -> None:
         pass
 
-    def del_peer(self, pubkey: str) -> None:
+    def delete_peer(self, pubkey: str) -> None:
         pass
 
     def enable_peer(self, pubkey: str) -> None:

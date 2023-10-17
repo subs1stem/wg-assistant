@@ -8,7 +8,7 @@ from modules.fsm_states import AddPeer, CurrentServer
 from modules.keyboards import *
 from modules.messages import peers_message
 from modules.middlewares import ServerConnectionMiddleware
-from wireguard.linux import Linux
+from wireguard.linux_new import Linux
 
 router = Router()
 router.callback_query.middleware(CallbackAnswerMiddleware())
@@ -24,7 +24,7 @@ async def send_server_list(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith('server:'))
 async def send_server_menu(callback: CallbackQuery, state: FSMContext, server: Linux, server_name: str):
-    interface_is_up = server.get_wg_status()
+    interface_is_up = server.get_wg_enabled()
     await state.set_state(CurrentServer.working_with_server)
     await callback.message.edit_text(text=f'Сервер <b>{server_name}</b>', reply_markup=wg_options_kb(interface_is_up))
 
@@ -32,7 +32,7 @@ async def send_server_menu(callback: CallbackQuery, state: FSMContext, server: L
 @router.callback_query(F.data == 'reboot_server')
 async def reboot_server(callback: CallbackQuery, server: Linux):
     await callback.answer('Перезагружаю сервер...')
-    server.reboot()
+    server.reboot_host()
 
 
 @router.callback_query(CurrentServer.working_with_server, F.data == 'get_peers')
@@ -45,7 +45,7 @@ async def send_peer_list(callback: CallbackQuery, server: Linux):
 @router.callback_query(CurrentServer.working_with_server, F.data == 'get_server_config')
 async def send_raw_config(callback: CallbackQuery, server: Linux):
     await callback.answer('Запрашиваю конфигурацию...')
-    raw_config = server.get_raw_config()
+    raw_config = server.get_config()
     await callback.message.edit_text(text=f'<code>{raw_config}</code>', reply_markup=back_btn('server:'))
 
 
@@ -53,9 +53,9 @@ async def send_raw_config(callback: CallbackQuery, server: Linux):
 async def change_wg_state(callback: CallbackQuery, server: Linux):
     await callback.answer('Выполняю...')
     wg_state = callback.data.split(':')[-1]
-    server.wg_change_state(wg_state)
-    interface_is_up = wg_state == 'up'
-    await callback.message.edit_reply_markup(reply_markup=wg_options_kb(interface_is_up))
+    is_up = wg_state == 'up'
+    server.set_wg_enabled(is_up)
+    await callback.message.edit_reply_markup(reply_markup=wg_options_kb(is_up))
 
 
 @router.callback_query(F.data == 'add_peer')
@@ -67,7 +67,7 @@ async def add_peer(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'config_peers')
 async def config_peers(callback: CallbackQuery, server: Linux):
     await callback.answer('Запрашиваю список пиров...')
-    peer_names = server.get_peer_names()
+    peer_names = list(server.get_peers().keys())
     await callback.message.edit_text(text='Выбери клиента:', reply_markup=peers_kb(peer_names))
 
 

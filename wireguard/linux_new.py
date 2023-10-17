@@ -185,6 +185,10 @@ class Linux(WireGuard):
         state = 'up' if enabled else 'down'
         self.client.exec_command(f'wg-quick {state} {self.interface}')
 
+    def get_wg_enabled(self) -> bool:
+        _, stdout, _ = self.client.exec_command(f'wg show {self.interface}')
+        return bool(stdout.readline())
+
     def restart(self) -> None:
         self.set_wg_enabled(False)
         sleep(3)
@@ -231,7 +235,7 @@ class Linux(WireGuard):
         return client_config
 
     @_config_operation(rewrite_config=True)
-    def del_peer(self, pubkey: str) -> None:
+    def delete_peer(self, pubkey: str) -> None:
         self.wg_config.del_peer(pubkey)
 
     @_config_operation(rewrite_config=True)
