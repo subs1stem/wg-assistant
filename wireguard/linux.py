@@ -1,200 +1,251 @@
-import time
-from ipaddress import ip_interface
+from functools import wraps
+from time import sleep
+from typing import Callable, Any, Tuple, Optional
 
-import qrcode
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
 
+from wireguard.wireguard import WireGuard
 
-class Linux:
-    path_to_tmp_config = '/tmp/wg0.conf'
 
-    def __init__(self, host, port, username, password, config='/etc/wireguard/wg0.conf', interface='wg0'):
-        self.host = host
-        self.port = int(port)
-        self.username = username
-        self.password = password
+class Linux(WireGuard):
+    """A class for a WireGuard server deployed on a Linux host."""
+
+    tmp_config = '/tmp/wg0.conf'
+
+    def __init__(
+            self,
+            server: str,
+            port: int,
+            username: str,
+            password: str,
+            config: str = '/etc/wireguard/wg0.conf',
+            interface: str = 'wg0',
+    ) -> None:
+        """Initialize a new instance of Linux WireGuard client.
+
+        Args:
+            server (str): The server address.
+            port (int): The port number for the connection.
+            username (str): The username for authentication.
+            password (str): The password for authentication.
+            config (str, optional): The path to the WireGuard configuration file.
+                Defaults to '/etc/wireguard/wg0.conf'.
+            interface (str, optional): The WireGuard interface name. Defaults to 'wg0'.
+
+        Returns:
+            None
+        """
+        super().__init__(server, port, username, password)
+
         self.config = config
         self.interface = interface
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
+        self.connect()
 
+        self.wg_config = WGConfig(self.tmp_config)
+
+    def __del__(self) -> None:
+        self.client.close()
+
+    def _download_config(self) -> None:
+        """Download the WireGuard server configuration file to the local temporary file.
+
+        Returns:
+            None
+        """
+        self.client.open_sftp().get(self.config, self.tmp_config)
+
+    def _upload_config(self) -> None:
+        """Upload the local temporary WireGuard configuration file to the remote host.
+
+        Returns:
+            None
+        """
+        self.client.open_sftp().put(self.tmp_config, self.config)
+
+    def _generate_key_pair(self) -> Tuple[str, str]:
+        """Generate a WireGuard private-public key pair using an SSH connection.
+
+        Returns:
+            Tuple[str, str]: A tuple containing the private key and public key strings.
+        """
+        _, stdout, _ = self.client.exec_command(f'wg genkey')
+        privkey = stdout.readline().strip()
+
+        _, stdout, _ = self.client.exec_command(f'echo "{privkey}" | wg pubkey')
+        pubkey = stdout.readline().strip()
+
+        return privkey, pubkey
+
+    @staticmethod
+    def _config_operation(rewrite_config: bool = False) -> Callable[..., Any]:
+        """Decorator for performing configuration-related operations.
+
+        This decorator is used to wrap methods that involve configuration operations.
+        It can download the configuration file, read it, execute the wrapped method,
+        and optionally rewrite the configuration file and trigger a restart.
+
+        Args:
+            rewrite_config (bool, optional): Whether to rewrite the configuration file
+                and trigger a restart the WireGuard server after executing the wrapped method.
+                Defaults to False.
+
+        Returns:
+            Callable[..., Any]: A decorated method that handles configuration operations.
+        """
+
+        def decorator(method: Callable[..., Any]) -> Callable[..., Any]:
+            @wraps(method)
+            def wrapper(self, *args, **kwargs) -> Any:
+                self._download_config()
+                self.wg_config.read_file()
+                result = method(self, *args, **kwargs)
+
+                if rewrite_config:
+                    self.wg_config.write_file()
+                    self._upload_config()
+                    self.restart()
+
+                return result
+
+            return wrapper
+
+        return decorator
+
+    @staticmethod
+    def parse_config_to_dict(config: str) -> dict:
+        """Parse a WireGuard server configuration string and convert it into a dictionary.
+
+        Args:
+            config (str): The WireGuard server configuration as a string.
+
+        Returns:
+            dict: A dictionary representation of the WireGuard server configuration.
+        """
+        config_dict = {}
+        now_section_name = 'Interface'
+        now_section_content = {}
+
+        for line in config.splitlines():
+            if line.startswith('# '):
+                config_dict[now_section_name] = now_section_content
+                now_section_content = {}
+                now_section_name = line.lstrip('# ').rstrip()
+
+            elif line and not line.startswith('['):
+                key, value = (item.strip() for item in line.split(' = '))
+                now_section_content[key] = value
+
+        config_dict[now_section_name] = now_section_content
+        return config_dict
+
+    @staticmethod
+    def find_next_available_ip(config: dict) -> Optional[str]:
+        """Find the next available IP address based on the provided configuration.
+
+        Args:
+            config (dict): A dictionary containing network configuration data.
+
+        Returns:
+            Optional[str]: The next available IP address in the format 'X.X.X.X/32',
+            or None if there are no available IP addresses.
+        """
+        ip_addresses = [config[key]['AllowedIPs'] for key in config if key != 'Interface']
+        prefix = ip_addresses[0].split('/')[0].split('.')[:-1]
+        network_prefix = ".".join(prefix)  # Use the network prefix from the configuration
+        ip_integers = [int(ip.split('/')[0].split('.')[-1]) for ip in ip_addresses]
+        max_ip_integer = max(ip_integers)
+        next_ip_integer = max_ip_integer + 1
+        if next_ip_integer <= 255:
+            next_ip_address = f'{network_prefix}.{next_ip_integer}/32'
+            return next_ip_address
+        else:
+            return None
+
+    def connect(self) -> None:
         try:
-            self.client.connect(hostname=self.host,
+            self.client.connect(hostname=self.server,
                                 username=self.username,
                                 password=self.password,
                                 port=self.port)
         except Exception:
-            raise ConnectionError('Error connecting to WireGuard server')
+            raise ConnectionError('Error connecting to WireGuard server host')
 
-    def __del__(self):
-        self.client.close()
-
-    def ping(self):
-        _, stdout, _ = self.client.exec_command('ping -c 1 8.8.8.8', timeout=1)
-        return bool(stdout.read())
-
-    def reboot(self):
+    def reboot_host(self) -> None:
         self.client.exec_command('reboot')
 
-    def get_raw_config(self):
+    def get_config(self, as_dict: bool = False) -> str | dict:
         _, stdout, _ = self.client.exec_command(f'cat {self.config}')
-        return ''.join(stdout.readlines())
+        config = ''.join(stdout.readlines())
+        return self.parse_config_to_dict(config) if as_dict else config
 
-    def get_wg_status(self):
+    def set_wg_enabled(self, enabled: bool) -> None:
+        state = 'up' if enabled else 'down'
+        self.client.exec_command(f'wg-quick {state} {self.interface}')
+
+    def get_wg_enabled(self) -> bool:
         _, stdout, _ = self.client.exec_command(f'wg show {self.interface}')
         return bool(stdout.readline())
 
-    def wg_change_state(self, state):
-        self.client.exec_command(f'wg-quick {state} {self.interface}')
+    def restart(self) -> None:
+        self.set_wg_enabled(False)
+        sleep(3)
+        self.set_wg_enabled(True)
 
-    def wg_down_up(self):
-        self.wg_change_state('down')
-        time.sleep(3)
-        self.wg_change_state('up')
-
-    def download_config(self):
-        self.client.open_sftp().get(self.config, self.path_to_tmp_config)
-
-    def upload_config(self):
-        self.client.open_sftp().put(self.path_to_tmp_config, self.config)
-
-    def get_server_pubkey(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.interface} public-key')
-        return stdout.readline().strip()
-
-    def get_server_port(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.interface} listen-port')
-        return stdout.readline().strip()
-
-    def get_server_address(self):
-        _, stdout, _ = self.client.exec_command(f'cat {self.config}')
-        lines = stdout.readlines()
-        network = [s for s in lines if 'Address' in s][0].split('=')[1].strip()
-        return network
-
-    def get_allowed_ips(self):
-        _, stdout, _ = self.client.exec_command(f'wg show {self.interface} allowed-ips')
-        allowed_ips = {}
-        for line in stdout.readlines():
-            key, value = line.split()
-            allowed_ips[key] = value.split('/')[0]
-        return allowed_ips
-
-    def get_next_available_ip(self):
-        server_address = self.get_server_address()
-        server_ip = format(ip_interface(server_address).ip)
-        network = ip_interface(server_address).network
-        reserved = list(self.get_allowed_ips().values())
-        reserved.append(server_ip)
-        hosts_iterator = (host for host in network.hosts() if str(host) not in reserved)
-        return next(hosts_iterator)
-
-    def get_peer_names(self):
-        self.download_config()
-        wg_config = WGConfig(self.path_to_tmp_config)
-        wg_config.read_file()
-        peers = wg_config.peers
-        peer_names = {}
-        for peer in peers:
-            name = None
-            for item in peers[peer]['_rawdata']:
-                item = item.replace('#!', '').strip()
-                if item.startswith('#'):
-                    name = item.replace('#', '').strip()
-            peer_names[peer] = name
-        return peer_names
-
-    def get_peers(self):
-        if not self.get_wg_status():
-            return False
+    def get_peers(self) -> dict:
         _, stdout, _ = self.client.exec_command(f'wg show {self.interface}')
-        peer_names = self.get_peer_names()
         str_blocks = stdout.read().decode().split('\n\n')
+
+        config = self.get_config(as_dict=True)
+        peer_names = {v.get('PublicKey', k): k for k, v in config.items()}
+
         peers = {}
+
         for block in str_blocks:
             unit = block.split('\n  ')
             key = unit.pop(0).split(':')[1].strip()
-            if key == self.interface:
-                continue
-            try:
-                peer_name = peer_names[key]
-            except KeyError:
-                peer_name = key
-            peers[peer_name] = None
-            inside_dict = {}
-            for item in unit:
-                inside_key, inside_value = item.split(':', 1)
-                inside_dict[inside_key.strip()] = inside_value.strip()
-            peers[peer_name] = inside_dict
+
+            if key != self.interface:
+                inside_dict = {k.strip(): v.strip() for k, v in (item.split(':', 1) for item in unit)}
+                peers[peer_names.get(key, key)] = inside_dict
+
         return peers
 
-    def add_peer(self, peer_name):
-        _, stdout, _ = self.client.exec_command(f'wg genkey')
-        client_privkey = stdout.readline().strip()
-        _, stdout, _ = self.client.exec_command(f'echo "{client_privkey}" | wg pubkey')
-        client_pubkey = stdout.readline().strip()
-        server_pubkey = self.get_server_pubkey()
-        peer_ip = f'{self.get_next_available_ip()}/32'
-        server_port = self.get_server_port()
-        self.download_config()
-        wg_config = WGConfig(self.path_to_tmp_config)
-        wg_config.read_file()
-        wg_config.add_peer(client_pubkey, '# ' + peer_name)
-        wg_config.add_attr(client_pubkey, 'AllowedIPs', peer_ip)
-        wg_config.write_file()
-        self.upload_config()
-        self.wg_down_up()
-        wg_config = self.generate_client_config(client_privkey, peer_ip, server_pubkey, self.host, server_port)
-        qr = qrcode.make(wg_config)
-        return qr, wg_config
+    @_config_operation(rewrite_config=True)
+    def add_peer(self, name: str) -> str:
+        privkey, pubkey = self._generate_key_pair()
 
-    def delete_peer(self, pubkey):
-        self.download_config()
-        wg_config = WGConfig(self.path_to_tmp_config)
-        wg_config.read_file()
-        wg_config.del_peer(pubkey)
-        wg_config.write_file()
-        self.upload_config()
-        self.wg_down_up()
+        config = self.get_config(as_dict=True)
+        server_port = config.get('Interface').get('ListenPort')
+        peer_ip = self.find_next_available_ip(config)
 
-    def enable_peer(self, pubkey):
-        self.download_config()
-        wg_config = WGConfig(self.path_to_tmp_config)
-        wg_config.read_file()
-        wg_config.enable_peer(pubkey)
-        wg_config.write_file()
-        self.upload_config()
-        self.wg_down_up()
+        self.wg_config.add_peer(pubkey, '# ' + name)
+        self.wg_config.add_attr(pubkey, 'AllowedIPs', peer_ip)
 
-    def disable_peer(self, pubkey):
-        self.download_config()
-        wg_config = WGConfig(self.path_to_tmp_config)
-        wg_config.read_file()
-        wg_config.disable_peer(pubkey)
-        wg_config.write_file()
-        self.upload_config()
-        self.wg_down_up()
+        client_config = self.get_client_config(
+            privkey=privkey,
+            address=peer_ip,
+            pubkey=pubkey,
+            server_ip=self.server,
+            server_port=server_port,
+        )
 
-    def get_peer_enabled(self, pubkey):
-        self.download_config()
-        wg_config = WGConfig(self.path_to_tmp_config)
-        wg_config.read_file()
-        return wg_config.get_peer_enabled(pubkey)
+        return client_config
 
-    @staticmethod
-    def generate_client_config(privkey, address, pubkey, server_ip, server_port):
-        wg_config = '[Interface]\n' \
-                    f'PrivateKey = {privkey}\n' \
-                    f'Address = {address}\n' \
-                    f'DNS = 8.8.8.8\n\n' \
-                    '[Peer]\n' \
-                    f'PublicKey = {pubkey}\n' \
-                    'AllowedIPs = 0.0.0.0/0\n' \
-                    f'Endpoint = {server_ip}:{server_port}\n' \
-                    'PersistentKeepalive = 30'
-        return wg_config
+    @_config_operation(rewrite_config=True)
+    def delete_peer(self, pubkey: str) -> None:
+        self.wg_config.del_peer(pubkey)
 
+    @_config_operation(rewrite_config=True)
+    def enable_peer(self, pubkey: str) -> None:
+        self.wg_config.enable_peer(pubkey)
 
-if __name__ == '__main__':
-    pass
+    @_config_operation(rewrite_config=True)
+    def disable_peer(self, pubkey: str) -> None:
+        self.wg_config.disable_peer(pubkey)
+
+    @_config_operation()
+    def get_peer_enabled(self, pubkey: str) -> bool:
+        return self.wg_config.get_peer_enabled(pubkey)

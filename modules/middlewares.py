@@ -3,8 +3,8 @@ from typing import Callable, Dict, Awaitable, Any
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, CallbackQuery
 
+from data.server_factory import create_server_instance
 from data.servers import ServersFile
-from wireguard.linux import Linux
 
 
 class AuthCheckMiddleware(BaseMiddleware):
@@ -36,9 +36,10 @@ class ServerConnectionMiddleware(BaseMiddleware):
         if event.data.startswith('server:') and not await data['state'].get_data():
             server_name = event.data.split(':')[1]
             server_data = ServersFile().get_server_by_name(server_name)
+            class_name = server_data.pop('type')
 
             try:
-                server = Linux(**server_data)
+                server = create_server_instance(class_name, server_data)
                 await data['state'].set_data({'server_name': server_name, 'server': server})
             except ConnectionError:
                 return await event.answer(f'Не удалось подключиться к серверу "{server_name}" ⚠️', show_alert=True)

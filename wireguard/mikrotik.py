@@ -1,7 +1,7 @@
 from wireguard.wireguard import WireGuard
 
 
-class Mikrotik(WireGuard):
+class MikroTik(WireGuard):
 
     def connect(self) -> None:
         pass
