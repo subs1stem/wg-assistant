@@ -46,7 +46,7 @@ def peer_list_kb():
 def peers_kb(peers):
     kb = InlineKeyboardBuilder()
     kb.button(text='Добавить клиента 🆕', callback_data='add_peer')
-    for pubkey, name in peers.items():
+    for name, pubkey in peers.items():
         kb.button(text=f'{name}', callback_data=f'peer:{pubkey}')
     kb.adjust(1, 2)
     kb.row(InlineKeyboardButton(text='⬅️ Назад', callback_data='server:'), width=1)
