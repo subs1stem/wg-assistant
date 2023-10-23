@@ -129,12 +129,15 @@ class Linux(WireGuard):
         now_section_content = {}
 
         for line in config.splitlines():
+            line = line.replace('#!', '').strip()
+
             if line.startswith('# '):
                 config_dict[now_section_name] = now_section_content
                 now_section_content = {}
                 now_section_name = line.lstrip('# ').rstrip()
 
             elif line and not line.startswith('['):
+                line = line.lstrip('#!')
                 key, value = (item.strip() for item in line.split(' = '))
                 now_section_content[key] = value
 
