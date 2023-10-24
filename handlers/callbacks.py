@@ -75,7 +75,7 @@ async def config_peers(callback: CallbackQuery, server: WireGuard):
 
 @router.callback_query(F.data.startswith('peer'))
 async def show_peer(callback: CallbackQuery, server: WireGuard):
-    _, pubkey = callback.data.split(':')
+    pubkey = callback.data.split(':')[-1]
     peer_is_enabled = server.get_peer_enabled(pubkey)
     await callback.message.edit_text(text=f'Выбери действие:', reply_markup=peer_action_kb(pubkey, peer_is_enabled))
 
@@ -94,7 +94,8 @@ async def process_peer_action(callback: CallbackQuery, server: WireGuard):
         case 'del':
             await callback.answer('Удаляю...')
             server.delete_peer(pubkey)
+            return await config_peers(callback, server)
         case _:
             await callback.answer('Неизвестное действие!', show_alert=True)
 
-    await config_peers(callback, server)
+    await show_peer(callback, server)
