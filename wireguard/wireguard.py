@@ -28,7 +28,13 @@ class WireGuard(ABC):
         self.password = password
 
     @staticmethod
-    def get_client_config(privkey, address, pubkey, server_ip, server_port):
+    def build_client_config(
+            privkey: str,
+            address: str,
+            pubkey: str,
+            server_ip: str,
+            server_port: int
+    ) -> str:
         """Generate a WireGuard client configuration.
 
         Args:

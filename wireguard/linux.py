@@ -227,7 +227,7 @@ class Linux(WireGuard):
         self.wg_config.add_peer(pubkey, '# ' + name)
         self.wg_config.add_attr(pubkey, 'AllowedIPs', peer_ip)
 
-        client_config = self.get_client_config(
+        client_config = self.build_client_config(
             privkey=privkey,
             address=peer_ip,
             pubkey=pubkey,
