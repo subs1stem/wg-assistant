@@ -198,7 +198,11 @@ class Linux(WireGuard):
         self.set_wg_enabled(True)
 
     def get_peers(self) -> dict:
-        _, stdout, _ = self.client.exec_command(f'wg show {self.interface}')
+        _, stdout, stderr = self.client.exec_command(f'wg show {self.interface}')
+
+        if stderr.read().decode():
+            return {}
+
         str_blocks = stdout.read().decode().split('\n\n')
 
         config = self.get_config(as_dict=True)
