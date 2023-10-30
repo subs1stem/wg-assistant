@@ -1,10 +1,7 @@
 from typing import Callable, Dict, Awaitable, Any
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, CallbackQuery
-
-from data.server_factory import create_server_instance
-from data.servers import ServersFile
+from aiogram.types import TelegramObject
 
 
 class AuthCheckMiddleware(BaseMiddleware):
@@ -23,27 +20,4 @@ class AuthCheckMiddleware(BaseMiddleware):
             if event.message is None:
                 return event.callback_query.answer('Вы были заблокированы 🛑', show_alert=True)
             return await event.message.answer('Я Вас не знаю ⚠')
-        return await handler(event, data)
-
-
-class ServerConnectionMiddleware(BaseMiddleware):
-    async def __call__(
-            self,
-            handler: Callable[[CallbackQuery, Dict[str, Any]], Awaitable[Any]],
-            event: CallbackQuery,
-            data: Dict[str, Any]
-    ) -> Any:
-        if event.data.startswith('server:') and not await data['state'].get_data():
-            server_name = event.data.split(':')[1]
-            server_data = ServersFile().get_server_by_name(server_name)
-            class_name = server_data.pop('type')
-
-            try:
-                server = create_server_instance(class_name, server_data)
-                await data['state'].set_data({'server_name': server_name, 'server': server})
-            except ConnectionError:
-                return await event.answer(f'Не удалось подключиться к серверу "{server_name}" ⚠️', show_alert=True)
-
-        data.update(await data['state'].get_data())  # TODO: I dont like it
-
         return await handler(event, data)

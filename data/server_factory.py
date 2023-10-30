@@ -3,22 +3,40 @@ from wireguard.mikrotik import MikroTik
 from wireguard.wireguard import WireGuard
 
 
-def create_server_instance(class_name: str, server_data: dict) -> WireGuard:
-    """Create an instance of a WireGuard server based on the provided class name and server data.
+class ServerFactory:
+    _instance = None
+    _created_instances = {}
 
-    Args:
-        class_name (str): The name of the server class to create (e.g., "Linux" or "MikroTik").
-        server_data (dict): A dictionary containing server configuration data.
+    def __new__(cls):
+        """Create or return the singleton instance of ServerFactory."""
+        if cls._instance is None:
+            cls._instance = super(ServerFactory, cls).__new__(cls)
+        return cls._instance
 
-    Returns:
-        WireGuard: An instance of the WireGuard server.
+    @staticmethod
+    def create_server_instance(class_name: str, server_name: str, server_data: dict) -> WireGuard:
+        """Create an instance of a WireGuard server based on the provided class name and server data.
 
-    Raises:
-        ValueError: If an unknown server class is provided.
-    """
-    if class_name == 'Linux':
-        return Linux(**server_data)
-    elif class_name == 'MikroTik':
-        return MikroTik(**server_data)
-    else:
-        raise ValueError(f'Unknown server class: {class_name}')
+        Args:
+            class_name (str): The name of the server class to create (e.g., "Linux" or "MikroTik").
+            server_name (str): The name of the server.
+            server_data (dict): A dictionary containing server configuration data.
+
+        Returns:
+            WireGuard: An instance of the WireGuard server.
+
+        Raises:
+            ValueError: If an unknown server class is provided.
+        """
+        if server_name in ServerFactory._created_instances:
+            return ServerFactory._created_instances[server_name]
+
+        if class_name == 'Linux':
+            instance = Linux(**server_data)
+        elif class_name == 'MikroTik':
+            instance = MikroTik(**server_data)
+        else:
+            raise ValueError(f'Unknown server class: {class_name}')
+
+        ServerFactory._created_instances[server_name] = instance
+        return instance
