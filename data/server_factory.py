@@ -14,11 +14,10 @@ class ServerFactory:
         return cls._instance
 
     @staticmethod
-    def create_server_instance(class_name: str, server_name: str, server_data: dict) -> WireGuard:
+    def create_server_instance(server_name: str, server_data: dict) -> WireGuard:
         """Create an instance of a WireGuard server based on the provided class name and server data.
 
         Args:
-            class_name (str): The name of the server class to create (e.g., "Linux" or "MikroTik").
             server_name (str): The name of the server.
             server_data (dict): A dictionary containing server configuration data.
 
@@ -31,6 +30,8 @@ class ServerFactory:
         if server_name in ServerFactory._created_instances:
             return ServerFactory._created_instances[server_name]
 
+        class_name = server_data.pop('type')
+
         if class_name == 'Linux':
             instance = Linux(**server_data)
         elif class_name == 'MikroTik':
@@ -39,4 +40,5 @@ class ServerFactory:
             raise ValueError(f'Unknown server class: {class_name}')
 
         ServerFactory._created_instances[server_name] = instance
+
         return instance

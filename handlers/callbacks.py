@@ -23,15 +23,18 @@ async def send_server_list(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith('server:'))
 async def send_server_menu(callback: CallbackQuery, state: FSMContext):
-    server_name = callback.data.split(':')[1]
-    server_data = ServersFile().get_server_by_name(server_name)
-    class_name = server_data.pop('type')
+    state_data = await state.get_data()
+    server_name = state_data.get('server_name') or callback.data.split(':')[1]
+    server = state_data.get('server')
 
-    try:
-        server = ServerFactory.create_server_instance(class_name, server_name, server_data)
-        await state.set_data({'server_name': server_name, 'server': server})
-    except ConnectionError:
-        return await callback.answer(f'Не удалось подключиться к серверу "{server_name}" ⚠️', show_alert=True)
+    if not server:
+        server_data = ServersFile().get_server_by_name(server_name)
+
+        try:
+            server = ServerFactory.create_server_instance(server_name, server_data)
+            await state.set_data({'server_name': server_name, 'server': server})
+        except ConnectionError:
+            return await callback.answer(f'Не удалось подключиться к серверу "{server_name}" ⚠️', show_alert=True)
 
     interface_is_up = server.get_wg_enabled()
 
@@ -53,11 +56,11 @@ async def send_peer_list(callback: CallbackQuery, server: WireGuard):
 
 
 @router.callback_query(CurrentServer.working_with_server, F.data == 'get_server_config')
-async def send_raw_config(callback: CallbackQuery, server: WireGuard, server_name: str):
+async def send_raw_config(callback: CallbackQuery, server: WireGuard):
     await callback.answer('Запрашиваю конфигурацию...')
     await callback.message.edit_text(
         text=f'<code>{server.get_config()}</code>',
-        reply_markup=back_btn(f'server:{server_name}')
+        reply_markup=back_btn(f'server:')
     )
 
 
