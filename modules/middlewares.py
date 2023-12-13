@@ -12,11 +12,11 @@ class AuthCheckMiddleware(BaseMiddleware):
             data: Dict[str, Any]
     ) -> Any:
         user_id = data.get('event_from_user').id
-        admin_list = data.get('admin_list')
+        admins = data.get('admins')
 
         data.update(await data['state'].get_data())  # TODO: I dont like it
 
-        if user_id not in admin_list:
+        if user_id not in admins:
             if event.message is None:
                 return event.callback_query.answer('Вы были заблокированы 🛑', show_alert=True)
             return await event.message.answer('Я Вас не знаю ⚠')

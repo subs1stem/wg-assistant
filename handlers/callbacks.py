@@ -2,12 +2,10 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.callback_answer import CallbackAnswerMiddleware
-
-from data.server_factory import ServerFactory
-from data.servers import ServersFile
 from modules.fsm_states import AddPeer, CurrentServer
 from modules.keyboards import *
 from modules.messages import peers_message
+from servers.server_factory import ServerFactory
 from wireguard.wireguard import WireGuard
 
 router = Router()
@@ -15,20 +13,20 @@ router.callback_query.middleware(CallbackAnswerMiddleware())
 
 
 @router.callback_query(F.data == 'servers')
-async def send_server_list(callback: CallbackQuery, state: FSMContext):
+async def send_servers(callback: CallbackQuery, state: FSMContext, servers: dict):
     await state.clear()
-    server_names = ServersFile().get_server_names()
+    server_names = list(servers.keys())
     await callback.message.edit_text(text='Список серверов:', reply_markup=servers_kb(server_names))
 
 
 @router.callback_query(F.data.startswith('server:'))
-async def send_server_menu(callback: CallbackQuery, state: FSMContext):
+async def send_server_menu(callback: CallbackQuery, state: FSMContext, servers: dict):
     state_data = await state.get_data()
     server_name = state_data.get('server_name') or callback.data.split(':')[1]
     server = state_data.get('server')
 
     if not server:
-        server_data = ServersFile().get_server_by_name(server_name)
+        server_data = servers.get(server_name)
 
         try:
             server = ServerFactory.create_server_instance(server_name, server_data)

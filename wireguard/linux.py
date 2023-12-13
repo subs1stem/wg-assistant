@@ -4,7 +4,6 @@ from typing import Callable, Any, Tuple, Optional
 
 from paramiko import SSHClient, AutoAddPolicy
 from wgconfig import WGConfig
-
 from wireguard.wireguard import WireGuard
 
 

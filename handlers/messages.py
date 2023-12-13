@@ -5,7 +5,6 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.types.input_file import BufferedInputFile
-
 from modules.fsm_states import AddPeer
 from modules.keyboards import back_btn
 from wireguard.wireguard import WireGuard

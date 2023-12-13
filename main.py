@@ -5,24 +5,32 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
-
 from handlers import commands, callbacks, messages
 from modules.middlewares import AuthCheckMiddleware
+from servers.servers_file_loader import ServersFileLoader
 
 load_dotenv()
 
 
 async def main():
-    admin_list = [int(admin_id) for admin_id in environ['ADMIN_ID'].split(',')]
+    admins = [int(admin_id) for admin_id in environ['ADMIN_ID'].split(',')]
+    servers = ServersFileLoader().get_servers()
+
     bot = Bot(token=environ['TOKEN'], parse_mode='HTML')
-    dp = Dispatcher(storage=MemoryStorage(), admin_list=admin_list)
+
+    dp = Dispatcher(
+        storage=MemoryStorage(),
+        admins=admins,
+        servers=servers,
+    )
 
     dp.update.middleware(AuthCheckMiddleware())
-    # dp.update.filter(MagicData(~F.event.from_user.id.in_(admin_list)))
 
-    dp.include_routers(commands.router,
-                       callbacks.router,
-                       messages.router)
+    dp.include_routers(
+        commands.router,
+        callbacks.router,
+        messages.router,
+    )
 
     await bot.set_my_commands([
         BotCommand(command='start', description='начало работы'),
