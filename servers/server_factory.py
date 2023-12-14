@@ -5,7 +5,7 @@ from wireguard.wireguard import WireGuard
 
 class ServerFactory:
     _instance = None
-    _created_instances = {}
+    _created_servers = {}
 
     def __new__(cls):
         """Create or return the singleton instance of ServerFactory."""
@@ -27,8 +27,8 @@ class ServerFactory:
         Raises:
             ValueError: If an unknown server class is provided.
         """
-        if server_name in ServerFactory._created_instances:
-            return ServerFactory._created_instances[server_name]
+        if server_name in ServerFactory._created_servers:
+            return ServerFactory._created_servers[server_name]
 
         class_name = server_data.pop('type')
 
@@ -39,6 +39,6 @@ class ServerFactory:
         else:
             raise ValueError(f'Unknown server class: {class_name}')
 
-        ServerFactory._created_instances[server_name] = instance
+        ServerFactory._created_servers[server_name] = instance
 
         return instance
