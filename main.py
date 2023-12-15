@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
+
 from handlers import commands, callbacks, messages
 from modules.middlewares import AuthCheckMiddleware
 from servers.servers_file_loader import ServersFileLoader
