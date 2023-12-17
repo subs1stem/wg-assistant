@@ -30,14 +30,14 @@ class ServerFactory:
         if server_name in ServerFactory._created_servers:
             return ServerFactory._created_servers[server_name]
 
-        class_name = server_data.pop('type')
+        server_type = server_data.pop('type')
 
-        if class_name == 'Linux':
+        if server_type == 'Linux':
             instance = Linux(**server_data)
-        elif class_name == 'MikroTik':
+        elif server_type == 'MikroTik':
             instance = MikroTik(**server_data)
         else:
-            raise ValueError(f'Unknown server class: {class_name}')
+            raise ValueError(f'Unknown server class: {server_type}')
 
         ServerFactory._created_servers[server_name] = instance
 

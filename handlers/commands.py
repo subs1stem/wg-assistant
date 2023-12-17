@@ -9,11 +9,8 @@ router = Router()
 
 
 @router.message(Command('start'))
-async def send_welcome(message: Message):
-    username = message.chat.username
-    if not username:
-        username = '%username%'
-    await message.answer(f'Привет, {username}! 👋')
+async def send_start(message: Message):
+    await message.answer(f'Привет, {message.chat.username or "%username%"}! 👋')
 
 
 @router.message(Command('servers'))
