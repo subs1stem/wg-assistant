@@ -3,14 +3,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.callback_answer import CallbackAnswerMiddleware
 
-from modules.fsm_states import AddPeer, CurrentServer
+from modules.fsm_states import AddPeer
 from modules.keyboards import *
 from modules.messages import peers_message
-from servers.server_factory import ServerFactory
+from modules.middlewares import ServerCreateMiddleware
 from wireguard.wireguard import WireGuard
 
 router = Router()
 router.callback_query.middleware(CallbackAnswerMiddleware())
+router.callback_query.middleware(ServerCreateMiddleware())
 
 
 @router.callback_query(F.data == 'servers')
@@ -21,24 +22,11 @@ async def send_servers(callback: CallbackQuery, state: FSMContext, servers: dict
 
 
 @router.callback_query(F.data.startswith('server:'))
-async def send_server_menu(callback: CallbackQuery, state: FSMContext, servers: dict):
-    state_data = await state.get_data()
-    server_name = state_data.get('server_name') or callback.data.split(':')[1]
-    server = state_data.get('server')
-
-    if not server:
-        server_data = servers.get(server_name)
-
-        try:
-            server = ServerFactory.create_server_instance(server_name, server_data)
-            await state.set_data({'server_name': server_name, 'server': server})
-        except ConnectionError:
-            return await callback.answer(f'Не удалось подключиться к серверу "{server_name}" ⚠️', show_alert=True)
-
-    interface_is_up = server.get_wg_enabled()
-
-    await state.set_state(CurrentServer.working_with_server)
-    await callback.message.edit_text(text=f'Сервер <b>{server_name}</b>', reply_markup=wg_options_kb(interface_is_up))
+async def send_server_menu(callback: CallbackQuery, server_name: str, server: WireGuard):
+    await callback.message.edit_text(
+        text=f'Сервер <b>{server_name}</b>',
+        reply_markup=wg_options_kb(server.get_wg_enabled())
+    )
 
 
 @router.callback_query(F.data == 'reboot_server')
@@ -47,14 +35,14 @@ async def reboot_server(callback: CallbackQuery, server: WireGuard):
     server.reboot_host()
 
 
-@router.callback_query(CurrentServer.working_with_server, F.data == 'get_peers')
+@router.callback_query(F.data == 'get_peers')
 async def send_peer_list(callback: CallbackQuery, server: WireGuard):
     await callback.answer('Запрашиваю состояние пиров...')
     peer_list = server.get_peers()
     await callback.message.edit_text(text=f'{peers_message(peer_list)}', reply_markup=peer_list_kb())
 
 
-@router.callback_query(CurrentServer.working_with_server, F.data == 'get_server_config')
+@router.callback_query(F.data == 'get_server_config')
 async def send_raw_config(callback: CallbackQuery, server: WireGuard):
     await callback.answer('Запрашиваю конфигурацию...')
     await callback.message.edit_text(

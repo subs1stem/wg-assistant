@@ -13,8 +13,8 @@ class ServerFactory:
             cls._instance = super(ServerFactory, cls).__new__(cls)
         return cls._instance
 
-    @staticmethod
-    def create_server_instance(server_name: str, server_data: dict) -> WireGuard:
+    @classmethod
+    def create_server_instance(cls, server_name: str, server_data: dict) -> WireGuard:
         """Create an instance of a WireGuard server based on the provided class name and server data.
 
         Args:
@@ -25,20 +25,23 @@ class ServerFactory:
             WireGuard: An instance of the WireGuard server.
 
         Raises:
-            ValueError: If an unknown server class is provided.
+            ValueError: If an unknown server class is provided or if required data is missing.
         """
-        if server_name in ServerFactory._created_servers:
-            return ServerFactory._created_servers[server_name]
+        if server_name in cls._created_servers:
+            return cls._created_servers[server_name]
 
-        server_type = server_data.pop('type')
+        server_type = server_data.get('type')
+        connection_data = server_data.get('data')
+
+        if not server_type or not connection_data:
+            raise ValueError("Invalid server data. 'type' and 'data' must be provided.")
 
         if server_type == 'Linux':
-            instance = Linux(**server_data)
+            instance = Linux(**connection_data)
         elif server_type == 'MikroTik':
-            instance = MikroTik(**server_data)
+            instance = MikroTik(**connection_data)
         else:
             raise ValueError(f'Unknown server class: {server_type}')
 
-        ServerFactory._created_servers[server_name] = instance
-
+        cls._created_servers[server_name] = instance
         return instance

@@ -1,20 +1,24 @@
 {
   "alpha": {
     "type": "Linux",
-    "server": "127.0.0.1",
-    "port": 22,
-    "username": "root",
-    "password": "toor",
-    "config": "/etc/wireguard/wg0.conf",
-    "interface": "wg0"
+    "data": {
+      "server": "127.0.0.1",
+      "port": 22,
+      "username": "root",
+      "password": "toor",
+      "config": "/etc/wireguard/wg0.conf",
+      "interface": "wg0"
+    }
   },
   "beta": {
     "type": "Linux",
-    "server": "127.0.0.2",
-    "port": 22,
-    "username": "root",
-    "password": "toor",
-    "config": "/etc/wireguard/wg0.conf",
-    "interface": "wg0"
+    "data": {
+      "server": "127.0.0.2",
+      "port": 22,
+      "username": "root",
+      "password": "toor",
+      "config": "/etc/wireguard/wg0.conf",
+      "interface": "wg0"
+    }
   }
 }

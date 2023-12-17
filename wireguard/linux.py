@@ -11,7 +11,7 @@ from wireguard.wireguard import WireGuard
 class Linux(WireGuard):
     """A class for a WireGuard server deployed on a Linux host."""
 
-    tmp_config = '/tmp/wg0.conf'
+    _tmp_config = '/tmp/wg0.conf'
 
     def __init__(
             self,
@@ -44,7 +44,7 @@ class Linux(WireGuard):
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.connect()
 
-        self.wg_config = WGConfig(self.tmp_config)
+        self.wg_config = WGConfig(self._tmp_config)
 
     def __del__(self) -> None:
         self.client.close()
@@ -55,7 +55,7 @@ class Linux(WireGuard):
         Returns:
             None
         """
-        self.client.open_sftp().get(self.config, self.tmp_config)
+        self.client.open_sftp().get(self.config, self._tmp_config)
 
     def _upload_config(self) -> None:
         """Upload the local temporary WireGuard configuration file to the remote host.
@@ -63,7 +63,7 @@ class Linux(WireGuard):
         Returns:
             None
         """
-        self.client.open_sftp().put(self.tmp_config, self.config)
+        self.client.open_sftp().put(self._tmp_config, self.config)
 
     def _generate_key_pair(self) -> Tuple[str, str]:
         """Generate a WireGuard private-public key pair using an SSH connection.
