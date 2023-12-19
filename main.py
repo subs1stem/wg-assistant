@@ -8,14 +8,14 @@ from dotenv import load_dotenv
 
 from handlers import commands, callbacks, messages
 from modules.middlewares import AuthCheckMiddleware
-from servers.servers_file_loader import ServersFileLoader
+from servers.servers_file_loader import load_servers_from_file
 
 load_dotenv()
 
 
 async def main():
     admins = [int(admin_id) for admin_id in environ['ADMIN_ID'].split(',')]
-    servers = ServersFileLoader().get_servers()
+    servers = load_servers_from_file()
 
     bot = Bot(token=environ['TOKEN'], parse_mode='HTML')
 
