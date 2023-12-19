@@ -3,6 +3,7 @@ from time import sleep
 from typing import Callable, Any, Tuple, Optional
 
 from paramiko import SSHClient, AutoAddPolicy
+from paramiko.ssh_exception import NoValidConnectionsError, SSHException
 from wgconfig import WGConfig
 
 from wireguard.wireguard import WireGuard
@@ -11,7 +12,8 @@ from wireguard.wireguard import WireGuard
 class Linux(WireGuard):
     """A class for a WireGuard server deployed on a Linux host."""
 
-    _tmp_config = '/tmp/wg0.conf'
+    _TMP_CONFIG = '/tmp/wg0.conf'
+    _RESTART_DELAY = 3
 
     def __init__(
             self,
@@ -40,11 +42,12 @@ class Linux(WireGuard):
 
         self.config = config
         self.interface = interface
+
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.connect()
 
-        self.wg_config = WGConfig(self._tmp_config)
+        self.wg_config = WGConfig(self._TMP_CONFIG)
 
     def __del__(self) -> None:
         self.client.close()
@@ -55,7 +58,7 @@ class Linux(WireGuard):
         Returns:
             None
         """
-        self.client.open_sftp().get(self.config, self._tmp_config)
+        self.client.open_sftp().get(self.config, self._TMP_CONFIG)
 
     def _upload_config(self) -> None:
         """Upload the local temporary WireGuard configuration file to the remote host.
@@ -63,7 +66,7 @@ class Linux(WireGuard):
         Returns:
             None
         """
-        self.client.open_sftp().put(self._tmp_config, self.config)
+        self.client.open_sftp().put(self._TMP_CONFIG, self.config)
 
     def _generate_key_pair(self) -> Tuple[str, str]:
         """Generate a WireGuard private-public key pair using an SSH connection.
@@ -169,12 +172,14 @@ class Linux(WireGuard):
 
     def connect(self) -> None:
         try:
-            self.client.connect(hostname=self.server,
-                                username=self.username,
-                                password=self.password,
-                                port=self.port)
-        except Exception:
-            raise ConnectionError('Error connecting to WireGuard server host')
+            self.client.connect(
+                hostname=self.server,
+                username=self.username,
+                password=self.password,
+                port=self.port
+            )
+        except (SSHException, NoValidConnectionsError) as e:
+            raise ConnectionError(f'Error connecting to WireGuard server host: {e}')
 
     def reboot_host(self) -> None:
         self.client.exec_command('reboot')
@@ -194,7 +199,7 @@ class Linux(WireGuard):
 
     def restart(self) -> None:
         self.set_wg_enabled(False)
-        sleep(3)
+        sleep(self._RESTART_DELAY)
         self.set_wg_enabled(True)
 
     def get_peers(self) -> dict:

@@ -6,7 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
-from handlers import commands, callbacks, messages
+from handlers import callbacks, commands, messages
 from modules.middlewares import AuthCheckMiddleware
 from servers.servers_file_loader import load_servers_from_file
 
