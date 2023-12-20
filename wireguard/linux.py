@@ -52,6 +52,22 @@ class Linux(WireGuard):
     def __del__(self) -> None:
         self.client.close()
 
+    def _exec_command(self, command: str, max_retries: int = 3) -> Tuple[Any, Any, Any]:
+        """Execute an SSH command, attempting to reconnect if SSHException is thrown.
+
+        Args:
+            command (str): The command to be executed on the remote SSH server.
+            max_retries (int): The maximum number of reconnect attempts (default is 3).
+
+        Returns:
+            Tuple[Any, Any, Any]: A tuple containing stdin, stdout, and stderr streams.
+        """
+        for _ in range(max_retries):
+            try:
+                return self.client.exec_command(command)
+            except SSHException:
+                self.connect()
+
     def _download_config(self) -> None:
         """Download the WireGuard server configuration file to the local temporary file.
 
@@ -74,10 +90,10 @@ class Linux(WireGuard):
         Returns:
             Tuple[str, str]: A tuple containing the private key and public key strings.
         """
-        _, stdout, _ = self.client.exec_command(f'wg genkey')
+        _, stdout, _ = self._exec_command(f'wg genkey')
         privkey = stdout.readline().strip()
 
-        _, stdout, _ = self.client.exec_command(f'echo "{privkey}" | wg pubkey')
+        _, stdout, _ = self._exec_command(f'echo "{privkey}" | wg pubkey')
         pubkey = stdout.readline().strip()
 
         return privkey, pubkey
@@ -182,19 +198,19 @@ class Linux(WireGuard):
             raise ConnectionError(f'Error connecting to WireGuard server host: {e}')
 
     def reboot_host(self) -> None:
-        self.client.exec_command('reboot')
+        self._exec_command('reboot')
 
     def get_config(self, as_dict: bool = False) -> str | dict:
-        _, stdout, _ = self.client.exec_command(f'cat {self.config}')
+        _, stdout, _ = self._exec_command(f'cat {self.config}')
         config = ''.join(stdout.readlines())
         return self.parse_config_to_dict(config) if as_dict else config
 
     def set_wg_enabled(self, enabled: bool) -> None:
         state = 'up' if enabled else 'down'
-        self.client.exec_command(f'wg-quick {state} {self.interface}')
+        self._exec_command(f'wg-quick {state} {self.interface}')
 
     def get_wg_enabled(self) -> bool:
-        _, stdout, _ = self.client.exec_command(f'wg show {self.interface}')
+        _, stdout, _ = self._exec_command(f'wg show {self.interface}')
         return bool(stdout.readline())
 
     def restart(self) -> None:
@@ -203,7 +219,7 @@ class Linux(WireGuard):
         self.set_wg_enabled(True)
 
     def get_peers(self) -> dict:
-        _, stdout, stderr = self.client.exec_command(f'wg show {self.interface}')
+        _, stdout, stderr = self._exec_command(f'wg show {self.interface}')
 
         if stderr.read().decode():
             return {}
