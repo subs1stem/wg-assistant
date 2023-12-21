@@ -52,22 +52,43 @@ class Linux(WireGuard):
     def __del__(self) -> None:
         self.client.close()
 
-    def _exec_command(self, command: str, max_retries: int = 3) -> Tuple[Any, Any, Any]:
+    @staticmethod
+    def retry_on_ssh_exception(max_retries: int = 3) -> Callable:
+        """Decorator for retrying a method in case of SSHException.
+
+        Args:
+            max_retries (int): The maximum number of retry attempts (default is 3).
+
+        Returns:
+            Callable: Decorated function.
+        """
+
+        def decorator(func):
+            @wraps(func)
+            def wrapper(self, *args, **kwargs):
+                for _ in range(max_retries):
+                    try:
+                        return func(self, *args, **kwargs)
+                    except SSHException:
+                        self.connect()
+
+            return wrapper
+
+        return decorator
+
+    @retry_on_ssh_exception()
+    def _exec_command(self, command: str) -> Tuple[Any, Any, Any]:
         """Execute an SSH command, attempting to reconnect if SSHException is thrown.
 
         Args:
             command (str): The command to be executed on the remote SSH server.
-            max_retries (int): The maximum number of reconnect attempts (default is 3).
 
         Returns:
             Tuple[Any, Any, Any]: A tuple containing stdin, stdout, and stderr streams.
         """
-        for _ in range(max_retries):
-            try:
-                return self.client.exec_command(command)
-            except SSHException:
-                self.connect()
+        return self.client.exec_command(command)
 
+    @retry_on_ssh_exception()
     def _download_config(self) -> None:
         """Download the WireGuard server configuration file to the local temporary file.
 
@@ -76,6 +97,7 @@ class Linux(WireGuard):
         """
         self.client.open_sftp().get(self.config, self._TMP_CONFIG)
 
+    @retry_on_ssh_exception()
     def _upload_config(self) -> None:
         """Upload the local temporary WireGuard configuration file to the remote host.
 
