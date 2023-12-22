@@ -1,7 +1,6 @@
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from aiogram.utils.callback_answer import CallbackAnswerMiddleware
 
 from modules.fsm_states import AddPeer
 from modules.keyboards import *
@@ -10,7 +9,6 @@ from modules.middlewares import ServerCreateMiddleware
 from wireguard.wireguard import WireGuard
 
 router = Router()
-router.callback_query.middleware(CallbackAnswerMiddleware())
 router.callback_query.middleware(ServerCreateMiddleware())
 
 

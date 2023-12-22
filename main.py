@@ -6,7 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
-from handlers import callbacks, commands, messages
+from handlers import callbacks, commands, errors, messages
 from modules.middlewares import AuthCheckMiddleware
 from servers.servers_file_loader import load_servers_from_file
 
@@ -31,6 +31,7 @@ async def main():
         commands.router,
         callbacks.router,
         messages.router,
+        errors.router,
     )
 
     await bot.set_my_commands([

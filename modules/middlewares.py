@@ -38,13 +38,7 @@ class ServerCreateMiddleware(BaseMiddleware):
         server_name = state_data.get('server_name') or event.data.split(':')[1]
         server_data = servers.get(server_name)
 
-        try:
-            server: WireGuard = ServerFactory.create_server_instance(server_name, server_data)
-        except ConnectionError:
-            return await event.answer(
-                f'Не удалось подключиться к серверу "{server_name}" ⚠️',
-                show_alert=True
-            )
+        server: WireGuard = ServerFactory.create_server_instance(server_name, server_data)
 
         await data['state'].set_data({'server_name': server_name, 'server': server})
         data.update(server_name=server_name, server=server)
