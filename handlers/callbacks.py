@@ -13,8 +13,7 @@ router.callback_query.middleware(ServerCreateMiddleware())
 
 
 @router.callback_query(F.data == 'servers')
-async def send_servers(callback: CallbackQuery, state: FSMContext, servers: dict):
-    await state.clear()
+async def send_servers(callback: CallbackQuery, servers: dict):
     server_names = list(servers.keys())
     await callback.message.edit_text(text='Список серверов:', reply_markup=servers_kb(server_names))
 
@@ -41,11 +40,11 @@ async def send_peer_list(callback: CallbackQuery, server: WireGuard):
 
 
 @router.callback_query(F.data == 'get_server_config')
-async def send_raw_config(callback: CallbackQuery, server: WireGuard):
+async def send_raw_config(callback: CallbackQuery, server: WireGuard, server_name: str):
     await callback.answer('Запрашиваю конфигурацию...')
     await callback.message.edit_text(
         text=f'<code>{server.get_config()}</code>',
-        reply_markup=back_btn(f'server:')
+        reply_markup=back_btn(f'server:{server_name}')
     )
 
 

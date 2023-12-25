@@ -1,6 +1,5 @@
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from modules.keyboards import servers_kb
@@ -14,7 +13,6 @@ async def send_start(message: Message):
 
 
 @router.message(Command('servers'))
-async def send_servers(message: Message, state: FSMContext, servers: dict):
-    await state.clear()
+async def send_servers(message: Message, servers: dict):
     server_names = list(servers.keys())
     await message.answer('Список серверов:', reply_markup=servers_kb(server_names))

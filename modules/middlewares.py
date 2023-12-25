@@ -4,7 +4,6 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, CallbackQuery
 
 from servers.server_factory import ServerFactory
-from wireguard.wireguard import WireGuard
 
 
 class AuthCheckMiddleware(BaseMiddleware):
@@ -12,7 +11,7 @@ class AuthCheckMiddleware(BaseMiddleware):
             self,
             handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
             event: TelegramObject,
-            data: Dict[str, Any]
+            data: Dict[str, Any],
     ) -> Any:
         user_id = data.get('event_from_user').id
         admins = data.get('admins')
@@ -27,20 +26,27 @@ class AuthCheckMiddleware(BaseMiddleware):
 
 
 class ServerCreateMiddleware(BaseMiddleware):
+    def __init__(self) -> None:
+        self.data = {}
+        self.data_updated = False
+
     async def __call__(
             self,
             handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
             event: CallbackQuery,
-            data: Dict[str, Any]
+            data: Dict[str, Any],
     ) -> Any:
-        servers = data.get('servers')
-        state_data = await data.get('state').get_data()
-        server_name = state_data.get('server_name') or event.data.split(':')[1]
-        server_data = servers.get(server_name)
+        if not self.data_updated:
+            self.data = data
+            self.data_updated = True
 
-        server: WireGuard = ServerFactory.create_server_instance(server_name, server_data)
+        if event.data.startswith('server:'):
+            servers = self.data.get('servers')
+            server_name = event.data.split(':')[1]
+            server_data = servers.get(server_name)
 
-        await data['state'].set_data({'server_name': server_name, 'server': server})
-        data.update(server_name=server_name, server=server)
+            server = ServerFactory.create_server_instance(server_name, server_data)
 
-        return await handler(event, data)
+            self.data.update(server_name=server_name, server=server)
+
+        return await handler(event, self.data)
