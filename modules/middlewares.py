@@ -29,6 +29,7 @@ class ServerCreateMiddleware(BaseMiddleware):
     def __init__(self) -> None:
         self.data = {}
         self.data_updated = False
+        self.selected_server_name = None
 
     async def __call__(
             self,
@@ -42,9 +43,10 @@ class ServerCreateMiddleware(BaseMiddleware):
 
         if event.data.startswith('server:'):
             servers = self.data.get('servers')
-            server_name = event.data.split(':')[1]
+            server_name = event.data.split(':')[1] or self.selected_server_name
             server_data = servers.get(server_name)
 
+            self.selected_server_name = server_name
             server = ServerFactory.create_server_instance(server_name, server_data)
 
             self.data.update(server_name=server_name, server=server)
