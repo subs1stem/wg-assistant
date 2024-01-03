@@ -4,3 +4,4 @@ __pycache__
 .env
 servers.json
 test.py
+*.db

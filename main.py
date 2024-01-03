@@ -2,12 +2,12 @@ import asyncio
 from os import environ
 
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
 from handlers import callbacks, commands, errors, messages
 from modules.middlewares import AuthCheckMiddleware
+from modules.storages import SQLiteStorage
 from servers.servers_file_loader import load_servers_from_file
 
 load_dotenv()
@@ -20,7 +20,7 @@ async def main():
     bot = Bot(token=environ['TOKEN'], parse_mode='HTML')
 
     dp = Dispatcher(
-        storage=MemoryStorage(),
+        storage=SQLiteStorage(),
         admins=admins,
         servers=servers,
     )
