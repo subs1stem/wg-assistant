@@ -1,6 +1,7 @@
 import sqlite3
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, cast
 
+from aiogram.fsm.state import State
 from aiogram.fsm.storage.base import BaseStorage, StorageKey, StateType
 
 
@@ -29,14 +30,17 @@ class SQLiteStorage(BaseStorage):
         if state is None:
             self.cursor.execute('DELETE FROM states WHERE chat_id = ?', (chat_id,))
         else:
-            self.cursor.execute('REPLACE INTO states (chat_id, state) VALUES (?, ?)', (chat_id, str(state)))
+            self.cursor.execute(
+                'REPLACE INTO states (chat_id, state) VALUES (?, ?)',
+                (chat_id, cast(str, state.state if isinstance(state, State) else state))
+            )
         self.connection.commit()
 
     async def get_state(self, key: StorageKey) -> Optional[str]:
         chat_id = key.chat_id
         self.cursor.execute('SELECT state FROM states WHERE chat_id = ?', (chat_id,))
         result = self.cursor.fetchone()
-        return result[0] if result else None
+        return cast(Optional[str], result[0]) if result else None
 
     async def set_data(self, key: StorageKey, data: Dict[str, Any]) -> None:
         chat_id = key.chat_id
