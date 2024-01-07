@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Awaitable, Any
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, CallbackQuery
+from aiogram.types import TelegramObject
 
 from servers.server_factory import ServerFactory
 
@@ -34,21 +34,27 @@ class ServerCreateMiddleware(BaseMiddleware):
     async def __call__(
             self,
             handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: CallbackQuery,
+            event: TelegramObject,
             data: Dict[str, Any],
     ) -> Any:
         if not self.data_updated:
             self.data = data
             self.data_updated = True
 
-        if event.data.startswith('server:'):
-            servers = self.data.get('servers')
-            server_name = event.data.split(':')[1] or self.selected_server_name
-            server_data = servers.get(server_name)
+        if event.message and data['raw_state'] == 'AddPeer:waiting_for_peer_name':
+            print('HERE')  # TODO: why does this crap work???
 
-            self.selected_server_name = server_name
-            server = ServerFactory.create_server_instance(server_name, server_data)
+        elif event.callback_query:
+            callback_data = event.callback_query.data
 
-            self.data.update(server_name=server_name, server=server)
+            if callback_data.startswith('server:'):
+                servers = self.data.get('servers')
+                server_name = callback_data.split(':')[1] or self.selected_server_name
+                server_data = servers.get(server_name)
+
+                self.selected_server_name = server_name
+                server = ServerFactory.create_server_instance(server_name, server_data)
+
+                self.data.update(server_name=server_name, server=server)
 
         return await handler(event, self.data)

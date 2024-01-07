@@ -6,7 +6,7 @@ from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
 from handlers import callbacks, commands, errors, messages
-from modules.middlewares import AuthCheckMiddleware
+from modules.middlewares import AuthCheckMiddleware, ServerCreateMiddleware
 from modules.storages import SQLiteStorage
 from servers.servers_file_loader import load_servers_from_file
 
@@ -26,6 +26,7 @@ async def main():
     )
 
     dp.update.middleware(AuthCheckMiddleware())
+    dp.update.middleware(ServerCreateMiddleware())
 
     dp.include_routers(
         commands.router,

@@ -5,11 +5,9 @@ from aiogram.types import CallbackQuery
 from modules.fsm_states import AddPeer
 from modules.keyboards import *
 from modules.messages import peers_message
-from modules.middlewares import ServerCreateMiddleware
 from wireguard.wireguard import WireGuard
 
 router = Router()
-router.callback_query.middleware(ServerCreateMiddleware())
 
 
 @router.callback_query(F.data == 'servers')
