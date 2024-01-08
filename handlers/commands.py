@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
@@ -8,7 +8,7 @@ from modules.keyboards import servers_kb
 router = Router()
 
 
-@router.message(Command('start'))
+@router.message(CommandStart())
 async def send_start(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(f'Привет, {message.chat.username or "%username%"}! 👋')

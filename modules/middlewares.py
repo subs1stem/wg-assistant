@@ -41,10 +41,7 @@ class ServerCreateMiddleware(BaseMiddleware):
             self.data = data
             self.data_updated = True
 
-        if event.message and data['raw_state'] == 'AddPeer:waiting_for_peer_name':
-            print('HERE')  # TODO: why does this crap work???
-
-        elif event.callback_query:
+        if event.callback_query:
             callback_data = event.callback_query.data
 
             if callback_data.startswith('server:'):
