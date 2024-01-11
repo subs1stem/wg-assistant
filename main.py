@@ -2,6 +2,7 @@ import asyncio
 from os import environ
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
@@ -20,7 +21,8 @@ async def main():
     bot = Bot(token=environ['TOKEN'], parse_mode='HTML')
 
     dp = Dispatcher(
-        storage=SQLiteStorage(),
+        # storage=SQLiteStorage(),
+        storage=MemoryStorage(),
         admins=admins,
         servers=servers,
     )

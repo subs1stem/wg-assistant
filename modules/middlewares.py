@@ -26,32 +26,33 @@ class AuthCheckMiddleware(BaseMiddleware):
 
 
 class ServerCreateMiddleware(BaseMiddleware):
-    def __init__(self) -> None:
-        self.data = {}
-        self.data_updated = False
-        self.selected_server_name = None
-
     async def __call__(
             self,
             handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
             event: TelegramObject,
             data: Dict[str, Any],
     ) -> Any:
-        if not self.data_updated:
-            self.data = data
-            self.data_updated = True
+        state = data['state']
 
         if event.callback_query:
             callback_data = event.callback_query.data
 
-            if callback_data.startswith('server:'):
-                servers = self.data.get('servers')
-                server_name = callback_data.split(':')[1] or self.selected_server_name
+            if callback_data.startswith('server:') and callback_data != 'server:':
+                servers = data.get('servers')
+                server_name = callback_data.split(':')[1]
                 server_data = servers.get(server_name)
 
-                self.selected_server_name = server_name
-                server = ServerFactory.create_server_instance(server_name, server_data)
+                await state.set_data({
+                    'server_name': server_name,
+                    'server_data': server_data
+                })
 
-                self.data.update(server_name=server_name, server=server)
+        state_data = await state.get_data()
 
-        return await handler(event, self.data)
+        if state_data:
+            server_name = state_data['server_name']
+            server_data = state_data['server_data']
+            server = ServerFactory.create_server_instance(server_name, server_data)
+            data.update(server_name=server_name, server=server)
+
+        return await handler(event, data)
