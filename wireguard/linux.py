@@ -54,7 +54,7 @@ class Linux(WireGuard):
 
     @staticmethod
     def retry_on_ssh_exception(max_retries: int = 3) -> Callable:
-        """Decorator for retrying a method in case of SSHException.
+        """Decorator for retrying a method in case of ConnectionError.
 
         Args:
             max_retries (int): The maximum number of retry attempts (default is 3).
@@ -69,7 +69,7 @@ class Linux(WireGuard):
                 for _ in range(max_retries):
                     try:
                         return func(self, *args, **kwargs)
-                    except SSHException:
+                    except ConnectionError:
                         self.connect()
 
             return wrapper
@@ -216,7 +216,7 @@ class Linux(WireGuard):
                 password=self.password,
                 port=self.port
             )
-        except (SSHException, NoValidConnectionsError) as e:
+        except (SSHException, NoValidConnectionsError, ConnectionResetError) as e:
             raise ConnectionError(f'Error connecting to WireGuard server host: {e}')
 
     def reboot_host(self) -> None:
