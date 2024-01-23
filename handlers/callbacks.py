@@ -11,7 +11,8 @@ router = Router()
 
 
 @router.callback_query(F.data == 'servers')
-async def send_servers(callback: CallbackQuery, servers: dict):
+async def send_servers(callback: CallbackQuery, state: FSMContext, servers: dict):
+    await state.clear()
     server_names = list(servers.keys())
     await callback.message.edit_text(text='Список серверов:', reply_markup=servers_kb(server_names))
 
