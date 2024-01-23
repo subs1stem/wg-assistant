@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from typing import Dict, Any, Optional, cast
 
@@ -47,14 +48,14 @@ class SQLiteStorage(BaseStorage):
         if not data:
             self.cursor.execute('DELETE FROM data WHERE chat_id = ?', (chat_id,))
         else:
-            self.cursor.execute('REPLACE INTO data (chat_id, data) VALUES (?, ?)', (chat_id, data))
+            self.cursor.execute('REPLACE INTO data (chat_id, data) VALUES (?, ?)', (chat_id, json.dumps(data)))
         self.connection.commit()
 
     async def get_data(self, key: StorageKey) -> Dict[str, Any]:
         chat_id = key.chat_id
         self.cursor.execute('SELECT data FROM data WHERE chat_id = ?', (chat_id,))
         result = self.cursor.fetchone()
-        return eval(result[0]) if result else {}
+        return json.loads(result[0]) if result else {}
 
     async def close(self) -> None:
         self.connection.close()
