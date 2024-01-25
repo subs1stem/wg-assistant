@@ -32,4 +32,4 @@ async def check_peer_name(message: Message, state: FSMContext, server: WireGuard
 
 @router.message()
 async def send_unknown_message(message: Message):
-    await message.answer('Я тебя не понимаю.\nИспользуй команды ⬇')
+    await message.answer("I don't understand you.\nUse commands ⬇")

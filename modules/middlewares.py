@@ -18,9 +18,9 @@ class AuthCheckMiddleware(BaseMiddleware):
 
         if user_id not in admins:
             if event.message is None:
-                return await event.callback_query.answer('Вы были заблокированы 🛑', show_alert=True)
+                return await event.callback_query.answer('You have been blocked 🛑', show_alert=True)
 
-            return await event.message.answer('Я Вас не знаю ⚠')
+            return await event.message.answer("I don't know you ⚠")
 
         return await handler(event, data)
 

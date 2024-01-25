@@ -1,6 +1,6 @@
 def peers_message(peers):
     if not peers:
-        return 'Интерфейс неактивен'
+        return 'Interface is inactive'
     message = ''
     for key in peers:
         params = peers[key]
