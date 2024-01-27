@@ -32,6 +32,9 @@ class ServerCreateMiddleware(BaseMiddleware):
             event: TelegramObject,
             data: Dict[str, Any],
     ) -> Any:
+        if event.message and (event.message.text == '/start' or event.message.text == '/servers'):
+            return await handler(event, data)
+
         state = data['state']
 
         if event.callback_query:
