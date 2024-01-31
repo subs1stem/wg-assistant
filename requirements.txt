@@ -18,8 +18,8 @@ pydantic==2.5.2
 pydantic_core==2.14.5
 PyNaCl==1.5.0
 pypng==0.20220715.0
-python-dotenv==1.0.0
+python-dotenv==1.0.1
 qrcode==7.4.2
 typing_extensions==4.9.0
-wgconfig==1.0.0
+wgconfig==1.0.1
 yarl==1.9.4
