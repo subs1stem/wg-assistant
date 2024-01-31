@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import sys
 from os import environ
 
 from aiogram import Bot, Dispatcher
@@ -6,7 +8,7 @@ from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
 from handlers import callbacks, commands, errors, messages
-from modules.middlewares import AuthCheckMiddleware, ServerCreateMiddleware
+from modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
 from modules.storages import SQLiteStorage
 from servers.servers_file_loader import load_servers_from_file
 
@@ -25,6 +27,7 @@ async def main():
         servers=servers,
     )
 
+    dp.update.middleware(LoggingMiddleware())
     dp.update.middleware(AuthCheckMiddleware())
     dp.update.middleware(ServerCreateMiddleware())
 
@@ -45,4 +48,10 @@ async def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    )
+
     asyncio.run(main())

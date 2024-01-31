@@ -69,7 +69,7 @@ class Linux(WireGuard):
                 for _ in range(max_retries):
                     try:
                         return func(self, *args, **kwargs)
-                    except ConnectionError:
+                    except (SSHException, ConnectionError):
                         self.connect()
 
             return wrapper
