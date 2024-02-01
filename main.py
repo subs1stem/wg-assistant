@@ -41,6 +41,7 @@ async def main():
     await bot.set_my_commands([
         BotCommand(command='start', description='start'),
         BotCommand(command='servers', description='server list'),
+        BotCommand(command='settings', description='bot settings'),
     ])
 
     await bot.delete_webhook(drop_pending_updates=True)

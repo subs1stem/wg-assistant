@@ -97,3 +97,9 @@ async def process_peer_action(callback: CallbackQuery, server: WireGuard):
             await callback.answer('Unknown action!', show_alert=True)
 
     await show_peer(callback, server)
+
+
+@router.callback_query(F.data.startswith('debug_log'))
+async def set_debug_log_state(callback: CallbackQuery):
+    state = callback.data.split(':')[-1] == 'enable'
+    await callback.message.edit_reply_markup(reply_markup=bot_settings_kb(state))

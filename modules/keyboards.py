@@ -62,3 +62,12 @@ def peer_action_kb(pubkey, peer_is_enabled):
     kb.button(text='Delete 🗑', callback_data=f'selected_peer:del:{pubkey}')
     kb.button(text='⬅ Back', callback_data='config_peers')
     return kb.adjust(2, 1).as_markup()
+
+
+def bot_settings_kb(debug_log_enabled):
+    kb = InlineKeyboardBuilder()
+    if debug_log_enabled:
+        kb.button(text='Disable debug log ⏹', callback_data='debug_log:disable')
+    else:
+        kb.button(text='Enable debug log 🐞', callback_data='debug_log:enable')
+    return kb.as_markup()
