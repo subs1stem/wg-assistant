@@ -9,19 +9,8 @@ Telegram bot for managing your own WireGuard servers.
 * View client status (endpoint, traffic, etc.).
 * Manage an unlimited number of servers.
 
-## Quick start
+## Supported ✅
 
-```
-git clone https://github.com/subs1stem/wg-assistant.git
-cd wg-assistant/
-chmod +x install.sh
-./install.sh
-```
+* Linux.
 
-Then go to `/etc/wg-assistant/wg-assistant.conf` and edit the config file
-
-Finally, run the docker container:
-
-```
-sudo docker run -v /etc/wg-assistant:/etc/wg-assistant --name wg-assistant -d wg-assistant
-```
+## Installation 🛠
