@@ -55,4 +55,8 @@ if __name__ == '__main__':
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     )
 
+    # Set the logging level of "aiogram.event" to "WARNING"
+    # because there is too much spam coming in with the INFO level
+    logging.getLogger('aiogram.event').setLevel(logging.WARNING)
+
     asyncio.run(main())
