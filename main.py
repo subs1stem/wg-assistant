@@ -7,6 +7,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
+from db.init_db import init_db
 from handlers import callbacks, commands, errors, messages
 from modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
 from modules.storages import SQLiteStorage
@@ -49,6 +50,8 @@ async def main():
 
 
 if __name__ == '__main__':
+    init_db()
+
     logging.basicConfig(
         level=logging.INFO,
         stream=sys.stdout,
