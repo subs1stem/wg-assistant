@@ -17,5 +17,12 @@ def init_db(database_name: str = 'wg_assistant.db') -> None:
 def get_log_level(database_name: str = 'wg_assistant.db') -> str:
     with sqlite3.connect(database_name) as con:
         cur = con.cursor()
-        cur.execute('SELECT value FROM settings WHERE key = "log_level"')
+        cur.execute("SELECT value FROM settings WHERE key = 'log_level'")
         return cur.fetchone()[0]
+
+
+def set_log_level(log_level: str, database_name: str = 'wg_assistant.db') -> None:
+    with sqlite3.connect(database_name) as con:
+        cur = con.cursor()
+        cur.execute("UPDATE settings SET value = ? WHERE key = 'log_level'", (log_level,))
+        con.commit()

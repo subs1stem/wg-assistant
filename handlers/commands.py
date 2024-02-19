@@ -3,6 +3,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from db.database import get_log_level
 from modules.keyboards import servers_kb, bot_settings_kb
 
 router = Router()
@@ -23,4 +24,5 @@ async def send_servers(message: Message, servers: dict, state: FSMContext):
 
 @router.message(Command('settings'))
 async def send_settings(message: Message):
-    await message.answer('Bot settings:', reply_markup=bot_settings_kb(False))
+    debug_log_enabled = get_log_level() == 'DEBUG'
+    await message.answer('Bot settings:', reply_markup=bot_settings_kb(debug_log_enabled))

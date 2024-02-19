@@ -1,7 +1,10 @@
+import logging
+
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
+from db.database import set_log_level
 from modules.fsm_states import AddPeer
 from modules.keyboards import *
 from modules.messages import peers_message
@@ -102,4 +105,7 @@ async def process_peer_action(callback: CallbackQuery, server: WireGuard):
 @router.callback_query(F.data.startswith('debug_log'))
 async def set_debug_log_state(callback: CallbackQuery):
     state = callback.data.split(':')[-1] == 'enable'
+    log_level = 'DEBUG' if state else 'INFO'
+    set_log_level(log_level)
+    logging.getLogger().setLevel(log_level)
     await callback.message.edit_reply_markup(reply_markup=bot_settings_kb(state))
