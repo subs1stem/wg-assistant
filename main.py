@@ -7,7 +7,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
-from db.database import init_db, get_log_level
+from db.database import Database
 from handlers import callbacks, commands, errors, messages
 from modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
 from modules.storages import SQLiteStorage
@@ -50,9 +50,10 @@ async def main():
 
 
 if __name__ == '__main__':
-    init_db()
+    database = Database()
+    database.init_db()
 
-    log_level_str = get_log_level()
+    log_level_str = database.get_log_level()
     log_level = logging.getLevelName(log_level_str)
 
     logging.basicConfig(
