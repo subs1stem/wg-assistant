@@ -4,6 +4,7 @@ import sys
 from os import environ
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
@@ -20,7 +21,8 @@ async def main():
     admins = [int(admin_id) for admin_id in environ['ADMIN_ID'].split(',')]
     servers = load_servers_from_file()
 
-    bot = Bot(token=environ['TOKEN'], parse_mode='HTML')
+    default = DefaultBotProperties(parse_mode='HTML')
+    bot = Bot(token=environ['TOKEN'], default=default)
 
     dp = Dispatcher(
         storage=SQLiteStorage(),

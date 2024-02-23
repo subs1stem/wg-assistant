@@ -18,4 +18,4 @@ async def handle_connection_error(_, callback: CallbackQuery, state: FSMContext)
 @router.error(F.update.callback_query.as_('callback'))
 async def handle_error(event: ErrorEvent, callback: CallbackQuery):
     await callback.answer(f'Unknown error ⚠️', show_alert=True)
-    logging.warning(event.exception)
+    logging.error(event.exception)
