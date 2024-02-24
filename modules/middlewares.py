@@ -14,7 +14,8 @@ class LoggingMiddleware(BaseMiddleware):
             event: TelegramObject,
             data: Dict[str, Any],
     ) -> Any:
-        logging.debug(f'Incoming update:\n{event.model_dump_json(indent=2, exclude_none=True)}')
+        event_json = event.model_dump_json(indent=2, exclude_none=True)
+        logging.debug(f'Incoming update:\n{event_json}')
         return await handler(event, data)
 
 
@@ -44,7 +45,7 @@ class ServerCreateMiddleware(BaseMiddleware):
             event: TelegramObject,
             data: Dict[str, Any],
     ) -> Any:
-        if event.message and (event.message.text == '/start' or event.message.text == '/servers'):
+        if event.message is not None and event.message.text.startswith('/'):
             return await handler(event, data)
 
         state = data['state']
