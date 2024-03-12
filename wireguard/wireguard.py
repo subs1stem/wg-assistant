@@ -31,7 +31,7 @@ class WireGuard(ABC):
     def build_client_config(
             privkey: str,
             address: str,
-            pubkey: str,
+            server_pubkey: str,
             server_ip: str,
             server_port: int
     ) -> str:
@@ -40,7 +40,7 @@ class WireGuard(ABC):
         Args:
             privkey (str): The private key of the client.
             address (str): The client's assigned IP address.
-            pubkey (str): The public key of the server.
+            server_pubkey (str): The public key of the server.
             server_ip (str): The IP address of the WireGuard server.
             server_port (int): The port number of the WireGuard server.
 
@@ -50,12 +50,13 @@ class WireGuard(ABC):
         wg_config = '[Interface]\n' \
                     f'PrivateKey = {privkey}\n' \
                     f'Address = {address}\n' \
-                    f'DNS = 8.8.8.8\n\n' \
+                    f'DNS = 1.1.1.1, 1.0.0.1\n\n' \
                     '[Peer]\n' \
-                    f'PublicKey = {pubkey}\n' \
+                    f'PublicKey = {server_pubkey}\n' \
                     'AllowedIPs = 0.0.0.0/0\n' \
                     f'Endpoint = {server_ip}:{server_port}\n' \
                     'PersistentKeepalive = 30'
+
         return wg_config
 
     @abstractmethod
@@ -106,6 +107,14 @@ class WireGuard(ABC):
 
         Returns:
             bool: True if the WireGuard interface is enabled, False if it's disabled.
+        """
+
+    @abstractmethod
+    def get_server_pubkey(self) -> str | None:
+        """Get the public key of the WireGuard server.
+
+        Return:
+            str | None: The WireGuard server's public key, or "None" if an error occurred.
         """
 
     @abstractmethod

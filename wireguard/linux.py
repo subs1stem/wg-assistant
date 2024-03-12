@@ -235,6 +235,10 @@ class Linux(WireGuard):
         _, stdout, _ = self._exec_command(f'wg show {self.interface}')
         return bool(stdout.readline())
 
+    def get_server_pubkey(self) -> str | None:
+        _, stdout, stderr = self._exec_command(f'wg show {self.interface} public-key')
+        return None if stderr.readline() else stdout.readline().strip()
+
     def restart(self) -> None:
         self.set_wg_enabled(False)
         sleep(self._RESTART_DELAY)
@@ -277,7 +281,7 @@ class Linux(WireGuard):
         client_config = self.build_client_config(
             privkey=privkey,
             address=peer_ip,
-            pubkey=pubkey,
+            server_pubkey=self.get_server_pubkey(),
             server_ip=self.server,
             server_port=server_port,
         )
