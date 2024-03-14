@@ -1,6 +1,6 @@
 # wg-assistant
 
-Telegram bot for managing your own WireGuard servers.
+Telegram bot for managing WireGuard VPN.
 
 ## 🎯 Features
 
@@ -11,7 +11,7 @@ Telegram bot for managing your own WireGuard servers.
 
 ## ✅ Supported
 
-* Linux.
+* [Linux](https://www.wireguard.com)
 
 ## 🛠 Installation
 
