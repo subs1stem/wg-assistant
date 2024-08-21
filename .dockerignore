@@ -3,4 +3,7 @@ venv
 .git
 .gitignore
 .idea
+servers.example.json
+test.py
+*.db
 **/__pycache__/
