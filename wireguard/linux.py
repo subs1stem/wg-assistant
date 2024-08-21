@@ -1,4 +1,5 @@
 from functools import wraps
+from ipaddress import IPv4Address, IPv4Interface
 from time import sleep
 from typing import Callable, Any, Tuple, Optional
 
@@ -196,17 +197,25 @@ class Linux(WireGuard):
             Optional[str]: The next available IP address in the format 'X.X.X.X/32',
             or None if there are no available IP addresses.
         """
-        ip_addresses = [config[key]['AllowedIPs'] for key in config if key != 'Interface']
-        prefix = ip_addresses[0].split('/')[0].split('.')[:-1]
-        network_prefix = ".".join(prefix)  # Use the network prefix from the configuration
-        ip_integers = [int(ip.split('/')[0].split('.')[-1]) for ip in ip_addresses]
-        max_ip_integer = max(ip_integers)
-        next_ip_integer = max_ip_integer + 1
-        if next_ip_integer <= 255:
-            next_ip_address = f'{network_prefix}.{next_ip_integer}/32'
-            return next_ip_address
-        else:
-            return None
+        # Extract the interface IP address and subnet mask
+        interface_ip_with_mask = config['Interface']['Address']
+        interface_ip = IPv4Interface(interface_ip_with_mask)
+
+        # Calculate the network from the interface's IP and mask
+        network = interface_ip.network
+
+        # Extract all used IP addresses and convert them to IPv4Address objects
+        used_ips = [IPv4Address(config[key]['AllowedIPs'].split('/')[0]) for key in config if
+                    key != 'Interface']
+
+        # Iterate through the possible IP range in the network and find the first available IP,
+        # skipping the interface IP.
+        for ip in network.hosts():
+            if ip != interface_ip.ip and ip not in used_ips:
+                return f'{ip}/32'
+
+        # If no available IP is found, return None
+        return None
 
     def connect(self) -> None:
         try:
