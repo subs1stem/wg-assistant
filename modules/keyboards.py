@@ -55,6 +55,7 @@ def peers_kb(peers):
 
 def peer_action_kb(pubkey, peer_is_enabled):
     kb = InlineKeyboardBuilder()
+    kb.button(text='Rename ✏️', callback_data=f'selected_peer:name:{pubkey}')
     if peer_is_enabled:
         kb.button(text='Disable 📵', callback_data=f'selected_peer:off:{pubkey}')
     else:

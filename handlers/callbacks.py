@@ -86,6 +86,8 @@ async def process_peer_action(callback: CallbackQuery, server: WireGuard):
     _, action, pubkey = callback.data.split(':')
 
     match action:
+        case 'name':
+            await callback.answer()
         case 'off':
             await callback.answer('Disabling...')
             server.disable_peer(pubkey)
