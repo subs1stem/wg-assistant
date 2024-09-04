@@ -92,7 +92,8 @@ async def process_peer_action(callback: CallbackQuery, state: FSMContext, server
                 text="Send me the new client name",
                 reply_markup=cancel_btn(f'peer:{pubkey}')
             )
-            await state.set_state(RenamePeer.waiting_for_new_name)
+            await state.update_data({'pubkey': pubkey})
+            return await state.set_state(RenamePeer.waiting_for_new_name)
         case 'off':
             await callback.answer('Disabling...')
             server.disable_peer(pubkey)

@@ -187,3 +187,15 @@ class WireGuard(ABC):
         Returns:
             bool: True if the peer is enabled, False otherwise.
         """
+
+    @abstractmethod
+    def rename_peer(self, pubkey: str, new_name: str) -> None:
+        """Rename a peer in the WireGuard server.
+
+        Args:
+            pubkey (str): The public key of the peer to be renamed.
+            new_name (str): The new name of the peer.
+
+        Returns:
+            None
+        """

@@ -312,3 +312,7 @@ class Linux(WireGuard):
     @_config_operation()
     def get_peer_enabled(self, pubkey: str) -> bool:
         return self.wg_config.get_peer_enabled(pubkey)
+
+    @_config_operation(rewrite_config=True)
+    def rename_peer(self, pubkey: str, new_name: str) -> None:
+        pass

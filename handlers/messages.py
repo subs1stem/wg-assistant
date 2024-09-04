@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.types.input_file import BufferedInputFile
 
-from modules.fsm_states import AddPeer
+from modules.fsm_states import AddPeer, RenamePeer
 from wireguard.wireguard import WireGuard
 
 router = Router()
@@ -27,6 +27,14 @@ async def check_peer_name(message: Message, state: FSMContext, server: WireGuard
             caption=client_config,
         )
 
+    await state.clear()
+
+
+@router.message(RenamePeer.waiting_for_new_name)
+async def check_new_name(message: Message, state: FSMContext, server: WireGuard):
+    state_data = await state.get_data()
+    pubkey = state_data.get('pubkey')
+    server.rename_peer(pubkey, message.text)
     await state.clear()
 
 

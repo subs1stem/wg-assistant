@@ -38,3 +38,6 @@ class MikroTik(WireGuard):
 
     def get_peer_enabled(self, pubkey: str) -> bool:
         pass
+
+    def rename_peer(self, pubkey: str, new_name: str) -> None:
+        pass
