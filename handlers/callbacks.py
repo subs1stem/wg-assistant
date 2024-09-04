@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from db.database import Database
-from modules.fsm_states import AddPeer
+from modules.fsm_states import AddPeer, RenamePeer
 from modules.keyboards import *
 from modules.messages import peers_message
 from wireguard.wireguard import WireGuard
@@ -82,12 +82,17 @@ async def show_peer(callback: CallbackQuery, server: WireGuard):
 
 
 @router.callback_query(F.data.startswith('selected_peer'))
-async def process_peer_action(callback: CallbackQuery, server: WireGuard):
+async def process_peer_action(callback: CallbackQuery, state: FSMContext, server: WireGuard):
     _, action, pubkey = callback.data.split(':')
 
     match action:
         case 'name':
             await callback.answer()
+            await callback.message.edit_text(
+                text="Send me the new client name",
+                reply_markup=cancel_btn(f'peer:{pubkey}')
+            )
+            await state.set_state(RenamePeer.waiting_for_new_name)
         case 'off':
             await callback.answer('Disabling...')
             server.disable_peer(pubkey)
