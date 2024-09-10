@@ -40,7 +40,7 @@ async def check_new_name(message: Message, state: FSMContext, server: WireGuard)
     peer_is_enabled = server.get_peer_enabled(pubkey)
     await message.answer(text=f'Choose an action:', reply_markup=peer_action_kb(pubkey, peer_is_enabled))
 
-    await state.clear()
+    await state.set_state()
 
 
 @router.message()
