@@ -1,4 +1,5 @@
 from routeros_api import RouterOsApiPool
+from routeros_api.api_communicator.base import AsynchronousResponse
 
 from wireguard.wireguard import WireGuard
 
@@ -11,7 +12,8 @@ class RouterOS(WireGuard):
             server: str,
             port: int,
             username: str,
-            password: str
+            password: str,
+            interface_name: str,
     ) -> None:
         """Initialize a new instance of the RouterOS WireGuard client.
 
@@ -20,11 +22,13 @@ class RouterOS(WireGuard):
             port (int): The port number for the connection.
             username (str): The username for authentication.
             password (str): The password for authentication.
+            interface_name (str): The WireGuard interface name.
 
         Returns:
             None
         """
         super().__init__(server, port, username, password)
+        self.interface_name = interface_name
 
         self.connection = RouterOsApiPool(
             host=self.server,
@@ -39,6 +43,9 @@ class RouterOS(WireGuard):
     def __del__(self) -> None:
         self.connection.disconnect()
 
+    def _get_interface(self) -> AsynchronousResponse:
+        return self.api.get_resource('/interface/wireguard').get(name=self.interface_name)
+
     def connect(self) -> None:
         pass
 
@@ -49,10 +56,16 @@ class RouterOS(WireGuard):
         pass
 
     def set_wg_enabled(self, enabled: bool) -> None:
-        pass
+        interface = self._get_interface()
+        if interface:
+            self.api.get_resource('/interface/wireguard').set(
+                id=interface[0]['id'],
+                disabled='no' if enabled else 'yes'
+            )
 
     def get_wg_enabled(self) -> bool:
-        pass
+        interface = self._get_interface()
+        return bool(interface and interface[0].get('disabled') == 'false')
 
     def get_server_pubkey(self) -> str | None:
         pass
