@@ -68,10 +68,17 @@ class RouterOS(WireGuard):
         return bool(interface and interface[0].get('disabled') == 'false')
 
     def get_server_pubkey(self) -> str | None:
-        pass
+        interface = self._get_interface()
+        if interface:
+            return interface[0].get('public-key')
+        return None
 
     def restart(self) -> None:
-        pass
+        interface = self._get_interface()
+        if interface:
+            resource = self.api.get_resource('/interface/wireguard')
+            resource.set(id=interface[0]['id'], disabled='yes')
+            resource.set(id=interface[0]['id'], disabled='no')
 
     def get_peers(self) -> list:
         pass
