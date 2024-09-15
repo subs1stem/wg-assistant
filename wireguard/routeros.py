@@ -1,5 +1,6 @@
+from typing import Any
+
 from routeros_api import RouterOsApiPool
-from routeros_api.api_communicator.base import AsynchronousResponse
 
 from wireguard.wireguard import WireGuard
 
@@ -43,8 +44,9 @@ class RouterOS(WireGuard):
     def __del__(self) -> None:
         self.connection.disconnect()
 
-    def _get_interface(self) -> AsynchronousResponse:
-        return self.api.get_resource('/interface/wireguard').get(name=self.interface_name)
+    def _get_interface(self) -> dict[str, Any] | None:
+        interface = self.api.get_resource('/interface/wireguard').get(name=self.interface_name)
+        return interface[0] if interface else None
 
     def connect(self) -> None:
         pass
@@ -59,26 +61,26 @@ class RouterOS(WireGuard):
         interface = self._get_interface()
         if interface:
             self.api.get_resource('/interface/wireguard').set(
-                id=interface[0]['id'],
+                id=interface['id'],
                 disabled='no' if enabled else 'yes'
             )
 
     def get_wg_enabled(self) -> bool:
         interface = self._get_interface()
-        return bool(interface and interface[0].get('disabled') == 'false')
+        return bool(interface and interface.get('disabled') == 'false')
 
     def get_server_pubkey(self) -> str | None:
         interface = self._get_interface()
         if interface:
-            return interface[0].get('public-key')
+            return interface.get('public-key')
         return None
 
     def restart(self) -> None:
         interface = self._get_interface()
         if interface:
             resource = self.api.get_resource('/interface/wireguard')
-            resource.set(id=interface[0]['id'], disabled='yes')
-            resource.set(id=interface[0]['id'], disabled='no')
+            resource.set(id=interface['id'], disabled='yes')
+            resource.set(id=interface['id'], disabled='no')
 
     def get_peers(self) -> list:
         pass
