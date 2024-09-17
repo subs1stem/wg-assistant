@@ -48,6 +48,14 @@ class RouterOS(WireGuard):
         interface = self.api.get_resource('/interface/wireguard').get(name=self.interface_name)
         return interface[0] if interface else None
 
+    def _set_peer_enabled(self, pubkey: str, enabled: bool) -> None:
+        peer = self.api.get_resource('/interface/wireguard/peers').get(public_key=pubkey)
+        if peer:
+            self.api.get_resource('/interface/wireguard/peers').set(
+                id=peer[0]['id'],
+                disabled='no' if enabled else 'yes'
+            )
+
     def connect(self) -> None:
         pass
 
@@ -83,7 +91,7 @@ class RouterOS(WireGuard):
             resource.set(id=interface['id'], disabled='no')
 
     def get_peers(self) -> list:
-        pass
+        return self.api.get_resource('/interface/wireguard/peers').get(interface=self.interface_name)
 
     def add_peer(self, name: str) -> None:
         pass
@@ -92,10 +100,10 @@ class RouterOS(WireGuard):
         pass
 
     def enable_peer(self, pubkey: str) -> None:
-        pass
+        self._set_peer_enabled(pubkey, enabled=True)
 
     def disable_peer(self, pubkey: str) -> None:
-        pass
+        self._set_peer_enabled(pubkey, enabled=False)
 
     def get_peer_enabled(self, pubkey: str) -> bool:
         pass
