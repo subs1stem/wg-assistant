@@ -45,10 +45,22 @@ class RouterOS(WireGuard):
         self.connection.disconnect()
 
     def _get_interface(self) -> dict[str, Any] | None:
+        """Retrieves the WireGuard interface details by its name.
+
+        Returns:
+            dict[str, Any] | None: A dictionary containing the interface details if found, otherwise None.
+        """
         interface = self.api.get_resource('/interface/wireguard').get(name=self.interface_name)
         return interface[0] if interface else None
 
     def _set_peer_enabled(self, pubkey: str, enabled: bool) -> None:
+        """Enables or disables a WireGuard peer based on its public key.
+
+        Args:
+            pubkey (str): The public key of the peer to enable or disable.
+            enabled (bool): If True, enables the peer. If False, disables the peer.
+        """
+        # TODO: Consider making this method public and replacing `enable_peer` and `disable_peer`.
         peer = self.api.get_resource('/interface/wireguard/peers').get(public_key=pubkey)
         if peer:
             self.api.get_resource('/interface/wireguard/peers').set(
