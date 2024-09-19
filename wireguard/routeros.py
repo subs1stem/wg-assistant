@@ -120,7 +120,7 @@ class RouterOS(WireGuard):
     def get_peer_enabled(self, pubkey: str) -> bool:
         peer = self.api.get_resource('/interface/wireguard/peers').get(public_key=pubkey)
         if peer:
-            return peer[0].get('disabled') == 'no'
+            return peer[0].get('disabled') == 'false'
         return False
 
     def rename_peer(self, pubkey: str, new_name: str) -> None:
