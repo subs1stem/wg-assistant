@@ -118,7 +118,10 @@ class RouterOS(WireGuard):
         self._set_peer_enabled(pubkey, enabled=False)
 
     def get_peer_enabled(self, pubkey: str) -> bool:
-        pass
+        peer = self.api.get_resource('/interface/wireguard/peers').get(public_key=pubkey)
+        if peer:
+            return peer[0].get('disabled') == 'no'
+        return False
 
     def rename_peer(self, pubkey: str, new_name: str) -> None:
         pass
