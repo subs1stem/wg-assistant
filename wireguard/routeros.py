@@ -53,6 +53,18 @@ class RouterOS(WireGuard):
         interface = self.api.get_resource('/interface/wireguard').get(name=self.interface_name)
         return interface[0] if interface else None
 
+    def _get_peer(self, pubkey: str) -> dict[str, Any] | None:
+        """Retrieves the WireGuard peer details by its public key.
+
+        Args:
+            pubkey (str): The public key of the peer.
+
+        Returns:
+            dict[str, Any] | None: A dictionary containing the peer details if found, otherwise None.
+        """
+        peer = self.api.get_resource('/interface/wireguard/peers').get(public_key=pubkey)
+        return peer[0] if peer else None
+
     def _set_peer_enabled(self, pubkey: str, enabled: bool) -> None:
         """Enables or disables a WireGuard peer based on its public key.
 
@@ -61,10 +73,10 @@ class RouterOS(WireGuard):
             enabled (bool): If True, enables the peer. If False, disables the peer.
         """
         # TODO: Consider making this method public and replacing `enable_peer` and `disable_peer`.
-        peer = self.api.get_resource('/interface/wireguard/peers').get(public_key=pubkey)
+        peer = self._get_peer(pubkey)
         if peer:
             self.api.get_resource('/interface/wireguard/peers').set(
-                id=peer[0]['id'],
+                id=peer['id'],
                 disabled='no' if enabled else 'yes'
             )
 
@@ -118,10 +130,15 @@ class RouterOS(WireGuard):
         self._set_peer_enabled(pubkey, enabled=False)
 
     def get_peer_enabled(self, pubkey: str) -> bool:
-        peer = self.api.get_resource('/interface/wireguard/peers').get(public_key=pubkey)
+        peer = self._get_peer(pubkey)
         if peer:
-            return peer[0].get('disabled') == 'false'
+            return peer.get('disabled') == 'false'
         return False
 
     def rename_peer(self, pubkey: str, new_name: str) -> None:
-        pass
+        peer = self._get_peer(pubkey)
+        if peer:
+            self.api.get_resource('/interface/wireguard/peers').set(
+                id=peer['id'],
+                name=new_name
+            )
