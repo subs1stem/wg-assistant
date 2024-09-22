@@ -44,6 +44,26 @@ class RouterOS(WireGuard):
     def __del__(self) -> None:
         self.connection.disconnect()
 
+    @staticmethod
+    def _format_config_as_string(config: dict) -> str:
+        """Formats the WireGuard configuration dictionary as a string.
+
+        Args:
+            config (dict): The WireGuard configuration dictionary.
+
+        Returns:
+            str: The WireGuard configuration as a string, ending with a newline.
+        """
+        lines = ['[Interface]']
+        lines.extend(f'{key} = {value}' for key, value in config['Interface'].items())
+
+        for peer_name, peer_config in config.items():
+            if peer_name != 'Interface':
+                lines.append(f'\n# {peer_name}\n[Peer]')
+                lines.extend(f'{key} = {value}' for key, value in peer_config.items())
+
+        return '\n'.join(lines) + '\n'
+
     def _get_interface(self) -> dict[str, Any] | None:
         """Retrieves the WireGuard interface details by its name.
 
@@ -87,7 +107,29 @@ class RouterOS(WireGuard):
         self.api.get_binary_resource('/').call('system/reboot')
 
     def get_config(self, as_dict: bool = False) -> str | dict:
-        pass
+        interface = self._get_interface()
+        address = self.api.get_resource('/ip/address').get(interface=self.interface_name)[0]
+
+        config = {
+            'Interface': {
+                'PrivateKey': interface.get('private-key'),
+                'ListenPort': interface.get('listen-port'),
+                'Address': address.get('address'),
+                'PostUp': '',
+                'PostDown': '',
+            }
+        }
+
+        peers = self.api.get_resource('/interface/wireguard/peers').get(interface=self.interface_name)
+
+        for peer in peers:
+            peer_name = peer.get('name')
+            config[peer_name] = {
+                'PublicKey': peer.get('public-key'),
+                'AllowedIPs': peer.get('allowed-address'),
+            }
+
+        return config if as_dict else self._format_config_as_string(config)
 
     def set_wg_enabled(self, enabled: bool) -> None:
         interface = self._get_interface()
