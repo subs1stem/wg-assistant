@@ -115,8 +115,6 @@ class RouterOS(WireGuard):
                 'PrivateKey': interface.get('private-key'),
                 'ListenPort': interface.get('listen-port'),
                 'Address': address.get('address'),
-                'PostUp': '',
-                'PostDown': '',
             }
         }
 
