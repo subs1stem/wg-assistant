@@ -2,6 +2,7 @@ from typing import Any
 
 from routeros_api import RouterOsApiPool
 
+from wireguard.linux import Linux
 from wireguard.wireguard import WireGuard
 
 
@@ -157,8 +158,30 @@ class RouterOS(WireGuard):
     def get_peers(self) -> list:
         return self.api.get_resource('/interface/wireguard/peers').get(interface=self.interface_name)
 
-    def add_peer(self, name: str) -> None:
-        pass
+    def add_peer(self, name: str) -> str:
+        interface = self._get_interface()
+        config = self.get_config(as_dict=True)
+
+        peers_resource = self.api.get_resource('/interface/wireguard/peers')
+
+        peers_resource.add(
+            name=name,
+            interface=self.interface_name,
+            private_key='auto',
+            allowed_address=Linux.find_next_available_ip(config),  # TODO: move the method to the base class
+        )
+
+        peer = peers_resource.get(name=name)[0]
+
+        client_config = self.build_client_config(
+            privkey=peer.get('private-key'),
+            address=peer.get('allowed-address'),
+            server_pubkey=self.get_server_pubkey(),
+            server_ip=self.server,
+            server_port=interface.get('listen-port'),
+        )
+
+        return client_config
 
     def delete_peer(self, pubkey: str) -> None:
         pass
