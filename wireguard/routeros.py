@@ -184,7 +184,9 @@ class RouterOS(WireGuard):
         return client_config
 
     def delete_peer(self, pubkey: str) -> None:
-        pass
+        peer = self._get_peer(pubkey)
+        if peer:
+            self.api.get_resource('/interface/wireguard/peers').remove(id=peer['id'])
 
     def enable_peer(self, pubkey: str) -> None:
         self._set_peer_enabled(pubkey, enabled=True)
