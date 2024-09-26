@@ -11,14 +11,13 @@
     }
   },
   "beta": {
-    "type": "Linux",
+    "type": "RouterOS",
     "data": {
       "server": "127.0.0.2",
-      "port": 22,
-      "username": "root",
-      "password": "toor",
-      "config": "/etc/wireguard/wg0.conf",
-      "interface": "wg0"
+      "port": 8728,
+      "username": "admin",
+      "password": "admin",
+      "interface": "wireguard1"
     }
   }
 }

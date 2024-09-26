@@ -1,5 +1,6 @@
 from wireguard.linux import Linux
-from wireguard.mikrotik import MikroTik
+
+from wireguard.routeros import RouterOS
 from wireguard.wireguard import WireGuard
 
 
@@ -38,8 +39,8 @@ class ServerFactory:
 
         if server_type == 'Linux':
             instance = Linux(**connection_data)
-        elif server_type == 'MikroTik':
-            instance = MikroTik(**connection_data)
+        elif server_type == 'RouterOS':
+            instance = RouterOS(**connection_data)
         else:
             raise ValueError(f'Unknown server class: {server_type}')
 
