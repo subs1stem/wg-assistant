@@ -12,6 +12,7 @@ Telegram bot for managing WireGuard VPN.
 ## ✅ Supported
 
 * [Linux](https://www.wireguard.com)
+* [RouterOS](https://help.mikrotik.com/docs/display/ROS/WireGuard)
 
 ## 🛠 Installation
 
