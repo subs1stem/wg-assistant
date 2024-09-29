@@ -42,9 +42,6 @@ class RouterOS(WireGuard):
 
         self.api = self.connection.get_api()
 
-    def __del__(self) -> None:
-        self.connection.disconnect()
-
     @staticmethod
     def _format_config_as_string(config: dict) -> str:
         """Formats the WireGuard configuration dictionary as a string.
@@ -155,8 +152,18 @@ class RouterOS(WireGuard):
             resource.set(id=interface['id'], disabled='yes')
             resource.set(id=interface['id'], disabled='no')
 
-    def get_peers(self) -> list:
-        return self.api.get_resource('/interface/wireguard/peers').get(interface=self.interface_name)
+    def get_peers(self) -> dict:
+        raw_peers = self.api.get_resource('/interface/wireguard/peers').get(interface=self.interface_name)
+
+        return {
+            peer['name']: {
+                'endpoint': peer.get('current-endpoint-address'),
+                'allowed ips': peer.get('allowed-address'),
+                'latest handshake': peer.get('last-handshake'),
+                'transfer': f"{peer.get('rx')}, {peer.get('tx')}"
+            }
+            for peer in raw_peers
+        }
 
     def add_peer(self, name: str) -> str:
         interface = self._get_interface()
