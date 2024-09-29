@@ -157,10 +157,10 @@ class RouterOS(WireGuard):
 
         return {
             peer['name']: {
-                'endpoint': peer.get('current-endpoint-address'),
+                'endpoint': f'{peer.get('current-endpoint-address')}:{peer.get('current-endpoint-port')}',
                 'allowed ips': peer.get('allowed-address'),
                 'latest handshake': peer.get('last-handshake'),
-                'transfer': f"{peer.get('rx')}, {peer.get('tx')}"
+                'transfer': f'{peer.get('rx')} , {peer.get('tx')}',
             }
             for peer in raw_peers
         }
