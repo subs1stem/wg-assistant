@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from ipaddress import IPv4Interface, IPv4Address
+from typing import Optional
 
 
 class WireGuard(ABC):
@@ -58,6 +60,37 @@ class WireGuard(ABC):
                     'PersistentKeepalive = 30'
 
         return wg_config
+
+    @staticmethod
+    def get_available_ip(config: dict) -> Optional[str]:
+        """Get an available IP address based on the provided configuration.
+
+        Args:
+            config (dict): A dictionary containing network configuration data.
+
+        Returns:
+            Optional[str]: The next available IP address in the format 'X.X.X.X/32',
+            or None if there are no available IP addresses.
+        """
+        # Extract the interface IP address and subnet mask
+        interface_ip_with_mask = config['Interface']['Address']
+        interface_ip = IPv4Interface(interface_ip_with_mask)
+
+        # Calculate the network from the interface's IP and mask
+        network = interface_ip.network
+
+        # Extract all used IP addresses and convert them to IPv4Address objects
+        used_ips = [IPv4Address(config[key]['AllowedIPs'].split('/')[0]) for key in config if
+                    key != 'Interface']
+
+        # Iterate through the possible IP range in the network and find the first available IP,
+        # skipping the interface IP.
+        for ip in network.hosts():
+            if ip != interface_ip.ip and ip not in used_ips:
+                return f'{ip}/32'
+
+        # If no available IP is found, return None
+        return None
 
     @abstractmethod
     def connect(self) -> None:

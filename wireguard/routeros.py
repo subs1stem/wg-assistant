@@ -2,7 +2,6 @@ from typing import Any
 
 from routeros_api import RouterOsApiPool
 
-from wireguard.linux import Linux
 from wireguard.wireguard import WireGuard
 
 
@@ -175,7 +174,7 @@ class RouterOS(WireGuard):
             name=name,
             interface=self.interface_name,
             private_key='auto',
-            allowed_address=Linux.find_next_available_ip(config),  # TODO: move the method to the base class
+            allowed_address=self.get_available_ip(config),
         )
 
         peer = peers_resource.get(name=name)[0]
