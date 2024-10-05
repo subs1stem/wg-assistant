@@ -21,8 +21,8 @@ class Linux(WireGuard):
             port: int,
             username: str,
             password: str,
-            config: str = '/etc/wireguard/wg0.conf',
-            interface: str = 'wg0',
+            interface_name: str = 'wg0',
+            path_to_config: str = '/etc/wireguard/wg0.conf',
     ) -> None:
         """Initialize a new instance of Linux WireGuard client.
 
@@ -31,17 +31,16 @@ class Linux(WireGuard):
             port (int): The port number for the connection.
             username (str): The username for authentication.
             password (str): The password for authentication.
-            config (str, optional): The path to the WireGuard configuration file.
+            interface_name (str, optional): The WireGuard interface name. Defaults to 'wg0'.
+            path_to_config (str, optional): The path to the WireGuard configuration file.
                 Defaults to '/etc/wireguard/wg0.conf'.
-            interface (str, optional): The WireGuard interface name. Defaults to 'wg0'.
 
         Returns:
             None
         """
-        super().__init__(server, port, username, password)
+        super().__init__(server, port, username, password, interface_name)
 
-        self.config = config
-        self.interface = interface
+        self.path_to_config = path_to_config
 
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
@@ -95,7 +94,7 @@ class Linux(WireGuard):
         Returns:
             None
         """
-        self.client.open_sftp().get(self.config, self._TMP_CONFIG)
+        self.client.open_sftp().get(self.path_to_config, self._TMP_CONFIG)
 
     @retry_on_ssh_exception()
     def _upload_config(self) -> None:
@@ -104,7 +103,7 @@ class Linux(WireGuard):
         Returns:
             None
         """
-        self.client.open_sftp().put(self._TMP_CONFIG, self.config)
+        self.client.open_sftp().put(self._TMP_CONFIG, self.path_to_config)
 
     def _generate_key_pair(self) -> Tuple[str, str]:
         """Generate a WireGuard private-public key pair using an SSH connection.
@@ -200,20 +199,20 @@ class Linux(WireGuard):
         self._exec_command('reboot')
 
     def get_config(self, as_dict: bool = False) -> str | dict:
-        _, stdout, _ = self._exec_command(f'cat {self.config}')
+        _, stdout, _ = self._exec_command(f'cat {self.path_to_config}')
         config = ''.join(stdout.readlines())
         return self.parse_config_to_dict(config) if as_dict else config
 
     def set_wg_enabled(self, enabled: bool) -> None:
         state = 'up' if enabled else 'down'
-        self._exec_command(f'wg-quick {state} {self.interface}')
+        self._exec_command(f'wg-quick {state} {self.interface_name}')
 
     def get_wg_enabled(self) -> bool:
-        _, stdout, _ = self._exec_command(f'wg show {self.interface}')
+        _, stdout, _ = self._exec_command(f'wg show {self.interface_name}')
         return bool(stdout.readline())
 
     def get_server_pubkey(self) -> str | None:
-        _, stdout, stderr = self._exec_command(f'wg show {self.interface} public-key')
+        _, stdout, stderr = self._exec_command(f'wg show {self.interface_name} public-key')
         return None if stderr.readline() else stdout.readline().strip()
 
     def restart(self) -> None:
@@ -222,7 +221,7 @@ class Linux(WireGuard):
         self.set_wg_enabled(True)
 
     def get_peers(self) -> dict:
-        _, stdout, stderr = self._exec_command(f'wg show {self.interface}')
+        _, stdout, stderr = self._exec_command(f'wg show {self.interface_name}')
 
         if stderr.read().decode():
             return {}
@@ -238,7 +237,7 @@ class Linux(WireGuard):
             unit = block.split('\n  ')
             key = unit.pop(0).split(':')[1].strip()
 
-            if key != self.interface:
+            if key != self.interface_name:
                 inside_dict = {k.strip(): v.strip() for k, v in (item.split(':', 1) for item in unit)}
                 peers[peer_names.get(key, key)] = inside_dict
 

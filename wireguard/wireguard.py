@@ -11,7 +11,8 @@ class WireGuard(ABC):
             server: str,
             port: int,
             username: str,
-            password: str
+            password: str,
+            interface_name: str,
     ) -> None:
         """Initialize a new instance of WireGuard client.
 
@@ -20,6 +21,7 @@ class WireGuard(ABC):
             port (int): The port number for the connection.
             username (str): The username for authentication.
             password (str): The password for authentication.
+            interface_name (str): The WireGuard interface name.
 
         Returns:
             None
@@ -28,6 +30,7 @@ class WireGuard(ABC):
         self.port = port
         self.username = username
         self.password = password
+        self.interface_name = interface_name
 
     @staticmethod
     def build_client_config(

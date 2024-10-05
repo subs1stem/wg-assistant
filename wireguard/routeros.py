@@ -14,7 +14,7 @@ class RouterOS(WireGuard):
             port: int,
             username: str,
             password: str,
-            interface: str,  # TODO: rename to "interface_name" and move to base class
+            interface_name: str = 'wireguard1',
     ) -> None:
         """Initialize a new instance of the RouterOS WireGuard client.
 
@@ -23,13 +23,12 @@ class RouterOS(WireGuard):
             port (int): The port number for the connection.
             username (str): The username for authentication.
             password (str): The password for authentication.
-            interface (str): The WireGuard interface name.
+            interface_name (str, optional): The WireGuard interface name. Defaults to 'wireguard1'.
 
         Returns:
             None
         """
-        super().__init__(server, port, username, password)
-        self.interface_name = interface
+        super().__init__(server, port, username, password, interface_name)
 
         self.connection = RouterOsApiPool(
             host=self.server,
