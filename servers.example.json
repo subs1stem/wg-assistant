@@ -6,8 +6,8 @@
       "port": 22,
       "username": "root",
       "password": "toor",
-      "config": "/etc/wireguard/wg0.conf",
-      "interface": "wg0"
+      "interface_name": "wg0",
+      "path_to_config": "/etc/wireguard/wg0.conf"
     }
   },
   "beta": {
@@ -17,7 +17,7 @@
       "port": 8728,
       "username": "admin",
       "password": "admin",
-      "interface": "wireguard1"
+      "interface_name": "wireguard1"
     }
   }
 }

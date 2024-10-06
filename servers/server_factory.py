@@ -37,6 +37,16 @@ class ServerFactory:
         if not server_type or not connection_data:
             raise ValueError("Invalid server data. 'type' and 'data' must be provided.")
 
+        # Ensure backward compatibility by renaming old config keys to match constructor parameters
+        rename_keys = {
+            'interface': 'interface_name',
+            'config': 'path_to_config',
+        }
+
+        for old_key, new_key in rename_keys.items():
+            if old_key in connection_data:
+                connection_data[new_key] = connection_data.pop(old_key)
+
         if server_type == 'Linux':
             instance = Linux(**connection_data)
         elif server_type == 'RouterOS':
