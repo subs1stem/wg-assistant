@@ -192,22 +192,12 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def enable_peer(self, pubkey: str) -> None:
-        """Enable a peer in the WireGuard server.
+    def set_peer_enabled(self, pubkey: str, enabled: bool) -> None:
+        """Enables or disables a WireGuard peer based on its public key.
 
         Args:
-            pubkey (str): The public key of the peer to be enabled.
-
-        Returns:
-            None
-        """
-
-    @abstractmethod
-    def disable_peer(self, pubkey: str) -> None:
-        """Disable a peer in the WireGuard server.
-
-        Args:
-            pubkey (str): The public key of the peer to be disabled.
+            pubkey (str): The public key of the peer to enable or disable.
+            enabled (bool): If True, enables the peer. If False, disables the peer.
 
         Returns:
             None

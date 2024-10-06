@@ -81,21 +81,6 @@ class RouterOS(WireGuard):
         peer = self.api.get_resource('/interface/wireguard/peers').get(public_key=pubkey)
         return peer[0] if peer else None
 
-    def _set_peer_enabled(self, pubkey: str, enabled: bool) -> None:
-        """Enables or disables a WireGuard peer based on its public key.
-
-        Args:
-            pubkey (str): The public key of the peer to enable or disable.
-            enabled (bool): If True, enables the peer. If False, disables the peer.
-        """
-        # TODO: Consider making this method public and replacing `enable_peer` and `disable_peer`.
-        peer = self._get_peer(pubkey)
-        if peer:
-            self.api.get_resource('/interface/wireguard/peers').set(
-                id=peer['id'],
-                disabled='no' if enabled else 'yes'
-            )
-
     def connect(self) -> None:
         pass
 
@@ -193,11 +178,13 @@ class RouterOS(WireGuard):
         if peer:
             self.api.get_resource('/interface/wireguard/peers').remove(id=peer['id'])
 
-    def enable_peer(self, pubkey: str) -> None:
-        self._set_peer_enabled(pubkey, enabled=True)
-
-    def disable_peer(self, pubkey: str) -> None:
-        self._set_peer_enabled(pubkey, enabled=False)
+    def set_peer_enabled(self, pubkey: str, enabled: bool) -> None:
+        peer = self._get_peer(pubkey)
+        if peer:
+            self.api.get_resource('/interface/wireguard/peers').set(
+                id=peer['id'],
+                disabled='no' if enabled else 'yes'
+            )
 
     def get_peer_enabled(self, pubkey: str) -> bool:
         peer = self._get_peer(pubkey)

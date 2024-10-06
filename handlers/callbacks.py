@@ -96,10 +96,10 @@ async def process_peer_action(callback: CallbackQuery, state: FSMContext, server
             return await state.set_state(RenamePeer.waiting_for_new_name)
         case 'off':
             await callback.answer('Disabling...')
-            server.disable_peer(pubkey)
+            server.set_peer_enabled(pubkey, False)
         case 'on':
             await callback.answer('Enabling...')
-            server.enable_peer(pubkey)
+            server.set_peer_enabled(pubkey, True)
         case 'del':
             await callback.answer('Deleting...')
             server.delete_peer(pubkey)

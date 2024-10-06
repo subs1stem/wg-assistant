@@ -269,12 +269,11 @@ class Linux(WireGuard):
         self.wg_config.del_peer(pubkey)
 
     @_config_operation(rewrite_config=True)
-    def enable_peer(self, pubkey: str) -> None:
-        self.wg_config.enable_peer(pubkey)
-
-    @_config_operation(rewrite_config=True)
-    def disable_peer(self, pubkey: str) -> None:
-        self.wg_config.disable_peer(pubkey)
+    def set_peer_enabled(self, pubkey: str, enabled: bool) -> None:
+        if enabled:
+            self.wg_config.enable_peer(pubkey)
+        else:
+            self.wg_config.disable_peer(pubkey)
 
     @_config_operation()
     def get_peer_enabled(self, pubkey: str) -> bool:
