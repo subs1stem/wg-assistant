@@ -68,10 +68,19 @@ async def add_peer(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'config_peers')
 async def config_peers(callback: CallbackQuery, server: WireGuard):
     await callback.answer('Requesting a list of peers...')
+
     config = server.get_config(as_dict=True)
     config.pop('Interface')
     peers = {name: data['PublicKey'] for name, data in config.items()}
-    await callback.message.edit_text(text='Choose a client:', reply_markup=peers_kb(peers))
+
+    text = 'Choose a client:'
+    markup = peers_kb(peers)
+
+    if callback.message.photo:
+        await callback.message.delete()
+        await callback.message.answer(text=text, reply_markup=markup)
+    else:
+        await callback.message.edit_text(text=text, reply_markup=markup)
 
 
 @router.callback_query(F.data.startswith('peer'))
