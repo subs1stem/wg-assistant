@@ -66,7 +66,8 @@ async def add_peer(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == 'config_peers')
-async def config_peers(callback: CallbackQuery, server: WireGuard):
+async def config_peers(callback: CallbackQuery, server: WireGuard, state: FSMContext):
+    await state.set_state()
     await callback.answer('Requesting a list of peers...')
 
     config = server.get_config(as_dict=True)
@@ -84,7 +85,8 @@ async def config_peers(callback: CallbackQuery, server: WireGuard):
 
 
 @router.callback_query(F.data.startswith('peer'))
-async def show_peer(callback: CallbackQuery, server: WireGuard):
+async def show_peer(callback: CallbackQuery, server: WireGuard, state: FSMContext):
+    await state.set_state()
     pubkey = callback.data.split(':')[-1]
     peer_is_enabled = server.get_peer_enabled(pubkey)
     await callback.message.edit_text(text=f'Choose an action:', reply_markup=peer_action_kb(pubkey, peer_is_enabled))
@@ -112,7 +114,7 @@ async def process_peer_action(callback: CallbackQuery, state: FSMContext, server
         case 'del':
             await callback.answer('Deleting...')
             server.delete_peer(pubkey)
-            return await config_peers(callback, server)
+            return await config_peers(callback, server, state)
         case _:
             await callback.answer('Unknown action!', show_alert=True)
 
