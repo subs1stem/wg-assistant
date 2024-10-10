@@ -118,7 +118,7 @@ async def process_peer_action(callback: CallbackQuery, state: FSMContext, server
         case _:
             await callback.answer('Unknown action!', show_alert=True)
 
-    await show_peer(callback, server)
+    await show_peer(callback, server, state)
 
 
 @router.callback_query(F.data.startswith('debug_log'))
