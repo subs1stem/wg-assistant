@@ -1,5 +1,6 @@
 from typing import Any
 
+from humanize import naturalsize
 from routeros_api import RouterOsApiPool
 
 from wireguard.wireguard import WireGuard
@@ -143,7 +144,7 @@ class RouterOS(WireGuard):
                 'endpoint': f'{peer.get('current-endpoint-address')}:{peer.get('current-endpoint-port')}',
                 'allowed ips': peer.get('allowed-address'),
                 'latest handshake': peer.get('last-handshake'),
-                'transfer': f'{peer.get('rx')} , {peer.get('tx')}',
+                'transfer': f'{naturalsize(peer.get('rx', 0), True)} , {naturalsize(peer.get('tx', 0), True)}',
             }
             for peer in raw_peers
         }
