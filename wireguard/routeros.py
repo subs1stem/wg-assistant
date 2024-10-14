@@ -41,6 +41,9 @@ class RouterOS(WireGuard):
 
         self.api = self.connection.get_api()
 
+    def __del__(self):
+        self.connection.disconnect()
+
     @staticmethod
     def _format_config_as_string(config: dict) -> str:
         """Formats the WireGuard configuration dictionary as a string.
