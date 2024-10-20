@@ -31,15 +31,10 @@ class RouterOS(WireGuard):
         """
         super().__init__(server, port, username, password, interface_name)
 
-        self.connection = RouterOsApiPool(
-            host=self.server,
-            username=self.username,
-            password=self.password,
-            port=self.port,
-            plaintext_login=True,
-        )
+        self.connection = None
+        self.api = None
 
-        self.api = self.connection.get_api()
+        self.connect()
 
     def __del__(self):
         self.connection.disconnect()
@@ -86,7 +81,15 @@ class RouterOS(WireGuard):
         return peer[0] if peer else None
 
     def connect(self) -> None:
-        pass
+        self.connection = RouterOsApiPool(
+            host=self.server,
+            username=self.username,
+            password=self.password,
+            port=self.port,
+            plaintext_login=True,
+        )
+
+        self.api = self.connection.get_api()
 
     def reboot_host(self) -> None:
         self.api.get_binary_resource('/').call('system/reboot')
