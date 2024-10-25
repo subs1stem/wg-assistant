@@ -1,7 +1,9 @@
+import logging
 from typing import Any
 
 from humanize import naturalsize
 from routeros_api import RouterOsApiPool
+from routeros_api.exceptions import RouterOsApiConnectionError
 
 from wireguard.wireguard import WireGuard
 
@@ -40,6 +42,19 @@ class RouterOS(WireGuard):
         self.connection.disconnect()
 
     @staticmethod
+    def _exception_handler(func):
+        def wrapper(self, *args, **kwargs):
+            try:
+                return func(self, *args, **kwargs)
+            except RouterOsApiConnectionError:
+                logging.warning('RouterOS API connection error, reconnecting...')
+                self.connect()
+            except Exception as e:
+                logging.exception(e)
+
+        return wrapper
+
+    @staticmethod
     def _format_config_as_string(config: dict) -> str:
         """Formats the WireGuard configuration dictionary as a string.
 
@@ -59,6 +74,7 @@ class RouterOS(WireGuard):
 
         return '\n'.join(lines) + '\n'
 
+    @_exception_handler
     def _get_interface(self) -> dict[str, Any] | None:
         """Retrieves the WireGuard interface details by its name.
 
@@ -68,6 +84,7 @@ class RouterOS(WireGuard):
         interface = self.api.get_resource('/interface/wireguard').get(name=self.interface_name)
         return interface[0] if interface else None
 
+    @_exception_handler
     def _get_peer(self, pubkey: str) -> dict[str, Any] | None:
         """Retrieves the WireGuard peer details by its public key.
 
@@ -91,9 +108,11 @@ class RouterOS(WireGuard):
 
         self.api = self.connection.get_api()
 
+    @_exception_handler
     def reboot_host(self) -> None:
         self.api.get_binary_resource('/').call('system/reboot')
 
+    @_exception_handler
     def get_config(self, as_dict: bool = False) -> str | dict:
         interface = self._get_interface()
         address = self.api.get_resource('/ip/address').get(interface=self.interface_name)[0]
@@ -117,6 +136,7 @@ class RouterOS(WireGuard):
 
         return config if as_dict else self._format_config_as_string(config)
 
+    @_exception_handler
     def set_wg_enabled(self, enabled: bool) -> None:
         interface = self._get_interface()
         if interface:
@@ -135,6 +155,7 @@ class RouterOS(WireGuard):
             return interface.get('public-key')
         return None
 
+    @_exception_handler
     def restart(self) -> None:
         interface = self._get_interface()
         if interface:
@@ -142,6 +163,7 @@ class RouterOS(WireGuard):
             resource.set(id=interface['id'], disabled='yes')
             resource.set(id=interface['id'], disabled='no')
 
+    @_exception_handler
     def get_peers(self) -> dict:
         raw_peers = self.api.get_resource('/interface/wireguard/peers').get(interface=self.interface_name)
 
@@ -155,6 +177,7 @@ class RouterOS(WireGuard):
             for peer in raw_peers
         }
 
+    @_exception_handler
     def add_peer(self, name: str) -> str:
         interface = self._get_interface()
         config = self.get_config(as_dict=True)
@@ -180,11 +203,13 @@ class RouterOS(WireGuard):
 
         return client_config
 
+    @_exception_handler
     def delete_peer(self, pubkey: str) -> None:
         peer = self._get_peer(pubkey)
         if peer:
             self.api.get_resource('/interface/wireguard/peers').remove(id=peer['id'])
 
+    @_exception_handler
     def set_peer_enabled(self, pubkey: str, enabled: bool) -> None:
         peer = self._get_peer(pubkey)
         if peer:
@@ -199,6 +224,7 @@ class RouterOS(WireGuard):
             return peer.get('disabled') == 'false'
         return False
 
+    @_exception_handler
     def rename_peer(self, pubkey: str, new_name: str) -> None:
         peer = self._get_peer(pubkey)
         if peer:
