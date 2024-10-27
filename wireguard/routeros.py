@@ -1,5 +1,6 @@
 import logging
-from typing import Any
+from functools import wraps
+from typing import Any, Callable
 
 from humanize import naturalsize
 from routeros_api import RouterOsApiPool
@@ -42,15 +43,27 @@ class RouterOS(WireGuard):
         self.connection.disconnect()
 
     @staticmethod
-    def _exception_handler(func):
-        def wrapper(self, *args, **kwargs):
+    def _exception_handler(func: Callable) -> Callable:
+        """Decorator to handle RouterOS API connection errors.
+        Reconnects and retries the function once if a connection error occurs.
+
+        Args:
+            func (Callable): The function that might raise a connection error.
+
+        Returns:
+            Callable: A wrapped function that retries once after reconnecting.
+        """
+
+        @wraps(func)
+        def wrapper(self, *args: Any, **kwargs: Any) -> Any:
             try:
                 return func(self, *args, **kwargs)
             except RouterOsApiConnectionError:
                 logging.warning('RouterOS API connection error, reconnecting...')
                 self.connect()
+                return func(self, *args, **kwargs)
             except Exception as e:
-                logging.exception(e)
+                logging.exception(f'An unexpected error occurred: {e}')
 
         return wrapper
 
@@ -106,7 +119,12 @@ class RouterOS(WireGuard):
             plaintext_login=True,
         )
 
-        self.api = self.connection.get_api()
+        self.connection.set_timeout(5)
+
+        try:
+            self.api = self.connection.get_api()
+        except RouterOsApiConnectionError as e:
+            raise ConnectionError(f'Error connecting to RouterOS API: {e}')
 
     @_exception_handler
     def reboot_host(self) -> None:
