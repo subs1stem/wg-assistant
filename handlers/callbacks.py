@@ -28,10 +28,24 @@ async def send_server_menu(callback: CallbackQuery, server_name: str, server: Wi
     )
 
 
-@router.callback_query(F.data == 'reboot_server')
-async def reboot_server(callback: CallbackQuery, server: WireGuard):
-    await callback.answer('Rebooting the server...')
-    server.reboot_host()
+@router.callback_query(F.data == 'reboot_host')
+async def send_reboot_host_confirmation(callback: CallbackQuery):
+    await callback.message.edit_text(
+        text='Are you sure you want to reboot the host?',
+        reply_markup=yes_no_kb('confirm_reboot')
+    )
+
+
+@router.callback_query(F.data.startswith('confirm_reboot'))
+async def reboot_host(callback: CallbackQuery, state: FSMContext, servers: dict, server_name: str, server: WireGuard):
+    reboot_confirmed = callback.data.split(':')[-1] == 'yes'
+
+    if reboot_confirmed:
+        await callback.answer('Rebooting the host...')
+        server.reboot_host()
+        await send_servers(callback, state, servers)
+    else:
+        await send_server_menu(callback, server_name, server)
 
 
 @router.callback_query(F.data == 'get_peers')

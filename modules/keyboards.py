@@ -13,6 +13,13 @@ def cancel_btn(callback_data):
     return kb.as_markup()
 
 
+def yes_no_kb(callback_data):
+    kb = InlineKeyboardBuilder()
+    kb.button(text='Yes ✅', callback_data=f'{callback_data}:yes')
+    kb.button(text='No ❌', callback_data=f'{callback_data}:no')
+    return kb.as_markup()
+
+
 def servers_kb(servers):
     kb = InlineKeyboardBuilder()
 
@@ -31,7 +38,7 @@ def wg_options_kb(interface_is_up):
         kb.button(text='Disable interface ⬇️', callback_data='wg_state:down')
     else:
         kb.button(text='Enable interface ⬆️', callback_data='wg_state:up')
-    kb.button(text='Reboot host 🔄', callback_data='reboot_server')
+    kb.button(text='Reboot host 🔄', callback_data='reboot_host')
     kb.button(text='⬅ Go to server list', callback_data='servers')
     return kb.adjust(1, 2).as_markup()
 
