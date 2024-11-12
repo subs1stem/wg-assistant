@@ -13,10 +13,11 @@ def cancel_btn(callback_data):
     return kb.as_markup()
 
 
-def yes_no_kb(callback_data):
+def yes_no_kb(callback_data, extra_data=''):
+    postfix = f':{extra_data}' if extra_data else ''
     kb = InlineKeyboardBuilder()
-    kb.button(text='Yes ✅', callback_data=f'{callback_data}:yes')
-    kb.button(text='No ❌', callback_data=f'{callback_data}:no')
+    kb.button(text='Yes ✅', callback_data=f"{callback_data}:y{postfix}")
+    kb.button(text='No ❌', callback_data=f"{callback_data}:n{postfix}")
     return kb.as_markup()
 
 

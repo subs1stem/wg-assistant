@@ -38,7 +38,7 @@ async def send_reboot_host_confirmation(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith('confirm_reboot'))
 async def reboot_host(callback: CallbackQuery, state: FSMContext, servers: dict, server_name: str, server: WireGuard):
-    reboot_confirmed = callback.data.split(':')[-1] == 'yes'
+    reboot_confirmed = callback.data.split(':')[-1] == 'y'
 
     if reboot_confirmed:
         await callback.answer('Rebooting the host...')
@@ -126,13 +126,27 @@ async def process_peer_action(callback: CallbackQuery, state: FSMContext, server
             await callback.answer('Enabling...')
             server.set_peer_enabled(pubkey, True)
         case 'del':
-            await callback.answer('Deleting...')
-            server.delete_peer(pubkey)
-            return await config_peers(callback, server, state)
+            return await callback.message.edit_text(
+                text='Are you sure you want to delete the peer? This action cannot be reversed!',
+                reply_markup=yes_no_kb(f'confirm_peer_del', pubkey)
+            )
         case _:
             await callback.answer('Unknown action!', show_alert=True)
 
     await show_peer(callback, server, state)
+
+
+@router.callback_query(F.data.startswith('confirm_peer_del'))
+async def delete_peer(callback: CallbackQuery, state: FSMContext, server: WireGuard):
+    _, deletion_yes_no, pubkey = callback.data.split(':')
+    deletion_confirmed = deletion_yes_no == 'y'
+
+    if deletion_confirmed:
+        await callback.answer('Deleting...')
+        server.delete_peer(pubkey)
+        return await config_peers(callback, server, state)
+    else:
+        await show_peer(callback, server, state)
 
 
 @router.callback_query(F.data.startswith('debug_log'))
