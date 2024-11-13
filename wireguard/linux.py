@@ -22,6 +22,7 @@ class Linux(WireGuard):
             username: str,
             password: str,
             interface_name: str = 'wg0',
+            endpoint: str | None = None,
             path_to_config: str = '/etc/wireguard/wg0.conf',
     ) -> None:
         """Initialize a new instance of Linux WireGuard client.
@@ -32,13 +33,14 @@ class Linux(WireGuard):
             username (str): The username for authentication.
             password (str): The password for authentication.
             interface_name (str, optional): The WireGuard interface name. Defaults to 'wg0'.
+            endpoint (str | None): The WireGuard server endpoint. If ``None``, the ``server`` parameter is used.
             path_to_config (str, optional): The path to the WireGuard configuration file.
                 Defaults to '/etc/wireguard/wg0.conf'.
 
         Returns:
             None
         """
-        super().__init__(server, port, username, password, interface_name)
+        super().__init__(server, port, username, password, interface_name, endpoint)
 
         self.path_to_config = path_to_config
 
@@ -258,7 +260,7 @@ class Linux(WireGuard):
             privkey=privkey,
             address=peer_ip,
             server_pubkey=self.get_server_pubkey(),
-            server_ip=self.server,
+            endpoint=self.endpoint,
             server_port=server_port,
         )
 

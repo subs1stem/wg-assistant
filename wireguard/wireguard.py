@@ -13,6 +13,7 @@ class WireGuard(ABC):
             username: str,
             password: str,
             interface_name: str,
+            endpoint: str | None = None,
     ) -> None:
         """Initialize a new instance of WireGuard client.
 
@@ -22,6 +23,7 @@ class WireGuard(ABC):
             username (str): The username for authentication.
             password (str): The password for authentication.
             interface_name (str): The WireGuard interface name.
+            endpoint (str | None): The WireGuard server endpoint. If ``None``, the ``server`` parameter is used.
 
         Returns:
             None
@@ -31,14 +33,15 @@ class WireGuard(ABC):
         self.username = username
         self.password = password
         self.interface_name = interface_name
+        self.endpoint = endpoint if endpoint is not None else server
 
     @staticmethod
     def build_client_config(
             privkey: str,
             address: str,
             server_pubkey: str,
-            server_ip: str,
-            server_port: int
+            endpoint: str,
+            server_port: int,
     ) -> str:
         """Generate a WireGuard client configuration.
 
@@ -46,7 +49,7 @@ class WireGuard(ABC):
             privkey (str): The private key of the client.
             address (str): The client's assigned IP address.
             server_pubkey (str): The public key of the server.
-            server_ip (str): The IP address of the WireGuard server.
+            endpoint (str): The endpoint of the WireGuard server.
             server_port (int): The port number of the WireGuard server.
 
         Returns:
@@ -59,7 +62,7 @@ class WireGuard(ABC):
                     '[Peer]\n' \
                     f'PublicKey = {server_pubkey}\n' \
                     'AllowedIPs = 0.0.0.0/0\n' \
-                    f'Endpoint = {server_ip}:{server_port}\n' \
+                    f'Endpoint = {endpoint}:{server_port}\n' \
                     'PersistentKeepalive = 30'
 
         return wg_config
