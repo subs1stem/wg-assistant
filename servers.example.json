@@ -7,6 +7,7 @@
       "username": "root",
       "password": "toor",
       "interface_name": "wg0",
+      "endpoint": "myserver.com",
       "path_to_config": "/etc/wireguard/wg0.conf"
     }
   },
@@ -17,7 +18,8 @@
       "port": 8728,
       "username": "admin",
       "password": "admin",
-      "interface_name": "wireguard1"
+      "interface_name": "wireguard1",
+      "endpoint": "127.0.0.2"
     }
   }
 }
