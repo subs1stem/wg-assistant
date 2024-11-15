@@ -42,7 +42,7 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   ```
 * **Step 4:** Create an image of your bot:
   ```bash
-  sudo docker build -t wg-assistant .
+  sudo docker build -t subs1stem/wg-assistant .
   ```
 * **Step 5:** Run a container with your image:
   ```bash
