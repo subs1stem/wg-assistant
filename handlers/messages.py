@@ -5,6 +5,7 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.types.input_file import BufferedInputFile
+from qrcode.image.pure import PyPNGImage
 
 from modules.fsm_states import AddPeer, RenamePeer
 from modules.keyboards import peer_action_kb, back_btn
@@ -18,16 +19,14 @@ async def check_peer_name(message: Message, state: FSMContext, server: WireGuard
     await message.bot.send_chat_action(message.chat.id, action='upload_photo')
     client_config = server.add_peer(message.text)
 
-    with BytesIO() as img_buf:
-        qr = qrcode.make(client_config)
-        qr.save(img_buf)
-        img_buf.seek(0)
+    img_buf = BytesIO()
+    qrcode.make(client_config, image_factory=PyPNGImage).save(img_buf)
 
-        await message.answer_photo(
-            photo=BufferedInputFile(img_buf.read(), 'qr'),
-            caption=client_config,
-            reply_markup=back_btn('config_peers'),
-        )
+    await message.answer_photo(
+        photo=BufferedInputFile(img_buf.getvalue(), 'qr'),
+        caption=client_config,
+        reply_markup=back_btn('config_peers'),
+    )
 
     await state.set_state()
 
