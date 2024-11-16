@@ -46,7 +46,7 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   ```
 * **Step 5:** Run a container with your image:
   ```bash
-  sudo docker run --name wg-assistant --restart unless-stopped -d wg-assistant
+  sudo docker run --name wg-assistant --restart unless-stopped -d subs1stem/wg-assistant
   ```
 
 ### 🐍 venv
