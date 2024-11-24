@@ -34,7 +34,7 @@ class RouterOS(WireGuard):
         Returns:
             None
         """
-        super().__init__(interface_name, endpoint)
+        super().__init__(endpoint, interface_name)
 
         self.server = server
         self.port = port
