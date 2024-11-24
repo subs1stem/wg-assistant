@@ -4,36 +4,24 @@ from typing import Optional
 
 
 class WireGuard(ABC):
-    """Abstract base class for a WireGuard server."""
+    """Abstract base class for all WireGuard implementations."""
 
     def __init__(
             self,
-            server: str,
-            port: int,
-            username: str,
-            password: str,
+            endpoint: str,
             interface_name: str,
-            endpoint: str | None = None,
     ) -> None:
-        """Initialize a new instance of WireGuard client.
+        """Initialize a new instance of WireGuard.
 
         Args:
-            server (str): The server address.
-            port (int): The port number for the connection.
-            username (str): The username for authentication.
-            password (str): The password for authentication.
+            endpoint (str): The WireGuard server endpoint.
             interface_name (str): The WireGuard interface name.
-            endpoint (str | None): The WireGuard server endpoint. If ``None``, the ``server`` parameter is used.
 
         Returns:
             None
         """
-        self.server = server
-        self.port = port
-        self.username = username
-        self.password = password
+        self.endpoint = endpoint
         self.interface_name = interface_name
-        self.endpoint = endpoint if endpoint is not None else server
 
     @staticmethod
     def build_client_config(
@@ -97,17 +85,6 @@ class WireGuard(ABC):
 
         # If no available IP is found, return None
         return None
-
-    @abstractmethod
-    def connect(self) -> None:
-        """Connect to the WireGuard server.
-
-        Returns:
-            None
-
-        Raises:
-            ConnectionError: If the connection to the WireGuard server host fails.
-        """
 
     @abstractmethod
     def reboot_host(self) -> None:

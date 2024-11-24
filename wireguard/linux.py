@@ -2,121 +2,54 @@ from functools import wraps
 from time import sleep
 from typing import Callable, Any, Tuple
 
-from paramiko import SSHClient, AutoAddPolicy
-from paramiko.ssh_exception import NoValidConnectionsError, SSHException
 from wgconfig import WGConfig
 
+from wireguard.client.base import BaseClient
 from wireguard.wireguard import WireGuard
 
 
 class Linux(WireGuard):
-    """A class for a WireGuard server deployed on a Linux host."""
+    """Class for a WireGuard server deployed on a Linux host."""
 
-    _TMP_CONFIG = '/tmp/wg0.conf'
+    _TMP_CONFIG_PATH = '/tmp/wg0.conf'
     _RESTART_DELAY = 3
 
     def __init__(
             self,
-            server: str,
-            port: int,
-            username: str,
-            password: str,
+            client: BaseClient,
+            endpoint: str,
             interface_name: str = 'wg0',
-            endpoint: str | None = None,
-            path_to_config: str = '/etc/wireguard/wg0.conf',
+            path_to_config: str = '/etc/wireguard/wg0.conf'
     ) -> None:
-        """Initialize a new instance of Linux WireGuard client.
+        """Initialize a new instance of Linux WireGuard.
 
         Args:
-            server (str): The server address.
-            port (int): The port number for the connection.
-            username (str): The username for authentication.
-            password (str): The password for authentication.
-            interface_name (str, optional): The WireGuard interface name. Defaults to 'wg0'.
-            endpoint (str | None): The WireGuard server endpoint. If ``None``, the ``server`` parameter is used.
+            client (BaseClient): Client used to interact with the WireGuard host.
+            endpoint (str): The WireGuard server endpoint.
+            interface_name (str, optional): The WireGuard interface name. Default is ``wg0``.
             path_to_config (str, optional): The path to the WireGuard configuration file.
-                Defaults to '/etc/wireguard/wg0.conf'.
+                Default is ``/etc/wireguard/wg0.conf``.
 
         Returns:
             None
         """
-        super().__init__(server, port, username, password, interface_name, endpoint)
+        super().__init__(endpoint, interface_name)
 
+        self.client = client
         self.path_to_config = path_to_config
 
-        self.client = SSHClient()
-        self.client.set_missing_host_key_policy(AutoAddPolicy())
-        self.connect()
-
-        self.wg_config = WGConfig(self._TMP_CONFIG)
-
-    def __del__(self) -> None:
-        self.client.close()
-
-    @staticmethod
-    def retry_on_ssh_exception(max_retries: int = 3) -> Callable:
-        """Decorator for retrying a method in case of ConnectionError.
-
-        Args:
-            max_retries (int): The maximum number of retry attempts (default is 3).
-
-        Returns:
-            Callable: Decorated function.
-        """
-
-        def decorator(func):
-            @wraps(func)
-            def wrapper(self, *args, **kwargs):
-                for _ in range(max_retries):
-                    try:
-                        return func(self, *args, **kwargs)
-                    except (SSHException, ConnectionError):
-                        self.connect()
-
-            return wrapper
-
-        return decorator
-
-    @retry_on_ssh_exception()
-    def _exec_command(self, command: str) -> Tuple[Any, Any, Any]:
-        """Execute an SSH command, attempting to reconnect if SSHException is thrown.
-
-        Args:
-            command (str): The command to be executed on the remote SSH server.
-
-        Returns:
-            Tuple[Any, Any, Any]: A tuple containing stdin, stdout, and stderr streams.
-        """
-        return self.client.exec_command(command)
-
-    @retry_on_ssh_exception()
-    def _download_config(self) -> None:
-        """Download the WireGuard server configuration file to the local temporary file.
-
-        Returns:
-            None
-        """
-        self.client.open_sftp().get(self.path_to_config, self._TMP_CONFIG)
-
-    @retry_on_ssh_exception()
-    def _upload_config(self) -> None:
-        """Upload the local temporary WireGuard configuration file to the remote host.
-
-        Returns:
-            None
-        """
-        self.client.open_sftp().put(self._TMP_CONFIG, self.path_to_config)
+        self.wg_config = WGConfig(self._TMP_CONFIG_PATH)
 
     def _generate_key_pair(self) -> Tuple[str, str]:
-        """Generate a WireGuard private-public key pair using an SSH connection.
+        """Generate a WireGuard private-public key pair.
 
         Returns:
-            Tuple[str, str]: A tuple containing the private key and public key strings.
+            Tuple[str, str]: A tuple containing private key and public key strings.
         """
-        _, stdout, _ = self._exec_command(f'wg genkey')
+        _, stdout, _ = self.client.execute(f'wg genkey')
         privkey = stdout.readline().strip()
 
-        _, stdout, _ = self._exec_command(f'echo "{privkey}" | wg pubkey')
+        _, stdout, _ = self.client.execute(f'echo "{privkey}" | wg pubkey')
         pubkey = stdout.readline().strip()
 
         return privkey, pubkey
@@ -132,7 +65,7 @@ class Linux(WireGuard):
         Args:
             rewrite_config (bool, optional): Whether to rewrite the configuration file
                 and trigger a restart the WireGuard server after executing the wrapped method.
-                Defaults to False.
+                Default is False.
 
         Returns:
             Callable[..., Any]: A decorated method that handles configuration operations.
@@ -141,13 +74,18 @@ class Linux(WireGuard):
         def decorator(method: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(method)
             def wrapper(self, *args, **kwargs) -> Any:
-                self._download_config()
+                with open(self._TMP_CONFIG_PATH, 'w') as f:
+                    f.write(self.client.get_file_contents(self.path_to_config))
+
                 self.wg_config.read_file()
                 result = method(self, *args, **kwargs)
 
                 if rewrite_config:
                     self.wg_config.write_file()
-                    self._upload_config()
+
+                    with open(self._TMP_CONFIG_PATH, 'r') as f:
+                        self.client.put_file_contents(self.path_to_config, f.read())
+
                     self.restart()
 
                 return result
@@ -157,7 +95,7 @@ class Linux(WireGuard):
         return decorator
 
     @staticmethod
-    def parse_config_to_dict(config: str) -> dict:
+    def _parse_config_to_dict(config: str) -> dict:
         """Parse a WireGuard server configuration string and convert it into a dictionary.
 
         Args:
@@ -186,35 +124,24 @@ class Linux(WireGuard):
         config_dict[now_section_name] = now_section_content
         return config_dict
 
-    def connect(self) -> None:
-        try:
-            self.client.connect(
-                hostname=self.server,
-                username=self.username,
-                password=self.password,
-                port=self.port
-            )
-        except (SSHException, NoValidConnectionsError, ConnectionResetError) as e:
-            raise ConnectionError(f'Error connecting to WireGuard server host: {e}')
-
     def reboot_host(self) -> None:
-        self._exec_command('reboot')
+        self.client.execute('reboot')
 
     def get_config(self, as_dict: bool = False) -> str | dict:
-        _, stdout, _ = self._exec_command(f'cat {self.path_to_config}')
+        _, stdout, _ = self.client.execute(f'cat {self.path_to_config}')
         config = ''.join(stdout.readlines())
-        return self.parse_config_to_dict(config) if as_dict else config
+        return self._parse_config_to_dict(config) if as_dict else config
 
     def set_wg_enabled(self, enabled: bool) -> None:
         state = 'up' if enabled else 'down'
-        self._exec_command(f'wg-quick {state} {self.interface_name}')
+        self.client.execute(f'wg-quick {state} {self.interface_name}')
 
     def get_wg_enabled(self) -> bool:
-        _, stdout, _ = self._exec_command(f'wg show {self.interface_name}')
+        _, stdout, _ = self.client.execute(f'wg show {self.interface_name}')
         return bool(stdout.readline())
 
     def get_server_pubkey(self) -> str | None:
-        _, stdout, stderr = self._exec_command(f'wg show {self.interface_name} public-key')
+        _, stdout, stderr = self.client.execute(f'wg show {self.interface_name} public-key')
         return None if stderr.readline() else stdout.readline().strip()
 
     def restart(self) -> None:
@@ -223,7 +150,7 @@ class Linux(WireGuard):
         self.set_wg_enabled(True)
 
     def get_peers(self) -> dict:
-        _, stdout, stderr = self._exec_command(f'wg show {self.interface_name}')
+        _, stdout, stderr = self.client.execute(f'wg show {self.interface_name}')
 
         if stderr.read().decode():
             return {}

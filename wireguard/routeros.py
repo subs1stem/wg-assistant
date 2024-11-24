@@ -18,8 +18,8 @@ class RouterOS(WireGuard):
             port: int,
             username: str,
             password: str,
+            endpoint: str,
             interface_name: str = 'wireguard1',
-            endpoint: str | None = None,
     ) -> None:
         """Initialize a new instance of the RouterOS WireGuard client.
 
@@ -28,13 +28,18 @@ class RouterOS(WireGuard):
             port (int): The port number for the connection.
             username (str): The username for authentication.
             password (str): The password for authentication.
-            interface_name (str, optional): The WireGuard interface name. Defaults to 'wireguard1'.
-            endpoint (str | None): The WireGuard server endpoint. If ``None``, the ``server`` parameter is used.
+            endpoint (str): The WireGuard server endpoint.
+            interface_name (str, optional): The WireGuard interface name. Default is ``wireguard1``.
 
         Returns:
             None
         """
-        super().__init__(server, port, username, password, interface_name, endpoint)
+        super().__init__(interface_name, endpoint)
+
+        self.server = server
+        self.port = port
+        self.username = username
+        self.password = password
 
         self.connection = None
         self.api = None
@@ -71,7 +76,7 @@ class RouterOS(WireGuard):
 
     @staticmethod
     def _format_config_as_string(config: dict) -> str:
-        """Formats the WireGuard configuration dictionary as a string.
+        """Format the WireGuard configuration dictionary as a string.
 
         Args:
             config (dict): The WireGuard configuration dictionary.
@@ -91,7 +96,7 @@ class RouterOS(WireGuard):
 
     @_exception_handler
     def _get_interface(self) -> dict[str, Any] | None:
-        """Retrieves the WireGuard interface details by its name.
+        """Retrieve the WireGuard interface details by its name.
 
         Returns:
             dict[str, Any] | None: A dictionary containing the interface details if found, otherwise None.
@@ -101,7 +106,7 @@ class RouterOS(WireGuard):
 
     @_exception_handler
     def _get_peer(self, pubkey: str) -> dict[str, Any] | None:
-        """Retrieves the WireGuard peer details by its public key.
+        """Retrieve the WireGuard peer details by its public key.
 
         Args:
             pubkey (str): The public key of the peer.
