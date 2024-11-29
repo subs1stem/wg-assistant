@@ -1,3 +1,4 @@
+from wireguard.client.remote import RemoteClient
 from wireguard.linux import Linux
 
 from wireguard.routeros import RouterOS
@@ -47,8 +48,20 @@ class ServerFactory:
             if old_key in connection_data:
                 connection_data[new_key] = connection_data.pop(old_key)
 
+        # Ensure backward compatibility if endpoint is not specified in configuration
+        if 'endpoint' not in connection_data:
+            connection_data['endpoint'] = connection_data['server']
+
         if server_type == 'Linux':
-            instance = Linux(**connection_data)
+            credentials = {
+                'server': connection_data.pop('server'),
+                'port': connection_data.pop('port'),
+                'username': connection_data.pop('username'),
+                'password': connection_data.pop('password'),
+            }
+
+            client = RemoteClient(**credentials)
+            instance = Linux(**connection_data, client=client)
         elif server_type == 'RouterOS':
             instance = RouterOS(**connection_data)
         else:
