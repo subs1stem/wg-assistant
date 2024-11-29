@@ -1,8 +1,15 @@
+from enum import Enum
+
+from wireguard.client.local import LocalClient
 from wireguard.client.remote import RemoteClient
 from wireguard.linux import Linux
-
 from wireguard.routeros import RouterOS
 from wireguard.wireguard import WireGuard
+
+
+class ServerType(Enum):
+    LINUX = 'Linux'
+    ROUTEROS = 'RouterOS'
 
 
 class ServerFactory:
@@ -29,43 +36,49 @@ class ServerFactory:
         Raises:
             ValueError: If an unknown server class is provided or if required data is missing.
         """
+        # Return existing instance if already created
         if server_name in cls._created_servers:
             return cls._created_servers[server_name]
 
-        server_type = server_data.get('type')
-        connection_data = server_data.get('data')
+        # Extract and validate server data
+        server_type_str = server_data.get('type')
+        data = server_data.get('data')
 
-        if not server_type or not connection_data:
-            raise ValueError("Invalid server data. 'type' and 'data' must be provided.")
+        if not server_type_str or data is None:  # TODO: is it possible to completely delete data?
+            raise ValueError("Invalid server data: 'type' and 'data' are required.")
 
-        # Ensure backward compatibility by renaming old config keys to match constructor parameters
-        rename_keys = {
-            'interface': 'interface_name',
-            'config': 'path_to_config',
+        try:
+            server_type = ServerType(server_type_str)
+        except ValueError:
+            raise ValueError(f'Unknown server type: {server_type_str}')
+
+        # Backward compatibility: rename keys and set default endpoint
+        data = {
+            **data,
+            'interface_name': data.pop('interface', data.get('interface_name')),
+            'endpoint': data.get('endpoint', data.get('server')),
         }
 
-        for old_key, new_key in rename_keys.items():
-            if old_key in connection_data:
-                connection_data[new_key] = connection_data.pop(old_key)
+        # Handle server type
+        match server_type:
+            case ServerType.LINUX:
+                # Backward compatibility: rename 'path_to_config' key
+                data['path_to_config'] = data.pop('config', data.get('path_to_config'))
 
-        # Ensure backward compatibility if endpoint is not specified in configuration
-        if 'endpoint' not in connection_data:
-            connection_data['endpoint'] = connection_data['server']
+                credential_keys = ['server', 'port', 'username', 'password']
+                credentials = {key: data.pop(key, None) for key in credential_keys}
 
-        if server_type == 'Linux':
-            credentials = {
-                'server': connection_data.pop('server'),
-                'port': connection_data.pop('port'),
-                'username': connection_data.pop('username'),
-                'password': connection_data.pop('password'),
-            }
+                has_no_credentials = any(value is None for value in credentials.values())
+                client = LocalClient() if has_no_credentials else RemoteClient(**credentials)
 
-            client = RemoteClient(**credentials)
-            instance = Linux(**connection_data, client=client)
-        elif server_type == 'RouterOS':
-            instance = RouterOS(**connection_data)
-        else:
-            raise ValueError(f'Unknown server class: {server_type}')
+                instance = Linux(**data, client=client)
 
+            case ServerType.ROUTEROS:
+                instance = RouterOS(**data)
+
+            case _:
+                raise ValueError(f'Unhandled server type: {server_type}')
+
+        # Cache and return the created instance
         cls._created_servers[server_name] = instance
         return instance
