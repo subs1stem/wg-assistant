@@ -7,19 +7,34 @@
       "username": "root",
       "password": "toor",
       "interface_name": "wg0",
-      "endpoint": "myserver.com",
+      "endpoint": "remote-linux-server.com",
       "path_to_config": "/etc/wireguard/wg0.conf"
     }
   },
   "beta": {
     "type": "RouterOS",
     "data": {
-      "server": "127.0.0.2",
+      "server": "192.168.1.1",
       "port": 8728,
       "username": "admin",
       "password": "admin",
       "interface_name": "wireguard1",
-      "endpoint": "127.0.0.2"
+      "endpoint": "my-mikrotik.com"
+    }
+  },
+  "gamma": {
+    "type": "Linux",
+    "data": {
+      "endpoint": "local-linux-server-with-default-settings.com"
+    }
+  },
+  "delta": {
+    "type": "Linux",
+    "data": {
+      "server": "remote-linux-server-with-same-endpoint.com",
+      "port": 22,
+      "username": "admin",
+      "password": "admin"
     }
   }
 }

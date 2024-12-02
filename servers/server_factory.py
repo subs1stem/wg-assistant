@@ -44,7 +44,7 @@ class ServerFactory:
         server_type_str = server_data.get('type')
         data = server_data.get('data')
 
-        if not server_type_str or data is None:  # TODO: is it possible to completely delete data?
+        if not server_type_str or not data:
             raise ValueError("Invalid server data: 'type' and 'data' are required.")
 
         try:
