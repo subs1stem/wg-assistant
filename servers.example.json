@@ -31,10 +31,11 @@
   "delta": {
     "type": "Linux",
     "data": {
-      "server": "remote-linux-server-with-same-endpoint.com",
+      "server": "myserver.com",
       "port": 22,
       "username": "admin",
-      "password": "admin"
+      "password": "admin",
+      "endpoint": "remote-linux-server-with-default-settings.com"
     }
   }
 }
