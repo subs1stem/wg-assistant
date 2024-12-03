@@ -53,17 +53,17 @@ class ServerFactory:
             raise ValueError(f'Unknown server type: {server_type_str}')
 
         # Backward compatibility: rename keys and set default endpoint
-        data = {
-            **data,
-            'interface_name': data.pop('interface', data.get('interface_name')),
-            'endpoint': data.get('endpoint', data.get('server')),
-        }
+        if 'interface' in data:
+            data['interface_name'] = data.pop('interface')
+        if 'endpoint' not in data:
+            data['endpoint'] = data.get('server')
 
         # Handle server type
         match server_type:
             case ServerType.LINUX:
-                # Backward compatibility: rename 'path_to_config' key
-                data['path_to_config'] = data.pop('config', data.get('path_to_config'))
+                # Backward compatibility: rename 'config' key
+                if 'config' in data:
+                    data['path_to_config'] = data.pop('config')
 
                 credential_keys = ['server', 'port', 'username', 'password']
                 credentials = {key: data.pop(key, None) for key in credential_keys}
