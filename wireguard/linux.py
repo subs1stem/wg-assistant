@@ -152,10 +152,15 @@ class Linux(WireGuard):
     def get_peers(self) -> dict:
         _, stdout, stderr = self.client.execute(f'wg show {self.interface_name}')
 
-        if stderr.read().decode():
+        if stderr.read():
             return {}
 
-        str_blocks = stdout.read().decode().split('\n\n')
+        stdout_str = stdout.read()
+
+        if isinstance(stdout_str, bytes):
+            stdout_str = stdout_str.decode('utf-8')
+
+        str_blocks = stdout_str.split('\n\n')
 
         config = self.get_config(as_dict=True)
         peer_names = {v.get('PublicKey', k): k for k, v in config.items()}
