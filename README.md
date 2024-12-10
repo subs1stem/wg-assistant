@@ -40,6 +40,8 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   cp servers.example.json servers.json
   nano servers.json
   ```
+  > [!IMPORTANT]
+  > If you don't want to use SSH connection to the Linux host at this stage, go [here](#-local-deployment).
 * **Step 4:** Create an image of your bot:
   ```bash
   sudo docker build -t subs1stem/wg-assistant .
@@ -49,6 +51,35 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   sudo docker run --name wg-assistant --restart unless-stopped -d subs1stem/wg-assistant
   ```
 
-### 🐍 venv
+## 📦 Local deployment
 
-...
+If you want to deploy the bot on the same host as the WireGuard server and avoid using SSH, you can keep the simplest
+configuration:
+
+```json
+{
+  "MyServer": {
+    "type": "Linux",
+    "data": {
+      "endpoint": "myserver.com"
+    }
+  }
+}
+```
+
+After that, you need to build the image with the `LOCAL_DEPLOYMENT=true` argument:
+
+```bash
+sudo docker build --build-arg LOCAL_DEPLOYMENT=true -t subs1stem/wg-assistant .
+```
+
+Finally, run the container:
+
+```bash
+sudo docker run --name wg-assistant \
+  --restart unless-stopped \
+  --cap-add NET_ADMIN \
+  --network host \
+  -v /etc/wireguard:/etc/wireguard \
+  -d subs1stem/wg-assistant
+```
