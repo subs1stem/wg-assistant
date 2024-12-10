@@ -40,8 +40,10 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   cp servers.example.json servers.json
   nano servers.json
   ```
-  > [!IMPORTANT]
-  > If you don't want to use SSH connection to the Linux host at this stage, go [here](#-local-deployment).
+
+> [!IMPORTANT]
+> If you don't want to use SSH connection to the Linux host at this stage, go [here](#-local-deployment).
+
 * **Step 4:** Create an image of your bot:
   ```bash
   sudo docker build -t subs1stem/wg-assistant .
