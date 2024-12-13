@@ -5,6 +5,8 @@ from .base import BaseClient
 
 
 class LocalClient(BaseClient):
+    """Class that provides a client for local interaction with a host."""
+
     def execute(self, command: str) -> Tuple[Any, Any, Any]:
         process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, text=True)
         return None, process.stdout, process.stderr
