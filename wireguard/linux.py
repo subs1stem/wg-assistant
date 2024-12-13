@@ -5,6 +5,7 @@ from typing import Callable, Any, Tuple
 from wgconfig import WGConfig
 
 from wireguard.client.base import BaseClient
+from wireguard.config_builder.base import BaseConfigBuilder
 from wireguard.wireguard import WireGuard
 
 
@@ -17,6 +18,7 @@ class Linux(WireGuard):
     def __init__(
             self,
             client: BaseClient,
+            config_builder: BaseConfigBuilder,
             endpoint: str,
             interface_name: str = 'wg0',
             path_to_config: str = '/etc/wireguard/wg0.conf'
@@ -25,6 +27,7 @@ class Linux(WireGuard):
 
         Args:
             client (BaseClient): Client used to interact with the WireGuard host.
+            config_builder (BaseConfigBuilder): The WireGuard configuration builder.
             endpoint (str): The WireGuard server endpoint.
             interface_name (str, optional): The WireGuard interface name. Default is ``wg0``.
             path_to_config (str, optional): The path to the WireGuard configuration file.
@@ -33,7 +36,7 @@ class Linux(WireGuard):
         Returns:
             None
         """
-        super().__init__(endpoint, interface_name)
+        super().__init__(config_builder, endpoint, interface_name)
 
         self.client = client
         self.path_to_config = path_to_config

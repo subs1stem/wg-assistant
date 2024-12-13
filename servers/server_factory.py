@@ -12,6 +12,11 @@ class ServerType(Enum):
     ROUTEROS = 'RouterOS'
 
 
+class Protocol(Enum):
+    WIREGUARD = 'WireGuard'
+    AMNEZIA_WG = 'AmneziaWG'
+
+
 class ServerFactory:
     _instance = None
     _created_servers = {}

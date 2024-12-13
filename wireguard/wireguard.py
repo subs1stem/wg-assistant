@@ -2,24 +2,29 @@ from abc import ABC, abstractmethod
 from ipaddress import IPv4Interface, IPv4Address
 from typing import Optional
 
+from wireguard.config_builder.base import BaseConfigBuilder
+
 
 class WireGuard(ABC):
     """Abstract base class for all WireGuard implementations."""
 
     def __init__(
             self,
+            config_builder: BaseConfigBuilder,
             endpoint: str,
             interface_name: str,
     ) -> None:
         """Initialize a new instance of WireGuard.
 
         Args:
+            config_builder (BaseConfigBuilder): The WireGuard configuration builder.
             endpoint (str): The WireGuard server endpoint.
             interface_name (str): The WireGuard interface name.
 
         Returns:
             None
         """
+        self.config_builder = config_builder
         self.endpoint = endpoint
         self.interface_name = interface_name
 

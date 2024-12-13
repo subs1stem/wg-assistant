@@ -37,5 +37,12 @@
       "password": "admin",
       "endpoint": "remote-linux-server-with-default-settings.com"
     }
+  },
+  "epsilon": {
+    "type": "Linux",
+    "protocol": "AmneziaWG",
+    "data": {
+      "endpoint": "local-amnezia-wg.com"
+    }
   }
 }

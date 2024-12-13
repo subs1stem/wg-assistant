@@ -6,6 +6,7 @@ from humanize import naturalsize
 from routeros_api import RouterOsApiPool
 from routeros_api.exceptions import RouterOsApiConnectionError
 
+from wireguard.config_builder.base import BaseConfigBuilder
 from wireguard.wireguard import WireGuard
 
 
@@ -18,6 +19,7 @@ class RouterOS(WireGuard):
             port: int,
             username: str,
             password: str,
+            config_builder: BaseConfigBuilder,
             endpoint: str,
             interface_name: str = 'wireguard1',
     ) -> None:
@@ -28,13 +30,14 @@ class RouterOS(WireGuard):
             port (int): The port number for the connection.
             username (str): The username for authentication.
             password (str): The password for authentication.
+            config_builder (BaseConfigBuilder): The WireGuard configuration builder.
             endpoint (str): The WireGuard server endpoint.
             interface_name (str, optional): The WireGuard interface name. Default is ``wireguard1``.
 
         Returns:
             None
         """
-        super().__init__(endpoint, interface_name)
+        super().__init__(config_builder, endpoint, interface_name)
 
         self.server = server
         self.port = port
