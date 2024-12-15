@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
 
-class BaseConfigBuilder(ABC):
+class BaseProtocol(ABC):
     """"""
 
     @abstractmethod
-    def build_client_config(self) -> str:
+    def get_client_config(self) -> str:
         pass

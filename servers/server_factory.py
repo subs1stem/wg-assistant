@@ -3,6 +3,9 @@ from enum import Enum
 from wireguard.client.local import LocalClient
 from wireguard.client.remote import RemoteClient
 from wireguard.linux import Linux
+from wireguard.protocol.amnezia_wg import AmneziaWGProtocol
+from wireguard.protocol.base import BaseProtocol
+from wireguard.protocol.wireguard import WireguardProtocol
 from wireguard.routeros import RouterOS
 from wireguard.wireguard import WireGuard
 
@@ -22,68 +25,83 @@ class ServerFactory:
     _created_servers = {}
 
     def __new__(cls):
-        """Create or return the singleton instance of ServerFactory."""
         if cls._instance is None:
-            cls._instance = super(ServerFactory, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     @classmethod
     def create_server_instance(cls, server_name: str, server_data: dict) -> WireGuard:
-        """Create an instance of a WireGuard server based on the provided class name and server data.
+        """Create or retrieve a WireGuard server instance based on the provided server name and configuration.
 
         Args:
             server_name (str): The name of the server.
-            server_data (dict): A dictionary containing server configuration data.
+            server_data (dict): Configuration data for the server.
 
         Returns:
             WireGuard: An instance of the WireGuard server.
 
         Raises:
-            ValueError: If an unknown server class is provided or if required data is missing.
+            ValueError: If required data is missing or the server type is unrecognized.
         """
-        # Return existing instance if already created
         if server_name in cls._created_servers:
             return cls._created_servers[server_name]
 
-        # Extract and validate server data
-        server_type_str = server_data.get('type')
+        server_type = server_data.get('type')
+        protocol_type = server_data.get('protocol', Protocol.WIREGUARD)
         data = server_data.get('data')
 
-        if not server_type_str or not data:
+        if not server_type or not data:
             raise ValueError("Invalid server data: 'type' and 'data' are required.")
 
-        try:
-            server_type = ServerType(server_type_str)
-        except ValueError:
-            raise ValueError(f'Unknown server type: {server_type_str}')
+        cls._prepare_data(data)
+        protocol = cls._get_protocol(protocol_type)
+        instance = cls._create_instance(server_type, data, protocol)
 
-        # Backward compatibility: rename keys and set default endpoint
+        cls._created_servers[server_name] = instance
+        return instance
+
+    @staticmethod
+    def _prepare_data(data: dict):
+        """Prepare and normalize server data for backward compatibility."""
         if 'interface' in data:
             data['interface_name'] = data.pop('interface')
         if 'endpoint' not in data:
             data['endpoint'] = data.get('server')
+        if 'config' in data:
+            data['path_to_config'] = data.pop('config')
 
-        # Handle server type
+    @staticmethod
+    def _get_protocol(protocol_type: Protocol) -> BaseProtocol:
+        """Return the appropriate protocol instance based on the protocol type."""
+        match protocol_type:
+            case Protocol.WIREGUARD:
+                return WireguardProtocol()
+            case Protocol.AMNEZIA_WG:
+                return AmneziaWGProtocol()
+            case _:
+                raise ValueError(f'Unhandled protocol type: {protocol_type}')
+
+    @staticmethod
+    def _create_instance(server_type: str, data: dict, protocol: BaseProtocol) -> WireGuard:
+        """Instantiate and return the appropriate server type."""
         match server_type:
-            case ServerType.LINUX:
-                # Backward compatibility: rename 'config' key
-                if 'config' in data:
-                    data['path_to_config'] = data.pop('config')
+            case ServerType.LINUX.value:
+                client = ServerFactory._get_linux_client(data)
+                return Linux(**data, client=client, protocol=protocol)
 
-                credential_keys = ['server', 'port', 'username', 'password']
-                credentials = {key: data.pop(key, None) for key in credential_keys}
-
-                has_no_credentials = any(value is None for value in credentials.values())
-                client = LocalClient() if has_no_credentials else RemoteClient(**credentials)
-
-                instance = Linux(**data, client=client)
-
-            case ServerType.ROUTEROS:
-                instance = RouterOS(**data)
+            case ServerType.ROUTEROS.value:
+                return RouterOS(**data, protocol=protocol)
 
             case _:
                 raise ValueError(f'Unhandled server type: {server_type}')
 
-        # Cache and return the created instance
-        cls._created_servers[server_name] = instance
-        return instance
+    @staticmethod
+    def _get_linux_client(data: dict) -> LocalClient | RemoteClient:
+        """Determine and return the appropriate client for Linux servers."""
+        credential_keys = ['server', 'port', 'username', 'password']
+        credentials = {key: data.pop(key, None) for key in credential_keys}
+
+        if any(value is None for value in credentials.values()):
+            return LocalClient()
+
+        return RemoteClient(**credentials)
