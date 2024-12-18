@@ -47,7 +47,7 @@ class ServerFactory:
             return cls._created_servers[server_name]
 
         server_type = server_data.get('type')
-        protocol_type = server_data.get('protocol', Protocol.WIREGUARD)
+        protocol_type = Protocol(server_data.get('protocol', Protocol.WIREGUARD.value))
         data = server_data.get('data')
 
         if not server_type or not data:

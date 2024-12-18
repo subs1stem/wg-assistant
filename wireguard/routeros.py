@@ -207,8 +207,8 @@ class RouterOS(WireGuard):
 
     @_exception_handler
     def add_peer(self, name: str) -> str:
+        server_config = self.get_config(as_dict=True)
         interface = self._get_interface()
-        config = self.get_config(as_dict=True)
 
         peers_resource = self.api.get_resource('/interface/wireguard/peers')
 
@@ -216,17 +216,18 @@ class RouterOS(WireGuard):
             name=name,
             interface=self.interface_name,
             private_key='auto',
-            allowed_address=self.get_available_ip(config),
+            allowed_address=self.get_available_ip(server_config),
         )
 
         peer = peers_resource.get(name=name)[0]
 
-        client_config = self.build_client_config(
+        client_config = self.protocol.build_client_config(
             privkey=peer.get('private-key'),
             address=peer.get('allowed-address'),
             server_pubkey=self.get_server_pubkey(),
             endpoint=self.endpoint,
             server_port=interface.get('listen-port'),
+            server_config=server_config,
         )
 
         return client_config

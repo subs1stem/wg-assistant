@@ -29,38 +29,6 @@ class WireGuard(ABC):
         self.interface_name = interface_name
 
     @staticmethod
-    def build_client_config(
-            privkey: str,
-            address: str,
-            server_pubkey: str,
-            endpoint: str,
-            server_port: int,
-    ) -> str:
-        """Generate a WireGuard client configuration.
-
-        Args:
-            privkey (str): The private key of the client.
-            address (str): The client's assigned IP address.
-            server_pubkey (str): The public key of the server.
-            endpoint (str): The endpoint of the WireGuard server.
-            server_port (int): The port number of the WireGuard server.
-
-        Returns:
-            str: A WireGuard configuration string with the provided parameters.
-        """
-        wg_config = '[Interface]\n' \
-                    f'PrivateKey = {privkey}\n' \
-                    f'Address = {address}\n' \
-                    f'DNS = 1.1.1.1, 1.0.0.1\n\n' \
-                    '[Peer]\n' \
-                    f'PublicKey = {server_pubkey}\n' \
-                    'AllowedIPs = 0.0.0.0/0\n' \
-                    f'Endpoint = {endpoint}:{server_port}\n' \
-                    'PersistentKeepalive = 30'
-
-        return wg_config
-
-    @staticmethod
     def get_available_ip(config: dict) -> Optional[str]:
         """Get an available IP address based on the provided configuration.
 

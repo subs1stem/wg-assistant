@@ -182,21 +182,23 @@ class Linux(WireGuard):
 
     @_config_operation(rewrite_config=True)
     def add_peer(self, name: str) -> str:
-        privkey, pubkey = self._generate_key_pair()
+        server_config = self.get_config(as_dict=True)
 
-        config = self.get_config(as_dict=True)
-        server_port = config.get('Interface').get('ListenPort')
-        peer_ip = self.get_available_ip(config)
+        privkey, pubkey = self._generate_key_pair()
+        peer_ip = self.get_available_ip(server_config)
+        server_pubkey = self.get_server_pubkey()
+        server_port = server_config.get('Interface').get('ListenPort')
 
         self.wg_config.add_peer(pubkey, '# ' + name)
         self.wg_config.add_attr(pubkey, 'AllowedIPs', peer_ip)
 
-        client_config = self.build_client_config(
+        client_config = self.protocol.build_client_config(
             privkey=privkey,
             address=peer_ip,
-            server_pubkey=self.get_server_pubkey(),
+            server_pubkey=server_pubkey,
             endpoint=self.endpoint,
             server_port=server_port,
+            server_config=server_config,
         )
 
         return client_config
