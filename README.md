@@ -4,14 +4,14 @@ Telegram bot for managing WireGuard VPN.
 
 ## 🎯 Features
 
-* Adding new clients with automatic generation of configuration and QR code.
-* Managing existing clients: deleting, disabling, enabling.
+* Add new clients with automatic configuration and QR code generation.
+* Manage clients: delete, disable, enable.
 * View client status (endpoint, traffic, etc.).
-* Manage an unlimited number of servers.
+* Register an unlimited number of servers.
 
-## ✅ Supported
+## ✅ Supported platforms
 
-* [Linux](https://www.wireguard.com)
+* Linux ([default](https://www.wireguard.com) and [AmneziaWG](https://docs.amnezia.org/documentation/amnezia-wg/))
 * [RouterOS](https://help.mikrotik.com/docs/display/ROS/WireGuard)
 
 ## 🛠 Installation
