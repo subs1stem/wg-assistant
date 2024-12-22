@@ -52,6 +52,13 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   ```bash
   sudo docker run --name wg-assistant --restart unless-stopped -d subs1stem/wg-assistant
   ```
+  or mount the configuration files inside the container:
+  ```bash
+  sudo docker run --name wg-assistant --restart unless-stopped \
+  -v servers.json:/app/servers.json \
+  -v .env:/app/.env \
+  -d subs1stem/wg-assistant
+  ```
 
 ## 📦 Local deployment
 
