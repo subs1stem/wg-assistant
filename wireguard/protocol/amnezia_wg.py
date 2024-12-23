@@ -23,7 +23,7 @@ class AmneziaWGProtocol(BaseProtocol):
             server_config=server_config,
         )
 
-        params = ['jc', 'jmin', 'jmax', 's1', 's2', 'h1', 'h2', 'h3', 'h4']
-        amnezia_wg_config = '\n'.join(f'{param} = {server_config.get(param, 0)}' for param in params)
+        params = ['Jc', 'Jmin', 'Jmax', 'S1', 'S2', 'H1', 'H2', 'H3', 'H4']
+        amnezia_wg_config = '\n'.join(f'{param} = {server_config.get('Interface').get(param, 0)}' for param in params)
 
         return base_wireguard_config + '\n' + amnezia_wg_config
