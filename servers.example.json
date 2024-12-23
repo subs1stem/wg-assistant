@@ -42,7 +42,9 @@
     "type": "Linux",
     "protocol": "AmneziaWG",
     "data": {
-      "endpoint": "local-amnezia-wg.com"
+      "interface_name": "awg0",
+      "endpoint": "local-amnezia-wg.com",
+      "path_to_config": "/etc/amnezia/amneziawg/awg0.conf"
     }
   }
 }
