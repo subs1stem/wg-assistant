@@ -26,3 +26,15 @@ class WireguardProtocol(BaseProtocol):
         )
 
         return wg_config
+
+    def get_genkey_command(self) -> str:
+        return 'wg genkey'
+
+    def get_pubkey_command(self) -> str:
+        return 'wg pubkey'
+
+    def get_quick_command(self) -> str:
+        return 'wg-quick'
+
+    def get_show_command(self) -> str:
+        return 'wg show'

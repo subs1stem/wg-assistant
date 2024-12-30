@@ -27,3 +27,15 @@ class AmneziaWGProtocol(BaseProtocol):
         amnezia_wg_config = '\n'.join(f'{param} = {server_config.get('Interface').get(param, 0)}' for param in params)
 
         return base_wireguard_config + '\n' + amnezia_wg_config
+
+    def get_genkey_command(self) -> str:
+        return 'awg genkey'
+
+    def get_pubkey_command(self) -> str:
+        return 'awg pubkey'
+
+    def get_quick_command(self) -> str:
+        return 'awg-quick'
+
+    def get_show_command(self) -> str:
+        return 'awg show'

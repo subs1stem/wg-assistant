@@ -27,3 +27,35 @@ class BaseProtocol(ABC):
         Returns:
             str: A WireGuard configuration string with the provided parameters.
         """
+
+    @abstractmethod
+    def get_genkey_command(self) -> str:
+        """Retrieves the ``genkey`` command.
+
+        Returns:
+            str: The command string for generating a key pair.
+        """
+
+    @abstractmethod
+    def get_pubkey_command(self) -> str:
+        """Retrieves the ``pubkey`` command.
+
+        Returns:
+            str: The command string for obtaining the public key.
+        """
+
+    @abstractmethod
+    def get_quick_command(self) -> str:
+        """Retrieves the ``wg-quick`` command.
+
+        Returns:
+            str: The command string for running the ``wg-quick`` tool.
+        """
+
+    @abstractmethod
+    def get_show_command(self) -> str:
+        """Retrieves the ``show`` command.
+
+        Returns:
+            str: The command string for running the ``show`` command.
+        """

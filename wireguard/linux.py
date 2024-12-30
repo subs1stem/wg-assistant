@@ -49,10 +49,10 @@ class Linux(WireGuard):
         Returns:
             Tuple[str, str]: A tuple containing private key and public key strings.
         """
-        _, stdout, _ = self.client.execute(f'wg genkey')
+        _, stdout, _ = self.client.execute(self.protocol.get_genkey_command())
         privkey = stdout.readline().strip()
 
-        _, stdout, _ = self.client.execute(f'echo "{privkey}" | wg pubkey')
+        _, stdout, _ = self.client.execute(f'echo "{privkey}" | {self.protocol.get_pubkey_command()}')
         pubkey = stdout.readline().strip()
 
         return privkey, pubkey
@@ -137,14 +137,14 @@ class Linux(WireGuard):
 
     def set_wg_enabled(self, enabled: bool) -> None:
         state = 'up' if enabled else 'down'
-        self.client.execute(f'wg-quick {state} {self.interface_name}')
+        self.client.execute(f'{self.protocol.get_quick_command()} {state} {self.interface_name}')
 
     def get_wg_enabled(self) -> bool:
-        _, stdout, _ = self.client.execute(f'wg show {self.interface_name}')
+        _, stdout, _ = self.client.execute(f'{self.protocol.get_show_command()} {self.interface_name}')
         return bool(stdout.readline())
 
     def get_server_pubkey(self) -> str | None:
-        _, stdout, stderr = self.client.execute(f'wg show {self.interface_name} public-key')
+        _, stdout, stderr = self.client.execute(f'{self.protocol.get_show_command()} {self.interface_name} public-key')
         return None if stderr.readline() else stdout.readline().strip()
 
     def restart(self) -> None:
@@ -153,7 +153,7 @@ class Linux(WireGuard):
         self.set_wg_enabled(True)
 
     def get_peers(self) -> dict:
-        _, stdout, stderr = self.client.execute(f'wg show {self.interface_name}')
+        _, stdout, stderr = self.client.execute(f'{self.protocol.get_show_command()} {self.interface_name}')
 
         if stderr.read():
             return {}
