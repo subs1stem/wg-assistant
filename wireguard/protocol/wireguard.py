@@ -4,8 +4,8 @@ from wireguard.protocol.base import BaseProtocol
 class WireguardProtocol(BaseProtocol):
     """Class that provides the standard WireGuard protocol."""
 
+    @staticmethod
     def build_client_config(
-            self,
             privkey: str,
             address: str,
             server_pubkey: str,
@@ -27,14 +27,40 @@ class WireguardProtocol(BaseProtocol):
 
         return wg_config
 
-    def get_genkey_command(self) -> str:
+    @staticmethod
+    def parse_config_to_dict(config: str) -> dict:
+        config_dict = {}
+        now_section_name = 'Interface'
+        now_section_content = {}
+
+        for line in config.splitlines():
+            line = line.replace('#!', '').strip()
+
+            if line.startswith('# '):
+                config_dict[now_section_name] = now_section_content
+                now_section_content = {}
+                now_section_name = line.lstrip('# ').rstrip()
+
+            elif line and not line.startswith('['):
+                line = line.lstrip('#!')
+                key, value = (item.strip() for item in line.split(' = '))
+                now_section_content[key] = value
+
+        config_dict[now_section_name] = now_section_content
+        return config_dict
+
+    @staticmethod
+    def get_genkey_command() -> str:
         return 'wg genkey'
 
-    def get_pubkey_command(self) -> str:
+    @staticmethod
+    def get_pubkey_command() -> str:
         return 'wg pubkey'
 
-    def get_quick_command(self) -> str:
+    @staticmethod
+    def get_quick_command() -> str:
         return 'wg-quick'
 
-    def get_show_command(self) -> str:
+    @staticmethod
+    def get_show_command() -> str:
         return 'wg show'

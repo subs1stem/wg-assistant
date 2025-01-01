@@ -97,43 +97,13 @@ class Linux(WireGuard):
 
         return decorator
 
-    @staticmethod
-    def _parse_config_to_dict(config: str) -> dict:
-        """Parse a WireGuard server configuration string and convert it into a dictionary.
-
-        Args:
-            config (str): The WireGuard server configuration as a string.
-
-        Returns:
-            dict: A dictionary representation of the WireGuard server configuration.
-        """
-        config_dict = {}
-        now_section_name = 'Interface'
-        now_section_content = {}
-
-        for line in config.splitlines():
-            line = line.replace('#!', '').strip()
-
-            if line.startswith('# '):
-                config_dict[now_section_name] = now_section_content
-                now_section_content = {}
-                now_section_name = line.lstrip('# ').rstrip()
-
-            elif line and not line.startswith('['):
-                line = line.lstrip('#!')
-                key, value = (item.strip() for item in line.split(' = '))
-                now_section_content[key] = value
-
-        config_dict[now_section_name] = now_section_content
-        return config_dict
-
     def reboot_host(self) -> None:
         self.client.execute('reboot')
 
     def get_config(self, as_dict: bool = False) -> str | dict:
         _, stdout, _ = self.client.execute(f'cat {self.path_to_config}')
         config = ''.join(stdout.readlines())
-        return self._parse_config_to_dict(config) if as_dict else config
+        return self.protocol.parse_config_to_dict(config) if as_dict else config
 
     def set_wg_enabled(self, enabled: bool) -> None:
         state = 'up' if enabled else 'down'
