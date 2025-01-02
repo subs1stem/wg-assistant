@@ -1,3 +1,5 @@
+from wgconfig import WGConfig
+
 from wireguard.protocol.base import BaseProtocol
 
 
@@ -64,3 +66,8 @@ class WireguardProtocol(BaseProtocol):
     @staticmethod
     def get_show_command() -> str:
         return 'wg show'
+
+    @staticmethod
+    def add_peer(wg_config: WGConfig, pubkey: str, name: str) -> WGConfig:
+        wg_config.add_peer(pubkey, '# ' + name)
+        return wg_config

@@ -1,3 +1,5 @@
+from wgconfig import WGConfig
+
 from wireguard.protocol.base import BaseProtocol
 from wireguard.protocol.wireguard import WireguardProtocol
 
@@ -31,22 +33,43 @@ class AmneziaWGProtocol(BaseProtocol):
     @staticmethod
     def parse_config_to_dict(config: str) -> dict:
         config_dict = {}
-        now_section_name = 'Interface'
-        now_section_content = {}
+        current_section = 'Interface'
+        section_content = {}
+        pending_public_key = None
 
         for line in config.splitlines():
             line = line.removeprefix('#!').strip()
 
-            if line.startswith('#_Name'):
-                config_dict[now_section_name] = now_section_content
-                now_section_content = {}
-                now_section_name = line.removeprefix('#_Name = ').rstrip()
+            if not line or line == '[Interface]':
+                continue
 
-            elif line and not line.startswith('['):
-                key, value = (item.strip() for item in line.split(' = '))
-                now_section_content[key] = value
+            if line == '[Peer]':
+                if current_section is None and pending_public_key:
+                    current_section = pending_public_key
 
-        config_dict[now_section_name] = now_section_content
+                if current_section:
+                    config_dict[current_section] = section_content
+
+                current_section = None
+                pending_public_key = None
+                section_content = {}
+
+            else:
+                key, value = (item.strip() for item in line.split(' = ', maxsplit=1))
+
+                if key == '#_Name':
+                    current_section = value
+                elif key == 'PublicKey':
+                    pending_public_key = value
+
+                section_content[key] = value
+
+        if current_section is None and pending_public_key:
+            current_section = pending_public_key
+
+        if current_section:
+            config_dict[current_section] = section_content
+
         return config_dict
 
     @staticmethod
@@ -64,3 +87,9 @@ class AmneziaWGProtocol(BaseProtocol):
     @staticmethod
     def get_show_command() -> str:
         return 'awg show'
+
+    @staticmethod
+    def add_peer(wg_config: WGConfig, pubkey: str, name: str) -> WGConfig:
+        wg_config.add_peer(pubkey)
+        wg_config.add_attr(pubkey, '#_Name', name)
+        return wg_config

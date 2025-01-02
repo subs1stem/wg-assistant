@@ -159,7 +159,7 @@ class Linux(WireGuard):
         server_pubkey = self.get_server_pubkey()
         server_port = server_config.get('Interface').get('ListenPort')
 
-        self.wg_config.add_peer(pubkey, '# ' + name)
+        self.wg_config = self.protocol.add_peer(self.wg_config, pubkey, name)
         self.wg_config.add_attr(pubkey, 'AllowedIPs', peer_ip)
 
         client_config = self.protocol.build_client_config(

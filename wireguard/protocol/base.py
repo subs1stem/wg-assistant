@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from wgconfig import WGConfig
+
 
 class BaseProtocol(ABC):
     """Abstract base class for all WireGuard protocols."""
@@ -74,4 +76,22 @@ class BaseProtocol(ABC):
 
         Returns:
             str: The command string for running the ``show`` command.
+        """
+
+    @staticmethod
+    @abstractmethod
+    def add_peer(wg_config: WGConfig, pubkey: str, name: str) -> WGConfig:
+        """Add a peer to the given WireGuard configuration.
+
+        This method is responsible for adding a peer's public key and associated metadata
+        (such as name) to the WireGuard configuration. The exact implementation of how
+        the peer is added must be defined in a subclass.
+
+        Args:
+            wg_config (WGConfig): The ``WGConfig`` class instance to which the peer will be added.
+            pubkey (str): The public key of the peer.
+            name (str): A descriptive name or identifier for the peer.
+
+        Returns:
+            WGConfig: The updated ``WGConfig`` configuration instance with the new peer added.
         """
