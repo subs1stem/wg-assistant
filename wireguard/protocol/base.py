@@ -95,3 +95,21 @@ class BaseProtocol(ABC):
         Returns:
             WGConfig: The updated ``WGConfig`` configuration instance with the new peer added.
         """
+
+    @staticmethod
+    @abstractmethod
+    def rename_peer(wg_config: WGConfig, pubkey: str, new_name: str) -> WGConfig:
+        """Rename a peer in the given WireGuard configuration.
+
+        This method is responsible for updating the name or identifier associated
+        with a specific peer in the WireGuard configuration. The exact implementation
+        must be defined in a subclass.
+
+        Args:
+            wg_config (WGConfig): The ``WGConfig`` class instance containing the peer to rename.
+            pubkey (str): The public key of the peer whose name is to be updated.
+            new_name (str): The new name or identifier to assign to the peer.
+
+        Returns:
+            WGConfig: The updated ``WGConfig`` configuration instance with the peer renamed.
+        """

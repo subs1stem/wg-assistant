@@ -93,3 +93,9 @@ class AmneziaWGProtocol(BaseProtocol):
         wg_config.add_peer(pubkey)
         wg_config.add_attr(pubkey, '#_Name', name)
         return wg_config
+
+    @staticmethod
+    def rename_peer(wg_config: WGConfig, pubkey: str, new_name: str) -> WGConfig:
+        wg_config.del_attr(pubkey, '#_Name')
+        wg_config.add_attr(pubkey, '#_Name', new_name)
+        return wg_config

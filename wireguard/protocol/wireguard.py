@@ -71,3 +71,14 @@ class WireguardProtocol(BaseProtocol):
     def add_peer(wg_config: WGConfig, pubkey: str, name: str) -> WGConfig:
         wg_config.add_peer(pubkey, '# ' + name)
         return wg_config
+
+    @staticmethod
+    def rename_peer(wg_config: WGConfig, pubkey: str, new_name: str) -> WGConfig:
+        section_start_position = wg_config.get_sectioninfo(pubkey)[0]
+        first_line = wg_config.lines[section_start_position]
+
+        # Check if a line is a comment
+        if first_line.startswith('#'):
+            wg_config.lines[section_start_position] = '# ' + new_name
+
+        return wg_config

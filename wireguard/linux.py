@@ -190,11 +190,4 @@ class Linux(WireGuard):
 
     @_config_operation(rewrite_config=True)
     def rename_peer(self, pubkey: str, new_name: str) -> None:
-        section_start_position = self.wg_config.get_sectioninfo(pubkey)[0]
-        first_line = self.wg_config.lines[section_start_position]
-
-        # Check if a line is a comment
-        if not first_line.startswith('#'):
-            return
-
-        self.wg_config.lines[section_start_position] = '# ' + new_name
+        self.wg_config = self.protocol.rename_peer(self.wg_config, pubkey, new_name)
