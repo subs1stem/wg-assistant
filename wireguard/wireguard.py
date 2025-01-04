@@ -107,14 +107,6 @@ class WireGuard(ABC):
         """
 
     @abstractmethod
-    def restart(self) -> None:
-        """Restart the WireGuard server.
-
-        Returns:
-            None
-        """
-
-    @abstractmethod
     def get_peers(self) -> dict:
         """Get a list of all configured peers.
 

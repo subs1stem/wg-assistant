@@ -1,5 +1,4 @@
 from functools import wraps
-from time import sleep
 from typing import Callable, Any, Tuple
 
 from wgconfig import WGConfig
@@ -13,7 +12,6 @@ class Linux(WireGuard):
     """Class for a WireGuard server deployed on a Linux host."""
 
     _TMP_CONFIG_PATH = '/tmp/wg0.conf'
-    _RESTART_DELAY = 3
 
     def __init__(
             self,
@@ -49,10 +47,10 @@ class Linux(WireGuard):
         Returns:
             Tuple[str, str]: A tuple containing private key and public key strings.
         """
-        _, stdout, _ = self.client.execute(self.protocol.get_genkey_command())
+        _, stdout, _ = self.client.execute(f'{self.protocol.get_command()} genkey')
         privkey = stdout.readline().strip()
 
-        _, stdout, _ = self.client.execute(f'echo "{privkey}" | {self.protocol.get_pubkey_command()}')
+        _, stdout, _ = self.client.execute(f'echo "{privkey}" | {self.protocol.get_command()} pubkey')
         pubkey = stdout.readline().strip()
 
         return privkey, pubkey
@@ -89,13 +87,24 @@ class Linux(WireGuard):
                     with open(self._TMP_CONFIG_PATH, 'r') as f:
                         self.client.put_file_contents(self.path_to_config, f.read())
 
-                    self.restart()
+                    self.sync_config()
 
                 return result
 
             return wrapper
 
         return decorator
+
+    def sync_config(self) -> None:
+        """Synchronizes the WireGuard configuration without disrupting current peer sessions.
+
+        Returns:
+            None
+        """
+        self.client.execute(
+            f"{self.protocol.get_command()} syncconf {self.interface_name} "
+            f"<({self.protocol.get_quick_command()} strip {self.path_to_config})"
+        )
 
     def reboot_host(self) -> None:
         self.client.execute('reboot')
@@ -110,20 +119,15 @@ class Linux(WireGuard):
         self.client.execute(f'{self.protocol.get_quick_command()} {state} {self.interface_name}')
 
     def get_wg_enabled(self) -> bool:
-        _, stdout, _ = self.client.execute(f'{self.protocol.get_show_command()} {self.interface_name}')
+        _, stdout, _ = self.client.execute(f'{self.protocol.get_command()} show {self.interface_name}')
         return bool(stdout.readline())
 
     def get_server_pubkey(self) -> str | None:
-        _, stdout, stderr = self.client.execute(f'{self.protocol.get_show_command()} {self.interface_name} public-key')
+        _, stdout, stderr = self.client.execute(f'{self.protocol.get_command()} show {self.interface_name} public-key')
         return None if stderr.readline() else stdout.readline().strip()
 
-    def restart(self) -> None:
-        self.set_wg_enabled(False)
-        sleep(self._RESTART_DELAY)
-        self.set_wg_enabled(True)
-
     def get_peers(self) -> dict:
-        _, stdout, stderr = self.client.execute(f'{self.protocol.get_show_command()} {self.interface_name}')
+        _, stdout, stderr = self.client.execute(f'{self.protocol.get_command()} show {self.interface_name}')
 
         if stderr.read():
             return {}

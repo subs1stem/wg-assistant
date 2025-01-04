@@ -52,20 +52,12 @@ class WireguardProtocol(BaseProtocol):
         return config_dict
 
     @staticmethod
-    def get_genkey_command() -> str:
-        return 'wg genkey'
-
-    @staticmethod
-    def get_pubkey_command() -> str:
-        return 'wg pubkey'
+    def get_command() -> str:
+        return 'wg'
 
     @staticmethod
     def get_quick_command() -> str:
         return 'wg-quick'
-
-    @staticmethod
-    def get_show_command() -> str:
-        return 'wg show'
 
     @staticmethod
     def add_peer(wg_config: WGConfig, pubkey: str, name: str) -> WGConfig:

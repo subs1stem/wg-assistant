@@ -44,20 +44,11 @@ class BaseProtocol(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_genkey_command() -> str:
-        """Retrieves the ``genkey`` command.
+    def get_command() -> str:
+        """Retrieves the base WireGuard command.
 
         Returns:
-            str: The command string for generating a key pair.
-        """
-
-    @staticmethod
-    @abstractmethod
-    def get_pubkey_command() -> str:
-        """Retrieves the ``pubkey`` command.
-
-        Returns:
-            str: The command string for obtaining the public key.
+            str: The command string for running the base WireGuard configuration utility.
         """
 
     @staticmethod
@@ -67,15 +58,6 @@ class BaseProtocol(ABC):
 
         Returns:
             str: The command string for running the ``wg-quick`` tool.
-        """
-
-    @staticmethod
-    @abstractmethod
-    def get_show_command() -> str:
-        """Retrieves the ``show`` command.
-
-        Returns:
-            str: The command string for running the ``show`` command.
         """
 
     @staticmethod

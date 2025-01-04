@@ -73,20 +73,12 @@ class AmneziaWGProtocol(BaseProtocol):
         return config_dict
 
     @staticmethod
-    def get_genkey_command() -> str:
-        return 'awg genkey'
-
-    @staticmethod
-    def get_pubkey_command() -> str:
-        return 'awg pubkey'
+    def get_command() -> str:
+        return 'awg'
 
     @staticmethod
     def get_quick_command() -> str:
         return 'awg-quick'
-
-    @staticmethod
-    def get_show_command() -> str:
-        return 'awg show'
 
     @staticmethod
     def add_peer(wg_config: WGConfig, pubkey: str, name: str) -> WGConfig:

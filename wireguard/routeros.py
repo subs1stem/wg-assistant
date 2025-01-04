@@ -184,14 +184,6 @@ class RouterOS(WireGuard):
         return None
 
     @_exception_handler
-    def restart(self) -> None:
-        interface = self._get_interface()
-        if interface:
-            resource = self.api.get_resource('/interface/wireguard')
-            resource.set(id=interface['id'], disabled='yes')
-            resource.set(id=interface['id'], disabled='no')
-
-    @_exception_handler
     def get_peers(self) -> dict:
         raw_peers = self.api.get_resource('/interface/wireguard/peers').get(interface=self.interface_name)
 
