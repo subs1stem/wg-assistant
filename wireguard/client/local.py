@@ -8,7 +8,7 @@ class LocalClient(BaseClient):
     """Class that provides a client for local interaction with a host."""
 
     def execute(self, command: str) -> Tuple[Any, Any, Any]:
-        process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, text=True)
+        process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, text=True, executable='/bin/bash')
         return None, process.stdout, process.stderr
 
     def get_file_contents(self, path: str) -> str:
