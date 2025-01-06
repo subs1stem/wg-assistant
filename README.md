@@ -52,7 +52,7 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   ```bash
   sudo docker run --name wg-assistant --restart unless-stopped -d subs1stem/wg-assistant
   ```
-  or mount the configuration files inside the container:
+  or with mounting the bot configuration files inside the container:
   ```bash
   sudo docker run --name wg-assistant --restart unless-stopped \
   -v ./servers.json:/app/servers.json \
@@ -63,7 +63,7 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
 ## 📦 Local deployment
 
 If you want to deploy the bot on the same host as the WireGuard server and avoid using SSH, you can keep the simplest
-configuration:
+configuration without credentials:
 
 ```json
 {
@@ -76,13 +76,46 @@ configuration:
 }
 ```
 
-After that, you need to build the image with the `LOCAL_DEPLOYMENT=true` argument:
+or for **AmneziaWG**:
 
-```bash
-sudo docker build --build-arg LOCAL_DEPLOYMENT=true -t subs1stem/wg-assistant .
+```json
+{
+  "MyServer": {
+    "type": "Linux",
+    "protocol": "AmneziaWG",
+    "data": {
+      "interface_name": "awg0",
+      "endpoint": "myserver.com",
+      "path_to_config": "/etc/amnezia/amneziawg/awg0.conf"
+    }
+  }
+}
 ```
 
-Finally, run the container:
+After that, you need to build the image with the argument `LOCAL_DEPLOYMENT_WG=true` or `LOCAL_DEPLOYMENT_AWG=true`
+depending on the protocol you are using. This will install the necessary utilities inside the container.
+
+For **WireGuard**:
+
+```bash
+sudo docker build --build-arg LOCAL_DEPLOYMENT_WG=true --build-arg -t subs1stem/wg-assistant .
+```
+
+For **AmneziaWG**:
+
+```bash
+sudo docker build --build-arg LOCAL_DEPLOYMENT_AWG=true --build-arg -t subs1stem/wg-assistant .
+```
+
+Or use both arguments if you have both VPNs on your server:
+
+```bash
+sudo docker build --build-arg LOCAL_DEPLOYMENT_WG=true --build-arg LOCAL_DEPLOYMENT_AWG=true -t subs1stem/wg-assistant .
+```
+
+Finally, run the container with the server configuration directories mounted.
+
+For **WireGuard**:
 
 ```bash
 sudo docker run --name wg-assistant \
@@ -90,5 +123,28 @@ sudo docker run --name wg-assistant \
   --cap-add NET_ADMIN \
   --network host \
   -v /etc/wireguard:/etc/wireguard \
+  -d subs1stem/wg-assistant
+```
+
+For **AmneziaWG**:
+
+```bash
+sudo docker run --name wg-assistant \
+  --restart unless-stopped \
+  --cap-add NET_ADMIN \
+  --network host \
+  -v /etc/amnezia/amneziawg:/etc/amnezia/amneziawg \
+  -d subs1stem/wg-assistant
+```
+
+For both:
+
+```bash
+sudo docker run --name wg-assistant \
+  --restart unless-stopped \
+  --cap-add NET_ADMIN \
+  --network host \
+  -v /etc/wireguard:/etc/wireguard \
+  -v /etc/amnezia/amneziawg:/etc/amnezia/amneziawg \
   -d subs1stem/wg-assistant
 ```
