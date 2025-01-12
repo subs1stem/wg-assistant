@@ -1,4 +1,4 @@
-FROM python:3.13.0-slim-bookworm
+FROM python:3.13.1-slim-bookworm
 WORKDIR /app
 
 ARG LOCAL_DEPLOYMENT_WG=false
