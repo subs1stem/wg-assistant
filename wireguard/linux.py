@@ -1,4 +1,5 @@
 from functools import wraps
+from io import StringIO
 from typing import Callable, Any, Tuple
 
 from wgconfig import WGConfig
@@ -10,8 +11,6 @@ from wireguard.wireguard import WireGuard
 
 class Linux(WireGuard):
     """Class for a WireGuard server deployed on a Linux host."""
-
-    _TMP_CONFIG_PATH = '/tmp/wg0.conf'
 
     def __init__(
             self,
@@ -39,7 +38,7 @@ class Linux(WireGuard):
         self.client = client
         self.path_to_config = path_to_config
 
-        self.wg_config = WGConfig(self._TMP_CONFIG_PATH)
+        self.wg_config = WGConfig()
 
     def _generate_key_pair(self) -> Tuple[str, str]:
         """Generate a WireGuard private-public key pair.
@@ -75,18 +74,16 @@ class Linux(WireGuard):
         def decorator(method: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(method)
             def wrapper(self, *args, **kwargs) -> Any:
-                with open(self._TMP_CONFIG_PATH, 'w') as f:
-                    f.write(self.client.get_file_contents(self.path_to_config))
+                config_content = self.client.get_file_contents(self.path_to_config)
+                config_object = StringIO(config_content)
+                self.wg_config.read_from_fileobj(config_object)
 
-                self.wg_config.read_file()
                 result = method(self, *args, **kwargs)
 
                 if rewrite_config:
-                    self.wg_config.write_file()
-
-                    with open(self._TMP_CONFIG_PATH, 'r') as f:
-                        self.client.put_file_contents(self.path_to_config, f.read())
-
+                    config_object = StringIO()
+                    self.wg_config.write_to_fileobj(config_object)
+                    self.client.put_file_contents(self.path_to_config, config_object.getvalue())
                     self.sync_config()
 
                 return result
