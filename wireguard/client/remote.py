@@ -13,14 +13,29 @@ class RemoteClient(BaseClient):
     def __init__(
             self,
             server: str,
-            port: int,
-            username: str,
-            password: str,
+            port: int = 22,
+            username: str = None,
+            password: str = None,
+            key_filename: str = None,
     ) -> None:
+        """Initialize a new instance of the RemoteClient.
+
+        Args:
+            server (str): The remote server hostname or IP address.
+            port (int, optional): The port for SSH connection. Defaults to 22.
+            username (str, optional): The SSH username. Defaults to the current local username.
+            password (str, optional): The SSH password. Is also used for private key decryption.
+            key_filename (str, optional): The filename, or list of filenames, of optional private key(s)
+                and/or certs to try for authentication.
+
+        Returns:
+            None
+        """
         self.server = server
         self.port = port
         self.username = username
         self.password = password
+        self.key_filename = key_filename
 
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
@@ -65,9 +80,10 @@ class RemoteClient(BaseClient):
         try:
             self.client.connect(
                 hostname=self.server,
+                port=self.port,
                 username=self.username,
                 password=self.password,
-                port=self.port
+                key_filename=self.key_filename,
             )
         except (SSHException, NoValidConnectionsError, ConnectionResetError) as e:
             raise ConnectionError(f'Error connecting to WireGuard server host: {e}')
