@@ -98,10 +98,13 @@ class ServerFactory:
     @staticmethod
     def _get_linux_client(data: dict) -> LocalClient | RemoteClient:
         """Determine and return the appropriate client for Linux servers."""
-        credential_keys = ['server', 'port', 'username', 'password']
+        credential_keys = ['server', 'port', 'username', 'password', 'key_filename']
         credentials = {key: data.pop(key, None) for key in credential_keys}
 
-        if any(value is None for value in credentials.values()):
+        if credentials.get('server') is None:
             return LocalClient()
+
+        if credentials.get('port') is None:
+            credentials.pop('port')
 
         return RemoteClient(**credentials)
