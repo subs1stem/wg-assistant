@@ -41,8 +41,13 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   nano servers.json
   ```
 
+> [!TIP]
+> If you want to use an SSH key instead of a password to access your Linux server (recommended), the value in the
+> `password` field can be used as a passphrase to decrypt the private key. You can remove this field from the
+> configuration if you do not use a passphrase.
+
 > [!IMPORTANT]
-> If you don't want to use SSH connection to the Linux host at this stage, go [here](#-local-deployment).
+> If you don't want to use an SSH connection to the Linux host at this stage, go [here](#-local-deployment).
 
 * **Step 4:** Create an image of your bot:
   ```bash
@@ -52,11 +57,17 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   ```bash
   sudo docker run --name wg-assistant --restart unless-stopped -d subs1stem/wg-assistant
   ```
-  or with mounting the bot configuration files inside the container:
+  ⚠️ If an SSH key is used, it must be mounted inside the container:
   ```bash
   sudo docker run --name wg-assistant --restart unless-stopped \
-  -v ./servers.json:/app/servers.json \
-  -v ./.env:/app/.env \
+  -v ~/.ssh/id_ed25519:/root/.ssh/id_ed25519:ro \
+  -d subs1stem/wg-assistant
+  ```
+  Optionally, mount the bot's configuration files into the container:
+  ```bash
+  sudo docker run --name wg-assistant --restart unless-stopped \
+  -v ./servers.json:/app/servers.json:ro \
+  -v ./.env:/app/.env:ro \
   -d subs1stem/wg-assistant
   ```
 

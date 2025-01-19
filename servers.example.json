@@ -2,7 +2,7 @@
   "alpha": {
     "type": "Linux",
     "data": {
-      "server": "127.0.0.1",
+      "server": "myserver.com",
       "port": 22,
       "username": "root",
       "password": "toor",
@@ -25,17 +25,15 @@
   "gamma": {
     "type": "Linux",
     "data": {
-      "endpoint": "local-linux-server-with-default-settings.com"
+      "server": "myserver.com",
+      "username": "root",
+      "endpoint": "remote-linux-server-with-default-settings-and-key-access.com"
     }
   },
   "delta": {
     "type": "Linux",
     "data": {
-      "server": "myserver.com",
-      "port": 22,
-      "username": "admin",
-      "password": "admin",
-      "endpoint": "remote-linux-server-with-default-settings.com"
+      "endpoint": "local-linux-server-with-default-settings.com"
     }
   },
   "epsilon": {
