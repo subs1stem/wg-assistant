@@ -42,6 +42,10 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   ```
 
 > [!IMPORTANT]
+> To use the bot with RouterOS, make sure the port for
+> the [API](https://help.mikrotik.com/docs/spaces/ROS/pages/47579160/API) is enabled on your device.
+
+> [!IMPORTANT]
 > If you don't want to use SSH connection to the Linux host at this stage, go [here](#-local-deployment).
 
 * **Step 4:** Create an image of your bot:
