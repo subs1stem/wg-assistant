@@ -69,8 +69,7 @@ class WireguardProtocol(BaseProtocol):
         section_start_position = wg_config.get_sectioninfo(pubkey)[0]
         first_line = wg_config.lines[section_start_position]
 
-        # Check if a line is a comment
-        if first_line.startswith('#'):
-            wg_config.lines[section_start_position] = '# ' + new_name
+        prefix = '#! # ' if first_line.startswith('#! #') else '# ' if first_line.startswith('#') else ''
+        wg_config.lines[section_start_position] = f'{prefix}{new_name}'
 
         return wg_config
