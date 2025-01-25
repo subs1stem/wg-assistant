@@ -7,6 +7,8 @@ from wireguard.protocol.wireguard import WireguardProtocol
 class AmneziaWGProtocol(BaseProtocol):
     """Class that provides the AmneziaWG protocol."""
 
+    NAME_ATTR: str = '#_Name'
+
     @staticmethod
     def build_client_config(
             privkey: str,
@@ -57,7 +59,7 @@ class AmneziaWGProtocol(BaseProtocol):
             else:
                 key, value = (item.strip() for item in line.split(' = ', maxsplit=1))
 
-                if key == '#_Name':
+                if key == AmneziaWGProtocol.NAME_ATTR:
                     current_section = value
                 elif key == 'PublicKey':
                     pending_public_key = value
@@ -83,11 +85,19 @@ class AmneziaWGProtocol(BaseProtocol):
     @staticmethod
     def add_peer(wg_config: WGConfig, pubkey: str, name: str) -> WGConfig:
         wg_config.add_peer(pubkey)
-        wg_config.add_attr(pubkey, '#_Name', name)
+        wg_config.add_attr(pubkey, AmneziaWGProtocol.NAME_ATTR, name)
         return wg_config
 
     @staticmethod
     def rename_peer(wg_config: WGConfig, pubkey: str, new_name: str) -> WGConfig:
-        wg_config.del_attr(pubkey, '#_Name')
-        wg_config.add_attr(pubkey, '#_Name', new_name)
+        if wg_config.get_peer_enabled(pubkey):
+            wg_config.del_attr(key=pubkey, attr=AmneziaWGProtocol.NAME_ATTR)
+            wg_config.add_attr(key=pubkey, attr=AmneziaWGProtocol.NAME_ATTR, value=new_name)
+        else:
+            # Cannot change a disabled peer's attribute using del_attr() and add_attr()
+            for i, line in enumerate(wg_config.lines):
+                if line.startswith(f'#! {AmneziaWGProtocol.NAME_ATTR}'):
+                    wg_config.lines[i] = f'#! {AmneziaWGProtocol.NAME_ATTR} = {new_name}'
+                    break
+
         return wg_config
