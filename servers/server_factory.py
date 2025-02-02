@@ -1,4 +1,7 @@
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from wireguard.client.local import LocalClient
 from wireguard.client.remote import RemoteClient
@@ -10,14 +13,29 @@ from wireguard.routeros import RouterOS
 from wireguard.wireguard import WireGuard
 
 
-class ServerType(Enum):
+class ServerType(str, Enum):
     LINUX = 'Linux'
     ROUTEROS = 'RouterOS'
 
 
-class Protocol(Enum):
+class Protocol(str, Enum):
     WIREGUARD = 'WireGuard'
     AMNEZIA_WG = 'AmneziaWG'
+
+
+class ServerData(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    type: Optional[ServerType] = Field(default=ServerType.LINUX, validate_default=True)
+    protocol: Optional[Protocol] = Field(default=Protocol.WIREGUARD, validate_default=True)
+    interface_name: Optional[str] = None
+    endpoint: Optional[str] = None
+    path_to_config: Optional[str] = None
+    server: Optional[str] = None
+    port: Optional[int] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    key_filename: Optional[str] = None
 
 
 class ServerFactory:
@@ -47,7 +65,7 @@ class ServerFactory:
             return cls._created_servers[server_name]
 
         server_type = server_data.get('type')
-        protocol_type = Protocol(server_data.get('protocol', Protocol.WIREGUARD.value))
+        protocol_type = server_data.get('protocol', Protocol.WIREGUARD)
         data = server_data.get('data')
 
         if not server_type or not data:
@@ -71,7 +89,7 @@ class ServerFactory:
             data['path_to_config'] = data.pop('config')
 
     @staticmethod
-    def _get_protocol(protocol_type: Protocol) -> BaseProtocol:
+    def _get_protocol(protocol_type: str) -> BaseProtocol:
         """Return the appropriate protocol instance based on the protocol type."""
         match protocol_type:
             case Protocol.WIREGUARD:
@@ -85,11 +103,11 @@ class ServerFactory:
     def _create_instance(server_type: str, data: dict, protocol: BaseProtocol) -> WireGuard:
         """Instantiate and return the appropriate server type."""
         match server_type:
-            case ServerType.LINUX.value:
+            case ServerType.LINUX:
                 client = ServerFactory._get_linux_client(data)
                 return Linux(**data, client=client, protocol=protocol)
 
-            case ServerType.ROUTEROS.value:
+            case ServerType.ROUTEROS:
                 return RouterOS(**data, protocol=protocol)
 
             case _:
