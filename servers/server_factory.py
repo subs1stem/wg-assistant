@@ -1,8 +1,4 @@
-from enum import Enum
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict, Field
-
+from models.servers import Protocol, ServerType
 from wireguard.client.local import LocalClient
 from wireguard.client.remote import RemoteClient
 from wireguard.linux import Linux
@@ -11,31 +7,6 @@ from wireguard.protocol.base import BaseProtocol
 from wireguard.protocol.wireguard import WireguardProtocol
 from wireguard.routeros import RouterOS
 from wireguard.wireguard import WireGuard
-
-
-class ServerType(str, Enum):
-    LINUX = 'Linux'
-    ROUTEROS = 'RouterOS'
-
-
-class Protocol(str, Enum):
-    WIREGUARD = 'WireGuard'
-    AMNEZIA_WG = 'AmneziaWG'
-
-
-class ServerData(BaseModel):
-    model_config = ConfigDict(use_enum_values=True)
-
-    type: Optional[ServerType] = Field(default=ServerType.LINUX, validate_default=True)
-    protocol: Optional[Protocol] = Field(default=Protocol.WIREGUARD, validate_default=True)
-    interface_name: Optional[str] = None
-    endpoint: Optional[str] = None
-    path_to_config: Optional[str] = None
-    server: Optional[str] = None
-    port: Optional[int] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
-    key_filename: Optional[str] = None
 
 
 class ServerFactory:
