@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field, AnyUrl, IPvAnyAddress, conint
+from pydantic import BaseModel, AnyUrl, IPvAnyAddress, conint
 
 
 class ServerType(str, Enum):
@@ -14,11 +14,9 @@ class Protocol(str, Enum):
 
 
 class Server(BaseModel):
-    model_config = ConfigDict(use_enum_values=True)
-
     name: str
-    type: ServerType = Field(default=ServerType.LINUX, validate_default=True)
-    protocol: Protocol = Field(default=Protocol.WIREGUARD, validate_default=True)
+    type: ServerType = ServerType.LINUX
+    protocol: Protocol = Protocol.WIREGUARD
     interface_name: str | None = None
     endpoint: IPvAnyAddress | AnyUrl | None = None
     path_to_config: str | None = None
