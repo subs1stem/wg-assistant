@@ -17,9 +17,10 @@ class Server(BaseModel):
     name: str
     type: ServerType = ServerType.LINUX
     protocol: Protocol = Protocol.WIREGUARD
+    path_to_config: str | None = None
     interface_name: str | None = None
     endpoint: IPvAnyAddress | AnyUrl | None = None
-    path_to_config: str | None = None
+    dns: IPvAnyAddress | None = None
     server: IPvAnyAddress | AnyUrl | None = None
     port: conint(ge=1, le=65535) | None = None
     username: str | None = None
