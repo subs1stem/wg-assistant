@@ -42,22 +42,11 @@ class ServerFactory:
         if not server_type or not data:
             raise ValueError("Invalid server data: 'type' and 'data' are required.")
 
-        cls._prepare_data(data)
         protocol = cls._get_protocol(protocol_type)
         instance = cls._create_instance(server_type, data, protocol)
 
         cls._created_servers[server_name] = instance
         return instance
-
-    @staticmethod
-    def _prepare_data(data: dict):
-        """Prepare and normalize server data for backward compatibility."""
-        if 'interface' in data:
-            data['interface_name'] = data.pop('interface')
-        if 'endpoint' not in data:
-            data['endpoint'] = data.get('server')
-        if 'config' in data:
-            data['path_to_config'] = data.pop('config')
 
     @staticmethod
     def _get_protocol(protocol_type: str) -> BaseProtocol:
