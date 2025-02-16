@@ -20,7 +20,7 @@ class Server(BaseModel):
     protocol: Protocol = Protocol.WIREGUARD
 
     path_to_config: str | None = Field(
-        default=None,
+        default='/etc/wireguard/wg0.conf' if protocol == Protocol.WIREGUARD else '/etc/amnezia/amneziawg/awg0.conf',
         validation_alias=AliasChoices(
             'path_to_config',
             AliasPath('data', 'path_to_config'),
@@ -29,7 +29,7 @@ class Server(BaseModel):
     )
 
     interface_name: str | None = Field(
-        default=None,
+        default='wg0' if protocol == Protocol.WIREGUARD else 'awg0',
         validation_alias=AliasChoices(
             'interface_name',
             AliasPath('data', 'interface_name'),
@@ -50,7 +50,7 @@ class Server(BaseModel):
     )
 
     port: Annotated[int, Field(strict=True, ge=1, le=65535)] | None = Field(
-        default=None,
+        default=22 if type == ServerType.LINUX else 8728,
         validation_alias=AliasChoices('port', AliasPath('data', 'port')),
     )
 

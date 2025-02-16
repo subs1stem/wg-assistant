@@ -14,9 +14,9 @@ router = Router()
 
 
 @router.callback_query(F.data == 'servers')
-async def send_servers(callback: CallbackQuery, state: FSMContext, servers: dict):
+async def send_servers(callback: CallbackQuery, state: FSMContext, servers: list):
     await state.clear()
-    server_names = list(servers.keys())
+    server_names = [item.name for item in servers]
     await callback.message.edit_text(text='Server list:', reply_markup=servers_kb(server_names))
 
 
@@ -37,7 +37,7 @@ async def send_reboot_host_confirmation(callback: CallbackQuery):
 
 
 @router.callback_query(F.data.startswith('confirm_reboot'))
-async def reboot_host(callback: CallbackQuery, state: FSMContext, servers: dict, server_name: str, server: WireGuard):
+async def reboot_host(callback: CallbackQuery, state: FSMContext, servers: list, server_name: str, server: WireGuard):
     reboot_confirmed = callback.data.split(':')[-1] == 'y'
 
     if reboot_confirmed:

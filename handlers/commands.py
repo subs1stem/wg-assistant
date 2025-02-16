@@ -16,9 +16,9 @@ async def send_start(message: Message, state: FSMContext):
 
 
 @router.message(Command('servers'))
-async def send_servers(message: Message, servers: dict, state: FSMContext):
+async def send_servers(message: Message, servers: list, state: FSMContext):
     await state.clear()
-    server_names = list(servers.keys())
+    server_names = [item.name for item in servers]
     await message.answer('Server list:', reply_markup=servers_kb(server_names))
 
 
