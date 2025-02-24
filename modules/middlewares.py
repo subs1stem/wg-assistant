@@ -4,7 +4,7 @@ from typing import Callable, Dict, Awaitable, Any
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
-from models.servers import Server
+from models.servers import ServerModel
 from servers.server_factory import ServerFactory
 
 
@@ -68,7 +68,7 @@ class ServerCreateMiddleware(BaseMiddleware):
 
         if state_data:
             server_name = state_data['server_name']
-            server_data = Server.model_validate_json(state_data['server_data'])
+            server_data = ServerModel.model_validate_json(state_data['server_data'])
             server = ServerFactory.create_server_instance(server_name, server_data)
             data.update(server_name=server_name, server=server)
 

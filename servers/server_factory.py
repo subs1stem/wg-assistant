@@ -1,4 +1,4 @@
-from models.servers import Protocol, ServerType, Server
+from models.servers import Protocol, ServerType, ServerModel
 from wireguard.client.local import LocalClient
 from wireguard.client.remote import RemoteClient
 from wireguard.linux import Linux
@@ -19,12 +19,12 @@ class ServerFactory:
         return cls._instance
 
     @classmethod
-    def create_server_instance(cls, server_name: str, server: Server) -> WireGuard:
+    def create_server_instance(cls, server_name: str, server_model: ServerModel) -> WireGuard:
         """Create or retrieve a WireGuard server instance based on the provided server name and configuration.
 
         Args:
             server_name (str): The name of the server.
-            server (Server): Server model.
+            server_model (ServerModel): Server model.
 
         Returns:
             WireGuard: An instance of the WireGuard server.
@@ -35,25 +35,25 @@ class ServerFactory:
         if server_name in cls._created_servers:
             return cls._created_servers[server_name]
 
-        protocol = cls._get_protocol(server)
-        instance = cls._create_instance(server, protocol)
+        protocol = cls._get_protocol(server_model)
+        instance = cls._create_instance(server_model, protocol)
 
         cls._created_servers[server_name] = instance
         return instance
 
     @staticmethod
-    def _get_protocol(server: Server) -> BaseProtocol:
+    def _get_protocol(server_model: ServerModel) -> BaseProtocol:
         """Return the appropriate protocol instance based on the protocol type."""
-        match server.protocol:
+        match server_model.protocol:
             case Protocol.WIREGUARD:
                 return WireguardProtocol()
             case Protocol.AMNEZIA_WG:
                 return AmneziaWGProtocol()
             case _:
-                raise ValueError(f'Unhandled protocol type: {server.protocol.value}')
+                raise ValueError(f'Unhandled protocol type: {server_model.protocol.value}')
 
     @staticmethod
-    def _create_instance(server_model: Server, protocol: BaseProtocol) -> WireGuard:
+    def _create_instance(server_model: ServerModel, protocol: BaseProtocol) -> WireGuard:
         """Instantiate and return the appropriate server type."""
         match server_model.type:
             case ServerType.LINUX:
@@ -82,7 +82,7 @@ class ServerFactory:
                 raise ValueError(f'Unhandled server type: {server_model.type.value}')
 
     @staticmethod
-    def _get_linux_client(server_model: Server) -> LocalClient | RemoteClient:
+    def _get_linux_client(server_model: ServerModel) -> LocalClient | RemoteClient:
         """Determine and return the appropriate client for Linux servers."""
         if server_model.server is None:
             return LocalClient()

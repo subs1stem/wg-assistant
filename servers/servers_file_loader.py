@@ -3,10 +3,10 @@ import os
 from pathlib import Path
 from typing import List
 
-from models.servers import Server
+from models.servers import ServerModel
 
 
-def load_servers_from_file(filename: str = 'servers.json') -> List[Server]:
+def load_servers_from_file(filename: str = 'servers.json') -> List[ServerModel]:
     """Loads server configurations from a JSON file and converts them into a list of Server objects.
 
     Args:
@@ -29,4 +29,4 @@ def load_servers_from_file(filename: str = 'servers.json') -> List[Server]:
     if len(names) != len(set(names)):
         raise ValueError('Duplicate server names detected')
 
-    return [Server(**server) for server in servers_data]
+    return [ServerModel(**server) for server in servers_data]

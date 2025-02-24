@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import Annotated, Self
 
-from pydantic import BaseModel, AnyUrl, IPvAnyAddress, Field, AliasChoices, AliasPath, model_validator
+from pydantic import BaseModel, IPvAnyAddress, Field, AliasChoices, AliasPath, model_validator
+from pydantic_extra_types.domain import DomainStr
 
 DEFAULT_INTERFACE_NAME_WIREGUARD = 'wg0'
 DEFAULT_INTERFACE_NAME_AMNEZIAWG = 'awg0'
@@ -24,7 +25,7 @@ class Protocol(str, Enum):
     AMNEZIA_WG = 'AmneziaWG'
 
 
-class Server(BaseModel):
+class ServerModel(BaseModel):
     name: str
     type: ServerType = ServerType.LINUX
     protocol: Protocol = Protocol.WIREGUARD
@@ -47,14 +48,14 @@ class Server(BaseModel):
         ),
     )
 
-    endpoint: IPvAnyAddress | AnyUrl | None = Field(
+    endpoint: IPvAnyAddress | DomainStr | None = Field(
         default=None,
         validation_alias=AliasChoices('endpoint', AliasPath('data', 'endpoint')),
     )
 
     dns: IPvAnyAddress | None = None
 
-    server: IPvAnyAddress | AnyUrl | None = Field(
+    server: IPvAnyAddress | DomainStr | None = Field(
         default=None,
         validation_alias=AliasChoices('server', AliasPath('data', 'server')),
     )
