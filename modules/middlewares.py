@@ -57,19 +57,14 @@ class ServerCreateMiddleware(BaseMiddleware):
             if callback_data.startswith('server:') and callback_data != 'server:':
                 servers = data.get('servers')
                 server_name = callback_data.split(':')[1]
-                server_data = next((server for server in servers if server.name == server_name), None)
-
-                await state.set_data({
-                    'server_name': server_name,
-                    'server_data': server_data.model_dump_json(),
-                })
+                server_model = next((server for server in servers if server.name == server_name), None)
+                await state.set_data({'server_model': server_model.model_dump_json()})
 
         state_data = await state.get_data()
 
         if state_data:
-            server_name = state_data['server_name']
-            server_data = ServerModel.model_validate_json(state_data['server_data'])
-            server = ServerFactory.create_server_instance(server_name, server_data)
-            data.update(server_name=server_name, server=server)
+            server_model = ServerModel.model_validate_json(state_data.get('server_model'))
+            server = ServerFactory.create_server_instance(server_model)
+            data.update(server_name=server_model.name, server=server)
 
         return await handler(event, data)

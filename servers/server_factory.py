@@ -11,7 +11,7 @@ from wireguard.wireguard import WireGuard
 
 class ServerFactory:
     _instance = None
-    _created_servers = {}
+    _created_servers: dict[str, WireGuard] = {}
 
     def __new__(cls):
         if cls._instance is None:
@@ -19,19 +19,17 @@ class ServerFactory:
         return cls._instance
 
     @classmethod
-    def create_server_instance(cls, server_name: str, server_model: ServerModel) -> WireGuard:
+    def create_server_instance(cls, server_model: ServerModel) -> WireGuard:
         """Create or retrieve a WireGuard server instance based on the provided server name and configuration.
 
         Args:
-            server_name (str): The name of the server.
             server_model (ServerModel): Server model.
 
         Returns:
             WireGuard: An instance of the WireGuard server.
-
-        Raises:
-            ValueError: If required data is missing or the server type is unrecognized.
         """
+        server_name = server_model.name
+
         if server_name in cls._created_servers:
             return cls._created_servers[server_name]
 
@@ -57,10 +55,8 @@ class ServerFactory:
         """Instantiate and return the appropriate server type."""
         match server_model.type:
             case ServerType.LINUX:
-                client = ServerFactory._get_linux_client(server_model)
-
                 return Linux(
-                    client=client,
+                    client=ServerFactory._get_linux_client(server_model),
                     protocol=protocol,
                     endpoint=str(server_model.endpoint),
                     interface_name=server_model.interface_name,
