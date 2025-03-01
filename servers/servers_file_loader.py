@@ -25,7 +25,7 @@ def load_servers_from_file(filename: str = 'servers.json') -> List[ServerModel]:
         servers_data = [{'name': key, **value} for key, value in servers_data.items()]
 
     # Check server name uniqueness
-    names = [server['name'] for server in servers_data]
+    names = [server.get('name') for server in servers_data]
     if len(names) != len(set(names)):
         raise ValueError('Duplicate server names detected')
 

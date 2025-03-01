@@ -7,9 +7,11 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
+from pydantic import ValidationError
 
 from db.database import Database
 from handlers import callbacks, commands, errors, messages
+from models.servers import ServerModel
 from modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
 from modules.storages import SQLiteStorage
 from servers.servers_file_loader import load_servers_from_file
@@ -19,7 +21,18 @@ load_dotenv()
 
 async def main():
     admins = [int(admin_id) for admin_id in environ['ADMIN_ID'].split(',')]
-    servers = load_servers_from_file()
+
+    try:
+        servers = load_servers_from_file()
+    except FileNotFoundError:
+        logging.info('Servers file not found, local WireGuard server will be used')
+        servers = [ServerModel(name='WireGuard')]
+    except ValidationError as e:
+        logging.critical(f'Validation error while loading servers: {e.errors()}')
+        sys.exit(1)
+    except ValueError as e:
+        logging.critical(f'Servers file contains invalid data: {e}')
+        sys.exit(1)
 
     default = DefaultBotProperties(parse_mode='HTML')
     bot = Bot(token=environ['TOKEN'], default=default)
