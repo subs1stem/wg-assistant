@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Annotated, Self
+from typing import Annotated, Self, List
 
-from pydantic import BaseModel, IPvAnyAddress, Field, AliasChoices, AliasPath, model_validator
+from pydantic import BaseModel, IPvAnyAddress, Field, AliasChoices, AliasPath, model_validator, field_validator
 from pydantic_extra_types.domain import DomainStr
 
 DEFAULT_INTERFACE_NAME_WIREGUARD = 'wg0'
@@ -53,7 +53,7 @@ class ServerModel(BaseModel):
         validation_alias=AliasChoices('endpoint', AliasPath('data', 'endpoint')),
     )
 
-    dns: IPvAnyAddress | None = None
+    dns: IPvAnyAddress | List[IPvAnyAddress] | None = None
 
     server: IPvAnyAddress | DomainStr | None = Field(
         default=None,
@@ -76,6 +76,10 @@ class ServerModel(BaseModel):
     )
 
     key_filename: str | None = None
+
+    @field_validator('dns', mode='before')
+    def validate_dns(cls, value: str | None) -> str | List[str] | None:
+        return None if value is None else value.split(',') if ',' in value else value
 
     @model_validator(mode='after')
     def set_defaults(self) -> Self:
