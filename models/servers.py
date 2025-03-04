@@ -78,8 +78,16 @@ class ServerModel(BaseModel):
     key_filename: str | None = None
 
     @field_validator('dns', mode='before')
-    def validate_dns(cls, value: str | None) -> str | List[str] | None:
-        return None if value is None else value.split(',') if ',' in value else value
+    def validate_dns(cls, value: str | None) -> str | list[str] | None:
+        if value is None:
+            return None
+
+        dns_list = [ip.strip() for ip in value.split(',') if ip.strip()]
+
+        if not dns_list:
+            return None
+
+        return dns_list[0] if len(dns_list) == 1 else dns_list
 
     @model_validator(mode='after')
     def set_defaults(self) -> Self:
