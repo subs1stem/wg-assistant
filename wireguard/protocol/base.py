@@ -2,13 +2,18 @@ from abc import ABC, abstractmethod
 
 from wgconfig import WGConfig
 
+from models.servers import ServerModel
+
 
 class BaseProtocol(ABC):
     """Abstract base class for all WireGuard protocols."""
 
-    @staticmethod
+    def __init__(self, server_model: ServerModel):
+        self.server_model = server_model
+
     @abstractmethod
     def build_client_config(
+            self,
             privkey: str,
             address: str,
             server_pubkey: str,

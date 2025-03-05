@@ -6,8 +6,8 @@ from wireguard.protocol.base import BaseProtocol
 class WireguardProtocol(BaseProtocol):
     """Class that provides the standard WireGuard protocol."""
 
-    @staticmethod
     def build_client_config(
+            self,
             privkey: str,
             address: str,
             server_pubkey: str,
@@ -15,6 +15,11 @@ class WireguardProtocol(BaseProtocol):
             server_port: int,
             server_config: dict,
     ) -> str:
+        dns = self.server_model.dns
+
+        if isinstance(dns, list):
+            dns = ', '.join(map(str, dns))
+
         wg_config = (
             '[Peer]\n'
             f'PublicKey = {server_pubkey}\n'
@@ -24,7 +29,7 @@ class WireguardProtocol(BaseProtocol):
             '[Interface]\n'
             f'PrivateKey = {privkey}\n'
             f'Address = {address}\n'
-            'DNS = 1.1.1.1, 1.0.0.1'
+            f'DNS = {dns}'
         )
 
         return wg_config

@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import Annotated, Self, List
+from typing import Annotated, Self
 
-from pydantic import BaseModel, IPvAnyAddress, Field, AliasChoices, AliasPath, model_validator, field_validator
+from pydantic import BaseModel, IPvAnyAddress, Field, AliasChoices, AliasPath, model_validator, field_validator, \
+    field_serializer
 from pydantic_extra_types.domain import DomainStr
 
 DEFAULT_INTERFACE_NAME_WIREGUARD = 'wg0'
@@ -53,7 +54,7 @@ class ServerModel(BaseModel):
         validation_alias=AliasChoices('endpoint', AliasPath('data', 'endpoint')),
     )
 
-    dns: IPvAnyAddress | List[IPvAnyAddress] | None = None
+    dns: IPvAnyAddress | list[IPvAnyAddress] | None = None
 
     server: IPvAnyAddress | DomainStr | None = Field(
         default=None,
@@ -88,6 +89,14 @@ class ServerModel(BaseModel):
             return None
 
         return dns_list[0] if len(dns_list) == 1 else dns_list
+
+    @field_serializer('dns', when_used='json')
+    def serialize_dns(self, value: IPvAnyAddress | list[IPvAnyAddress] | None) -> str | None:
+        if value is None:
+            return None
+        if isinstance(value, list):
+            return ','.join(map(str, value))
+        return str(value)
 
     @model_validator(mode='after')
     def set_defaults(self) -> Self:

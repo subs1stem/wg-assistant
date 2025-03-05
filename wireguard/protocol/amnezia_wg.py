@@ -9,8 +9,8 @@ class AmneziaWGProtocol(BaseProtocol):
 
     NAME_ATTR: str = '#_Name'
 
-    @staticmethod
     def build_client_config(
+            self,
             privkey: str,
             address: str,
             server_pubkey: str,
@@ -18,7 +18,7 @@ class AmneziaWGProtocol(BaseProtocol):
             server_port: int,
             server_config: dict,
     ) -> str:
-        base_wireguard_config = WireguardProtocol().build_client_config(
+        base_wireguard_config = WireguardProtocol(self.server_model).build_client_config(
             privkey=privkey,
             address=address,
             server_pubkey=server_pubkey,
