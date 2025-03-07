@@ -20,7 +20,6 @@ class RouterOS(WireGuard):
             username: str,
             password: str,
             protocol: BaseProtocol,
-            endpoint: str,
             interface_name: str = 'wireguard1',
     ) -> None:
         """Initialize a new instance of the RouterOS WireGuard client.
@@ -31,13 +30,12 @@ class RouterOS(WireGuard):
             username (str): The username for authentication.
             password (str): The password for authentication.
             protocol (BaseProtocol): The WireGuard protocol.
-            endpoint (str): The WireGuard server endpoint.
             interface_name (str, optional): The WireGuard interface name. Default is ``wireguard1``.
 
         Returns:
             None
         """
-        super().__init__(protocol, endpoint, interface_name)
+        super().__init__(protocol, interface_name)
 
         self.server = server
         self.port = port
@@ -217,7 +215,6 @@ class RouterOS(WireGuard):
             privkey=peer.get('private-key'),
             address=peer.get('allowed-address'),
             server_pubkey=self.get_server_pubkey(),
-            endpoint=self.endpoint,
             server_port=interface.get('listen-port'),
             server_config=server_config,
         )

@@ -16,7 +16,6 @@ class Linux(WireGuard):
             self,
             client: BaseClient,
             protocol: BaseProtocol,
-            endpoint: str,
             interface_name: str = 'wg0',
             path_to_config: str = '/etc/wireguard/wg0.conf'
     ) -> None:
@@ -25,7 +24,6 @@ class Linux(WireGuard):
         Args:
             client (BaseClient): Client used to interact with the WireGuard host.
             protocol (BaseProtocol): The WireGuard protocol.
-            endpoint (str): The WireGuard server endpoint.
             interface_name (str, optional): The WireGuard interface name. Default is ``wg0``.
             path_to_config (str, optional): The path to the WireGuard configuration file.
                 Default is ``/etc/wireguard/wg0.conf``.
@@ -33,7 +31,7 @@ class Linux(WireGuard):
         Returns:
             None
         """
-        super().__init__(protocol, endpoint, interface_name)
+        super().__init__(protocol, interface_name)
 
         self.client = client
         self.path_to_config = path_to_config
@@ -167,7 +165,6 @@ class Linux(WireGuard):
             privkey=privkey,
             address=peer_ip,
             server_pubkey=server_pubkey,
-            endpoint=self.endpoint,
             server_port=server_port,
             server_config=server_config,
         )

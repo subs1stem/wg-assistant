@@ -11,7 +11,6 @@ class WireguardProtocol(BaseProtocol):
             privkey: str,
             address: str,
             server_pubkey: str,
-            endpoint: str,
             server_port: int,
             server_config: dict,
     ) -> str:
@@ -24,7 +23,7 @@ class WireguardProtocol(BaseProtocol):
             '[Peer]\n'
             f'PublicKey = {server_pubkey}\n'
             'AllowedIPs = 0.0.0.0/0\n'
-            f'Endpoint = {endpoint}:{server_port}\n'
+            f'Endpoint = {self.server_model.endpoint}:{server_port}\n'
             'PersistentKeepalive = 30\n\n'
             '[Interface]\n'
             f'PrivateKey = {privkey}\n'

@@ -14,7 +14,6 @@ class AmneziaWGProtocol(BaseProtocol):
             privkey: str,
             address: str,
             server_pubkey: str,
-            endpoint: str,
             server_port: int,
             server_config: dict,
     ) -> str:
@@ -22,7 +21,6 @@ class AmneziaWGProtocol(BaseProtocol):
             privkey=privkey,
             address=address,
             server_pubkey=server_pubkey,
-            endpoint=endpoint,
             server_port=server_port,
             server_config=server_config,
         )

@@ -58,7 +58,6 @@ class ServerFactory:
                 return Linux(
                     client=ServerFactory._get_linux_client(server_model),
                     protocol=protocol,
-                    endpoint=str(server_model.endpoint),
                     interface_name=server_model.interface_name,
                     path_to_config=server_model.path_to_config,
                 )
@@ -70,7 +69,6 @@ class ServerFactory:
                     username=server_model.username,
                     password=server_model.password,
                     protocol=protocol,
-                    endpoint=str(server_model.endpoint),
                     interface_name=server_model.interface_name,
                 )
 

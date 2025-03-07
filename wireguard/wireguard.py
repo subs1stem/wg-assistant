@@ -11,21 +11,18 @@ class WireGuard(ABC):
     def __init__(
             self,
             protocol: BaseProtocol,
-            endpoint: str,
             interface_name: str,
     ) -> None:
         """Initialize a new instance of WireGuard.
 
         Args:
             protocol (BaseProtocol): The WireGuard protocol.
-            endpoint (str): The WireGuard server endpoint.
             interface_name (str): The WireGuard interface name.
 
         Returns:
             None
         """
         self.protocol = protocol
-        self.endpoint = endpoint
         self.interface_name = interface_name
 
     @staticmethod
