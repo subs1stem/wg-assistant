@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ipaddress import IPv4Interface, IPv4Address
+from ipaddress import IPv4Interface, IPv4Address, IPv6Address
 from typing import Optional
 
 from wireguard.protocol.base import BaseProtocol
@@ -55,6 +55,14 @@ class WireGuard(ABC):
 
         # If no available IP is found, return None
         return None
+
+    @abstractmethod
+    def get_external_ip(self) -> IPv4Address | IPv6Address:
+        """Get the external IP address of the host system.
+
+        Returns:
+            IPv4Address | IPv6Address: The external IP address of the host system.
+        """
 
     @abstractmethod
     def reboot_host(self) -> None:

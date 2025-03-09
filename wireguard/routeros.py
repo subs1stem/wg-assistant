@@ -1,8 +1,10 @@
 import logging
 from functools import wraps
+from ipaddress import IPv4Address, IPv6Address
 from typing import Any, Callable
 
 from humanize import naturalsize
+from pydantic import IPvAnyAddress
 from routeros_api import RouterOsApiPool
 from routeros_api.exceptions import RouterOsApiConnectionError
 
@@ -133,6 +135,13 @@ class RouterOS(WireGuard):
             self.api = self.connection.get_api()
         except RouterOsApiConnectionError as e:
             raise ConnectionError(f'Error connecting to RouterOS API: {e}')
+
+    @_exception_handler
+    def get_external_ip(self) -> IPv4Address | IPv6Address:
+        default_route = self.api.get_resource('/ip/route').get(dst_address='0.0.0.0/0')[0]
+        interface_name = default_route.get('immediate-gw').split('%')[1]
+        ip = self.api.get_resource('/ip/address').get(interface=interface_name)[0].get('address').split('/')[0]
+        return IPvAnyAddress(ip)
 
     @_exception_handler
     def reboot_host(self) -> None:

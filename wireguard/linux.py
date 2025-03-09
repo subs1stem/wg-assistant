@@ -1,7 +1,9 @@
 from functools import wraps
 from io import StringIO
+from ipaddress import IPv4Address, IPv6Address
 from typing import Callable, Any, Tuple
 
+from pydantic import IPvAnyAddress
 from wgconfig import WGConfig
 
 from wireguard.client.base import BaseClient
@@ -100,6 +102,11 @@ class Linux(WireGuard):
             f"{self.protocol.get_command()} syncconf {self.interface_name} "
             f"<({self.protocol.get_quick_command()} strip {self.path_to_config})"
         )
+
+    def get_external_ip(self) -> IPv4Address | IPv6Address:
+        _, stdout, _ = self.client.execute('ip route get 1.1.1.1')
+        ip = stdout.readline().split('src')[1].split()[0]
+        return IPvAnyAddress(ip)
 
     def reboot_host(self) -> None:
         self.client.execute('reboot')
