@@ -1,15 +1,20 @@
 from abc import ABC, abstractmethod
+from ipaddress import IPv4Address, IPv6Address
 
+from pydantic import IPvAnyAddress
 from wgconfig import WGConfig
-
-from models.servers import ServerModel
 
 
 class BaseProtocol(ABC):
     """Abstract base class for all WireGuard protocols."""
 
-    def __init__(self, server_model: ServerModel):
-        self.server_model = server_model
+    def __init__(
+            self,
+            endpoint: IPvAnyAddress | None = None,
+            dns: IPvAnyAddress | list[IPvAnyAddress] | None = None,
+    ) -> None:
+        self.endpoint = endpoint
+        self.dns = dns
 
     @abstractmethod
     def build_client_config(
@@ -18,7 +23,8 @@ class BaseProtocol(ABC):
             address: str,
             server_pubkey: str,
             server_port: int,
-            server_config: dict,
+            server_external_ip: IPv4Address | IPv6Address | None = None,
+            server_config: dict | None = None,
     ) -> str:
         """Generate a WireGuard client configuration.
 
@@ -27,6 +33,7 @@ class BaseProtocol(ABC):
             address (str): The client's assigned IP address.
             server_pubkey (str): The public key of the server.
             server_port (int): The port number of the WireGuard server.
+            server_external_ip (IPv4Address | IPv6Address | None): The external IP address of the host system.
             server_config (dict): The configuration of the WireGuard server.
 
         Returns:

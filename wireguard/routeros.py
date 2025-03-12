@@ -225,6 +225,7 @@ class RouterOS(WireGuard):
             address=peer.get('allowed-address'),
             server_pubkey=self.get_server_pubkey(),
             server_port=interface.get('listen-port'),
+            server_external_ip=self.get_external_ip(),
             server_config=server_config,
         )
 

@@ -173,6 +173,7 @@ class Linux(WireGuard):
             address=peer_ip,
             server_pubkey=server_pubkey,
             server_port=server_port,
+            server_external_ip=self.get_external_ip(),
             server_config=server_config,
         )
 

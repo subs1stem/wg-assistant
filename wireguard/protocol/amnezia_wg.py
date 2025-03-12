@@ -1,3 +1,5 @@
+from ipaddress import IPv4Address, IPv6Address
+
 from wgconfig import WGConfig
 
 from wireguard.protocol.base import BaseProtocol
@@ -15,13 +17,15 @@ class AmneziaWGProtocol(BaseProtocol):
             address: str,
             server_pubkey: str,
             server_port: int,
-            server_config: dict,
+            server_external_ip: IPv4Address | IPv6Address | None = None,
+            server_config: dict | None = None,
     ) -> str:
-        base_wireguard_config = WireguardProtocol(self.server_model).build_client_config(
+        base_wireguard_config = WireguardProtocol(self.endpoint, self.dns).build_client_config(
             privkey=privkey,
             address=address,
             server_pubkey=server_pubkey,
             server_port=server_port,
+            server_external_ip=server_external_ip,
             server_config=server_config,
         )
 

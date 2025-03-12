@@ -1,3 +1,5 @@
+from ipaddress import IPv4Address, IPv6Address
+
 from wgconfig import WGConfig
 
 from wireguard.protocol.base import BaseProtocol
@@ -12,9 +14,11 @@ class WireguardProtocol(BaseProtocol):
             address: str,
             server_pubkey: str,
             server_port: int,
-            server_config: dict,
+            server_external_ip: IPv4Address | IPv6Address | None = None,
+            server_config: dict | None = None,
     ) -> str:
-        dns = self.server_model.dns
+        dns = self.dns or server_config.get('Interface', {}).get('Address', '').split('/')[0]
+        endpoint = self.endpoint or server_external_ip
 
         if isinstance(dns, list):
             dns = ', '.join(map(str, dns))
@@ -23,7 +27,7 @@ class WireguardProtocol(BaseProtocol):
             '[Peer]\n'
             f'PublicKey = {server_pubkey}\n'
             'AllowedIPs = 0.0.0.0/0\n'
-            f'Endpoint = {self.server_model.endpoint}:{server_port}\n'
+            f'Endpoint = {endpoint}:{server_port}\n'
             'PersistentKeepalive = 30\n\n'
             '[Interface]\n'
             f'PrivateKey = {privkey}\n'

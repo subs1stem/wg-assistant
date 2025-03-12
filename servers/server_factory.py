@@ -44,9 +44,9 @@ class ServerFactory:
         """Return the appropriate protocol instance based on the protocol type."""
         match server_model.protocol:
             case Protocol.WIREGUARD:
-                return WireguardProtocol(server_model)
+                return WireguardProtocol(server_model.endpoint, server_model.dns)
             case Protocol.AMNEZIA_WG:
-                return AmneziaWGProtocol(server_model)
+                return AmneziaWGProtocol(server_model.endpoint, server_model.dns)
             case _:
                 raise ValueError(f'Unhandled protocol type: {server_model.protocol.value}')
 
