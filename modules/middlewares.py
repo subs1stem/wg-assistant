@@ -2,7 +2,7 @@ import logging
 from typing import Callable, Dict, Awaitable, Any
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject
+from aiogram.types import TelegramObject, Update
 
 from models.servers import ServerModel
 from servers.server_factory import ServerFactory
@@ -24,7 +24,7 @@ class AuthCheckMiddleware(BaseMiddleware):
     async def __call__(
             self,
             handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
+            event: Update,
             data: Dict[str, Any],
     ) -> Any:
         user_id = data.get('event_from_user').id
@@ -43,7 +43,7 @@ class ServerCreateMiddleware(BaseMiddleware):
     async def __call__(
             self,
             handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
+            event: Update,
             data: Dict[str, Any],
     ) -> Any:
         if event.message is not None and event.message.text.startswith('/'):
