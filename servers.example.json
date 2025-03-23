@@ -1,43 +1,15 @@
 [
   {
-    "name": "alpha",
+    "name": "Alpha",
     "type": "Linux",
-    "server": "myserver.com",
-    "port": 22,
-    "username": "root",
-    "password": "toor",
-    "interface_name": "wg0",
-    "endpoint": "remote-linux-server.com",
-    "path_to_config": "/etc/wireguard/wg0.conf"
+    "server": "my-linux-server.com",
+    "username": "root"
   },
   {
-    "name": "beta",
+    "name": "Beta",
     "type": "RouterOS",
-    "server": "192.168.1.1",
-    "port": 8728,
+    "server": "my-mikrotik-server.com",
     "username": "admin",
-    "password": "admin",
-    "interface_name": "wireguard1",
-    "endpoint": "my-mikrotik.com"
-  },
-  {
-    "name": "gamma",
-    "type": "Linux",
-    "server": "myserver.com",
-    "username": "root",
-    "endpoint": "remote-linux-server-with-default-settings-and-key-access.com"
-  },
-  {
-    "name": "delta",
-    "type": "Linux",
-    "endpoint": "local-linux-server-with-default-settings.com"
-  },
-  {
-    "name": "epsilon",
-    "type": "Linux",
-    "protocol": "AmneziaWG",
-    "interface_name": "awg0",
-    "endpoint": "local-amnezia-wg.com",
-    "path_to_config": "/etc/amnezia/amneziawg/awg0.conf"
+    "password": "admin"
   }
 ]
