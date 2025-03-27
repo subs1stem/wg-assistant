@@ -58,9 +58,11 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
   {
     // Ensure that different names are used for different servers, or you will get an error.
     "name": "Any name",
-    // "Linux" for Linux-based servers or "RouterOS" for MikroTik-based servers. Defaults to "Linux".
+    // "Linux" for Linux-based servers or "RouterOS" for MikroTik-based servers.
+    // Defaults to "Linux".
     "type": "Linux",
-    // "WireGuard" or "AmneziaWG" depending on the protocol being used. Defaults to "WireGuard".
+    // "WireGuard" or "AmneziaWG" depending on the protocol being used.
+    // Defaults to "WireGuard".
     "protocol": "WireGuard",
     // Path to the WireGuard server configuration file. 
     // Defaults to "/etc/wireguard/wg0.conf" for "WireGuard" protocol.
@@ -70,13 +72,14 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
     // Defaults to "wg0" for "WireGuard" protocol.
     // Defaults to "awg0" for "AmneziaWG" protocol.
     "interface_name": "wg0",
-    // Endpoint for peers as an IP address or domain name. By default, the host's external IP address will be used.
+    // Endpoint for peers as an IP address or domain name.
+    // By default, the host's external IP address will be used.
     "endpoint": "myserver.com",
     // DNS addresses for peers. Can be a single address or a comma-separated list.
     // By default, the internal address of the server interface will be used.
     "dns": "1.1.1.1, 1.0.0.1",
     // The IP address or domain name of the WireGuard host that the bot will use to connect.
-    // If not specified, a local client will be used (implies deploying the bot on the same server).
+    // If not specified, a local client will be used.
     "server": "192.168.32.1",
     // The port of the WireGuard host that the bot will use to connect.
     // Defaults to 22 (SSH) for "Linux" type.
@@ -87,8 +90,9 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
     // Password that the bot will use to connect. Also used for private key decryption.
     // If not specified, private key will be used.
     "password": "toor",
-    // The filename, or list of filenames, of optional private key(s) and/or certs to try for authentication.
-    // If not specified, the bot will try to use local keyfiles or the SSH agent (if running).
+    // The filename, or list of filenames, of optional private key(s)
+    // and/or certs to try for authentication.
+    // If not specified, the bot will try to use local keyfiles or the SSH agent.
     "key_filename": "/home/user/.ssh/id_ed25519"
   },
   // JSON record for next server.
@@ -126,34 +130,26 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
 
 ## 📦 Local deployment
 
-If you want to deploy the bot on the same host as the WireGuard server and avoid using SSH, you can keep the simplest
-configuration without credentials:
+If you want to deploy the bot on the same host as the WireGuard server and avoid using SSH, you can do it without the
+`servers.json` configuration file, or simplify the configuration by specifying only the `name` parameter:
 
 ```json
-{
-  "MyServer": {
-    "type": "Linux",
-    "data": {
-      "endpoint": "myserver.com"
-    }
+[
+  {
+    "name": "My WireGuard"
   }
-}
+]
 ```
 
 or for **AmneziaWG**:
 
 ```json
-{
-  "MyServer": {
-    "type": "Linux",
-    "protocol": "AmneziaWG",
-    "data": {
-      "interface_name": "awg0",
-      "endpoint": "myserver.com",
-      "path_to_config": "/etc/amnezia/amneziawg/awg0.conf"
-    }
+[
+  {
+    "name": "My AmneziaWG",
+    "protocol": "AmneziaWG"
   }
-}
+]
 ```
 
 After that, you need to build the image with the argument `LOCAL_DEPLOYMENT_WG=true` or `LOCAL_DEPLOYMENT_AWG=true`
