@@ -16,13 +16,58 @@ Telegram bot for managing WireGuard VPN.
 
 ## 🛠 Installation
 
+### 💅 Preparation
+
 Before installation, create an account for your bot using [BotFather](https://t.me/BotFather).
 You can read more about BotFather [here](https://core.telegram.org/bots/features#botfather).
 
 Also, you need to know your chat ID.
 You can find it out using special bots, for example, [userinfobot](https://t.me/userinfobot).
 
-### 🐋 Docker (recommended)
+And, of course, **you should already have WireGuard deployed on your server**.
+
+It is recommended to add names to peers for convenience, as shown in the example, if you are using the default
+**WireGuard**:
+
+```
+...
+
+# Walter
+[Peer]
+PublicKey = <publickey>
+AllowedIPs = 10.0.0.2/32
+
+# Jesse
+[Peer]
+PublicKey = <publickey>
+AllowedIPs = 10.0.0.3/32
+
+...
+```
+
+If you are using **AmneziaWG**, the name should already be in the `#_Name` attribute:
+
+```
+...
+
+[Peer]
+#_Name = Rick
+#_GenKeyTime = 2025-03-29T01:29:06.021250
+#_PrivateKey = <privatekey>
+PublicKey = <publickey>
+AllowedIPs = 10.9.9.2/32
+
+[Peer]
+#_Name = Daryl
+#_GenKeyTime = 2025-03-29T01:30:06.036150
+#_PrivateKey = <privatekey>
+PublicKey = <publickey>
+AllowedIPs = 10.9.9.3/32
+
+...
+```
+
+### 🤖 Running a bot
 
 * **Preinstall:** Install [Docker](https://docs.docker.com/engine/install/).
 * **Step 1:** Clone the repository and go to the directory with it:
@@ -49,7 +94,7 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
 > the [API](https://help.mikrotik.com/docs/spaces/ROS/pages/47579160/API) is enabled on your device.
 
 <details>
-<summary>💡 Full description of the parameters used in the server configuration file</summary>
+<summary>💡 Full description of the parameters used in the server configuration file.</summary>
 
 ```json5
 [
@@ -130,8 +175,8 @@ You can find it out using special bots, for example, [userinfobot](https://t.me/
 
 ## 📦 Local deployment
 
-If you want to deploy the bot on the same host as the WireGuard server and avoid using SSH, you can do it without the
-`servers.json` configuration file, or simplify the configuration by specifying only the `name` parameter:
+If you want to deploy the bot on the same host as the WireGuard server and avoid using SSH, you can do it **without**
+the `servers.json` configuration file, or simplify the configuration by specifying only the `name` parameter:
 
 ```json
 [
