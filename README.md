@@ -85,70 +85,70 @@ Telegram bot for managing WireGuard VPN.
   nano servers.json
   ```
 
-  > [!IMPORTANT]
-  > If you don't want to use an SSH connection to the Linux host at this stage, go [here](#-local-deployment).
+> [!IMPORTANT]
+> If you don't want to use an SSH connection to the Linux host at this stage, go [here](#-local-deployment).
 
-  > [!IMPORTANT]
-  > To use the bot with RouterOS, make sure the port for
-  > the [API](https://help.mikrotik.com/docs/spaces/ROS/pages/47579160/API) is enabled on your device.
+> [!IMPORTANT]
+> To use the bot with RouterOS, make sure the port for
+> the [API](https://help.mikrotik.com/docs/spaces/ROS/pages/47579160/API) is enabled on your device.
 
-  <details>
-  <summary>💡 Full description of the parameters used in the server configuration file.</summary>
+<details>
+<summary>💡 Full description of the parameters used in the server configuration file.</summary>
 
-  ```json5
-  [
-    // Parameters of one server are a JSON record.
-    // Parameters that have a default value can be omitted.
-    {
-      // Ensure that different names are used for different servers, or you will get an error.
-      "name": "Any name",
-      // "Linux" for Linux-based servers or "RouterOS" for MikroTik-based servers.
-      // Defaults to "Linux".
-      "type": "Linux",
-      // "WireGuard" or "AmneziaWG" depending on the protocol being used.
-      // Defaults to "WireGuard".
-      "protocol": "WireGuard",
-      // Path to the WireGuard server configuration file. 
-      // Defaults to "/etc/wireguard/wg0.conf" for "WireGuard" protocol.
-      // Defaults to "/etc/amnezia/amneziawg/awg0.conf" for "AmneziaWG" protocol.
-      "path_to_config": "/etc/wireguard/wg0.conf",
-      // Interface name for the WireGuard server.
-      // Defaults to "wg0" for "WireGuard" protocol.
-      // Defaults to "awg0" for "AmneziaWG" protocol.
-      "interface_name": "wg0",
-      // Endpoint for peers as an IP address or domain name.
-      // By default, the host's external IP address will be used.
-      "endpoint": "myserver.com",
-      // DNS addresses for peers. Can be a single address or a comma-separated list.
-      // By default, the internal address of the server interface will be used.
-      "dns": "1.1.1.1, 1.0.0.1",
-      // The IP address or domain name of the WireGuard host that the bot will use to connect.
-      // If not specified, a local client will be used.
-      "server": "192.168.32.1",
-      // The port of the WireGuard host that the bot will use to connect.
-      // Defaults to 22 (SSH) for "Linux" type.
-      // Defaults to 8728 (RouterOS API) for "RouterOS" type.
-      "port": 22,
-      // Username that the bot will use to connect. Defaults to the current local username.
-      "username": "root",
-      // Password that the bot will use to connect. Also used for private key decryption.
-      // If not specified, private key will be used.
-      "password": "toor",
-      // The filename, or list of filenames, of optional private key(s)
-      // and/or certs to try for authentication.
-      // If not specified, the bot will try to use local keyfiles or the SSH agent.
-      "key_filename": "/home/user/.ssh/id_ed25519"
-    },
-    // JSON record for next server.
-    {
-      // ...
-      // ...
-      // ...
-    }
-  ]
-  ```
+```json5
+[
+  // Parameters of one server are a JSON record.
+  // Parameters that have a default value can be omitted.
+  {
+    // Ensure that different names are used for different servers, or you will get an error.
+    "name": "Any name",
+    // "Linux" for Linux-based servers or "RouterOS" for MikroTik-based servers.
+    // Defaults to "Linux".
+    "type": "Linux",
+    // "WireGuard" or "AmneziaWG" depending on the protocol being used.
+    // Defaults to "WireGuard".
+    "protocol": "WireGuard",
+    // Path to the WireGuard server configuration file. 
+    // Defaults to "/etc/wireguard/wg0.conf" for "WireGuard" protocol.
+    // Defaults to "/etc/amnezia/amneziawg/awg0.conf" for "AmneziaWG" protocol.
+    "path_to_config": "/etc/wireguard/wg0.conf",
+    // Interface name for the WireGuard server.
+    // Defaults to "wg0" for "WireGuard" protocol.
+    // Defaults to "awg0" for "AmneziaWG" protocol.
+    "interface_name": "wg0",
+    // Endpoint for peers as an IP address or domain name.
+    // By default, the host's external IP address will be used.
+    "endpoint": "myserver.com",
+    // DNS addresses for peers. Can be a single address or a comma-separated list.
+    // By default, the internal address of the server interface will be used.
+    "dns": "1.1.1.1, 1.0.0.1",
+    // The IP address or domain name of the WireGuard host that the bot will use to connect.
+    // If not specified, a local client will be used.
+    "server": "192.168.32.1",
+    // The port of the WireGuard host that the bot will use to connect.
+    // Defaults to 22 (SSH) for "Linux" type.
+    // Defaults to 8728 (RouterOS API) for "RouterOS" type.
+    "port": 22,
+    // Username that the bot will use to connect. Defaults to the current local username.
+    "username": "root",
+    // Password that the bot will use to connect. Also used for private key decryption.
+    // If not specified, private key will be used.
+    "password": "toor",
+    // The filename, or list of filenames, of optional private key(s)
+    // and/or certs to try for authentication.
+    // If not specified, the bot will try to use local keyfiles or the SSH agent.
+    "key_filename": "/home/user/.ssh/id_ed25519"
+  },
+  // JSON record for next server.
+  {
+    // ...
+    // ...
+    // ...
+  }
+]
+```
 
-  </details>
+</details>
 
 * Create an image of your bot:
   ```bash
