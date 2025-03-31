@@ -205,13 +205,13 @@ depending on the protocol you are using. This will install the necessary utiliti
 For **WireGuard**:
 
 ```bash
-sudo docker build --build-arg LOCAL_DEPLOYMENT_WG=true --build-arg -t subs1stem/wg-assistant .
+sudo docker build --build-arg LOCAL_DEPLOYMENT_WG=true -t subs1stem/wg-assistant .
 ```
 
 For **AmneziaWG**:
 
 ```bash
-sudo docker build --build-arg LOCAL_DEPLOYMENT_AWG=true --build-arg -t subs1stem/wg-assistant .
+sudo docker build --build-arg LOCAL_DEPLOYMENT_AWG=true -t subs1stem/wg-assistant .
 ```
 
 Or use both arguments if you have both VPNs on your server:
