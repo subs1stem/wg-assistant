@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from ipaddress import IPv4Interface, IPv4Address, IPv6Address
 from typing import Optional
 
-from wireguard.protocol.base import BaseProtocol
+from src.wg_assistant.wireguard.protocol.base import BaseProtocol
 
 
 class WireGuard(ABC):

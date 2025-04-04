@@ -6,9 +6,9 @@ from typing import Callable, Any, Tuple
 from pydantic import IPvAnyAddress
 from wgconfig import WGConfig
 
-from wireguard.client.base import BaseClient
-from wireguard.protocol.base import BaseProtocol
-from wireguard.wireguard import WireGuard
+from src.wg_assistant.wireguard.client.base import BaseClient
+from src.wg_assistant.wireguard.protocol.base import BaseProtocol
+from src.wg_assistant.wireguard.wireguard import WireGuard
 
 
 class Linux(WireGuard):

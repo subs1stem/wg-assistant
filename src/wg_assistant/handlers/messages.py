@@ -7,9 +7,9 @@ from aiogram.types import Message
 from aiogram.types.input_file import BufferedInputFile
 from qrcode.image.pure import PyPNGImage
 
-from modules.fsm_states import AddPeer, RenamePeer
-from modules.keyboards import peer_action_kb, back_btn
-from wireguard.wireguard import WireGuard
+from src.wg_assistant.modules.fsm_states import AddPeer, RenamePeer
+from src.wg_assistant.modules.keyboards import peer_action_kb, back_btn
+from src.wg_assistant.wireguard.wireguard import WireGuard
 
 router = Router()
 

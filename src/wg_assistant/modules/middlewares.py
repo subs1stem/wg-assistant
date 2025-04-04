@@ -4,8 +4,8 @@ from typing import Callable, Dict, Awaitable, Any
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 
-from models.servers import ServerModel
-from servers.server_factory import ServerFactory
+from src.wg_assistant.models.servers import ServerModel
+from src.wg_assistant.servers.server_factory import ServerFactory
 
 
 class LoggingMiddleware(BaseMiddleware):

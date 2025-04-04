@@ -8,8 +8,8 @@ from pydantic import IPvAnyAddress
 from routeros_api import RouterOsApiPool
 from routeros_api.exceptions import RouterOsApiConnectionError
 
-from wireguard.protocol.base import BaseProtocol
-from wireguard.wireguard import WireGuard
+from src.wg_assistant.wireguard.protocol.base import BaseProtocol
+from src.wg_assistant.wireguard.wireguard import WireGuard
 
 
 class RouterOS(WireGuard):

@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import List
 
-from models.servers import ServerModel
+from src.wg_assistant.models.servers import ServerModel
 
 
 def load_servers_from_file(filename: str = 'servers.json') -> List[ServerModel]:
