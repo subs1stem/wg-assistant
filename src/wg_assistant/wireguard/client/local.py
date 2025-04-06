@@ -1,7 +1,7 @@
 from subprocess import Popen, PIPE
 from typing import Tuple, Any
 
-from src.wg_assistant.wireguard.client.base import BaseClient
+from wg_assistant.wireguard.client.base import BaseClient
 
 
 class LocalClient(BaseClient):

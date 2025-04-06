@@ -1,12 +1,12 @@
-from src.wg_assistant.models.servers import Protocol, ServerType, ServerModel
-from src.wg_assistant.wireguard.client.local import LocalClient
-from src.wg_assistant.wireguard.client.remote import RemoteClient
-from src.wg_assistant.wireguard.linux import Linux
-from src.wg_assistant.wireguard.protocol.amnezia_wg import AmneziaWGProtocol
-from src.wg_assistant.wireguard.protocol.base import BaseProtocol
-from src.wg_assistant.wireguard.protocol.wireguard import WireguardProtocol
-from src.wg_assistant.wireguard.routeros import RouterOS
-from src.wg_assistant.wireguard.wireguard import WireGuard
+from wg_assistant.models.servers import Protocol, ServerType, ServerModel
+from wg_assistant.wireguard.client.local import LocalClient
+from wg_assistant.wireguard.client.remote import RemoteClient
+from wg_assistant.wireguard.linux import Linux
+from wg_assistant.wireguard.protocol.amnezia_wg import AmneziaWGProtocol
+from wg_assistant.wireguard.protocol.base import BaseProtocol
+from wg_assistant.wireguard.protocol.wireguard import WireguardProtocol
+from wg_assistant.wireguard.routeros import RouterOS
+from wg_assistant.wireguard.wireguard import WireGuard
 
 
 class ServerFactory:

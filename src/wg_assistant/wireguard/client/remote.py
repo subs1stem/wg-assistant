@@ -4,7 +4,7 @@ from typing import Tuple, Any, Callable
 from paramiko.client import SSHClient, AutoAddPolicy
 from paramiko.ssh_exception import SSHException, NoValidConnectionsError
 
-from src.wg_assistant.wireguard.client.base import BaseClient
+from wg_assistant.wireguard.client.base import BaseClient
 
 
 class RemoteClient(BaseClient):

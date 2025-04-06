@@ -9,12 +9,12 @@ from aiogram.types import BotCommand
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from db.database import Database
-from handlers import callbacks, commands, errors, messages
-from models.servers import ServerModel
-from modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
-from modules.storages import SQLiteStorage
-from servers.servers_file_loader import load_servers_from_file
+from wg_assistant.db.database import Database
+from wg_assistant.handlers import callbacks, commands, errors, messages
+from wg_assistant.models.servers import ServerModel
+from wg_assistant.modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
+from wg_assistant.modules.storages import SQLiteStorage
+from wg_assistant.servers.servers_file_loader import load_servers_from_file
 
 load_dotenv()
 

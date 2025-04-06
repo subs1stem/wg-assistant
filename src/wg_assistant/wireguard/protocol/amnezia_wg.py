@@ -2,8 +2,8 @@ from ipaddress import IPv4Address, IPv6Address
 
 from wgconfig import WGConfig
 
-from src.wg_assistant.wireguard.protocol.base import BaseProtocol
-from src.wg_assistant.wireguard.protocol.wireguard import WireguardProtocol
+from wg_assistant.wireguard.protocol.base import BaseProtocol
+from wg_assistant.wireguard.protocol.wireguard import WireguardProtocol
 
 
 class AmneziaWGProtocol(BaseProtocol):

@@ -25,5 +25,8 @@ RUN if [ "$LOCAL_DEPLOYMENT_WG" = "true" ] || [ "$LOCAL_DEPLOYMENT_AWG" = "true"
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
-CMD ["python", "main.py"]
+ENV PYTHONPATH=/app/src
+
+CMD ["python", "-m", "wg_assistant.main"]

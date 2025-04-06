@@ -3,8 +3,8 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from src.wg_assistant.db.database import Database
-from src.wg_assistant.modules.keyboards import servers_kb, bot_settings_kb
+from wg_assistant.db.database import Database
+from wg_assistant.modules.keyboards import servers_kb, bot_settings_kb
 
 router = Router()
 

@@ -4,11 +4,11 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from src.wg_assistant.db.database import Database
-from src.wg_assistant.modules.fsm_states import AddPeer, RenamePeer
-from src.wg_assistant.modules.keyboards import *
-from src.wg_assistant.modules.messages import peers_message
-from src.wg_assistant.wireguard.wireguard import WireGuard
+from wg_assistant.db.database import Database
+from wg_assistant.modules.fsm_states import AddPeer, RenamePeer
+from wg_assistant.modules.keyboards import *
+from wg_assistant.modules.messages import peers_message
+from wg_assistant.wireguard.wireguard import WireGuard
 
 router = Router()
 
