@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import sys
-from os import environ
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -9,8 +8,10 @@ from aiogram.types import BotCommand
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
+from wg_assistant.config.env import get_bot_admins, get_bot_token
 from wg_assistant.db.database import Database
 from wg_assistant.handlers import callbacks, commands, errors, messages
+from wg_assistant.logging_config import setup_logging
 from wg_assistant.models.servers import ServerModel
 from wg_assistant.modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
 from wg_assistant.modules.storages import SQLiteStorage
@@ -20,8 +21,6 @@ load_dotenv()
 
 
 async def main():
-    admins = [int(admin_id) for admin_id in environ['ADMIN_ID'].split(',')]
-
     try:
         servers = load_servers_from_file()
     except FileNotFoundError:
@@ -34,8 +33,14 @@ async def main():
         logging.critical(f'Servers file contains invalid data: {e}')
         sys.exit(1)
 
-    default = DefaultBotProperties(parse_mode='HTML')
-    bot = Bot(token=environ['TOKEN'], default=default)
+    try:
+        token = get_bot_token()
+        admins = get_bot_admins()
+    except RuntimeError as e:
+        logging.critical(f'Error loading environment variables: {e}')
+        sys.exit(1)
+
+    bot = Bot(token, default=DefaultBotProperties(parse_mode='HTML'))
 
     dp = Dispatcher(
         storage=SQLiteStorage(),
@@ -68,17 +73,6 @@ if __name__ == '__main__':
     database = Database()
     database.init_db()
 
-    log_level_str = database.get_log_level()
-    log_level = logging.getLevelName(log_level_str)
-
-    logging.basicConfig(
-        level=log_level,
-        stream=sys.stdout,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    )
-
-    # Set the logging level of "aiogram.event" to "WARNING"
-    # because there is too much spam coming in with the INFO level
-    logging.getLogger('aiogram.event').setLevel(logging.WARNING)
+    setup_logging(database.get_log_level())
 
     asyncio.run(main())
