@@ -9,35 +9,31 @@ from dotenv import load_dotenv
 from pydantic import ValidationError
 
 from wg_assistant.config.env import get_bot_admins, get_bot_token
+from wg_assistant.config.servers import get_servers
 from wg_assistant.db.database import Database
 from wg_assistant.handlers import callbacks, commands, errors, messages
 from wg_assistant.logging_config import setup_logging
-from wg_assistant.models.servers import ServerModel
 from wg_assistant.modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
 from wg_assistant.modules.storages import SQLiteStorage
-from wg_assistant.servers.servers_file_loader import load_servers_from_file
 
 load_dotenv()
 
 
 async def main():
     try:
-        servers = load_servers_from_file()
-    except FileNotFoundError:
-        logging.info('Servers file not found, local WireGuard server will be used')
-        servers = [ServerModel(name='WireGuard')]
+        token = get_bot_token()
+        admins = get_bot_admins()
+    except RuntimeError as e:
+        logging.critical(f'Error loading environment variables: {e}')
+        sys.exit(1)
+
+    try:
+        servers = get_servers()
     except ValidationError as e:
         logging.critical(f'Validation error while loading servers: {e.errors()}')
         sys.exit(1)
     except ValueError as e:
         logging.critical(f'Servers file contains invalid data: {e}')
-        sys.exit(1)
-
-    try:
-        token = get_bot_token()
-        admins = get_bot_admins()
-    except RuntimeError as e:
-        logging.critical(f'Error loading environment variables: {e}')
         sys.exit(1)
 
     bot = Bot(token, default=DefaultBotProperties(parse_mode='HTML'))
