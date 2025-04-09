@@ -4,7 +4,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from wg_assistant.db.database import Database
+from wg_assistant.db.database import set_log_level
 from wg_assistant.modules.fsm_states import AddPeer, RenamePeer
 from wg_assistant.modules.keyboards import *
 from wg_assistant.modules.messages import peers_message
@@ -153,6 +153,6 @@ async def delete_peer(callback: CallbackQuery, state: FSMContext, server: WireGu
 async def set_debug_log_state(callback: CallbackQuery):
     state = callback.data.split(':')[-1] == 'enable'
     log_level = 'DEBUG' if state else 'INFO'
-    Database().set_log_level(log_level)
+    set_log_level(log_level)
     logging.getLogger().setLevel(log_level)
     await callback.message.edit_reply_markup(reply_markup=bot_settings_kb(state))

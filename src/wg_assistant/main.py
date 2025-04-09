@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from wg_assistant.config.env import get_bot_admins, get_bot_token
 from wg_assistant.config.servers import get_servers
-from wg_assistant.db.database import Database
+from wg_assistant.db.database import init_db, get_log_level
 from wg_assistant.handlers import callbacks, commands, errors, messages
 from wg_assistant.logging_config import setup_logging
 from wg_assistant.modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
@@ -66,9 +66,6 @@ async def main():
 
 
 if __name__ == '__main__':
-    database = Database()
-    database.init_db()
-
-    setup_logging(database.get_log_level())
-
+    init_db()
+    setup_logging(get_log_level())
     asyncio.run(main())
