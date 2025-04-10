@@ -1,7 +1,7 @@
 import sqlite3
 from typing import List, Tuple, Optional
 
-from wg_assistant.paths import DB_PATH
+from wg_assistant.paths import DB_FILE
 
 
 def execute_query(query: str, parameters: Tuple = ()) -> List[Tuple]:
@@ -14,7 +14,7 @@ def execute_query(query: str, parameters: Tuple = ()) -> List[Tuple]:
     Returns:
         List[Tuple]: A list of tuples containing the query results.
     """
-    with sqlite3.connect(DB_PATH) as con:
+    with sqlite3.connect(DB_FILE) as con:
         cur = con.cursor()
         cur.execute(query, parameters)
         return cur.fetchall()
@@ -33,7 +33,7 @@ def init_db() -> None:
         INSERT OR IGNORE INTO settings (key, value) VALUES ('log_level', 'INFO');
     '''
 
-    with sqlite3.connect(DB_PATH) as con:
+    with sqlite3.connect(DB_FILE) as con:
         cur = con.cursor()
         cur.executescript(sql_queries)
 

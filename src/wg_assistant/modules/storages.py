@@ -5,12 +5,12 @@ from typing import Dict, Any, Optional, cast
 from aiogram.fsm.state import State
 from aiogram.fsm.storage.base import BaseStorage, StorageKey, StateType
 
-from wg_assistant.paths import DB_PATH
+from wg_assistant.paths import DB_FILE
 
 
 class SQLiteStorage(BaseStorage):
     def __init__(self) -> None:
-        self.con = sqlite3.connect(DB_PATH)
+        self.con = sqlite3.connect(DB_FILE)
         self.cur = self.con.cursor()
 
     async def set_state(self, key: StorageKey, state: StateType = None) -> None:

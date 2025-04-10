@@ -9,5 +9,5 @@ def get_project_root() -> Path:
 
 
 PROJECT_ROOT = get_project_root()
-DB_PATH = PROJECT_ROOT / 'wg_assistant.db'
+DB_FILE = PROJECT_ROOT / 'wg_assistant.db'
 SERVERS_FILE = PROJECT_ROOT / 'servers.json'
