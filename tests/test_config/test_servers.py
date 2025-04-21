@@ -13,14 +13,14 @@ def test_valid_server_config_loads(valid_server_data, patch_open_with_data):
         assert [server.name for server in servers] == ['server 1', 'server 2']
 
 
-def test_old_format_migrates_correctly(old_format_data, patch_open_with_data):
-    with patch_open_with_data(old_format_data):
+def test_old_format_migrates_correctly(old_format_server_data, patch_open_with_data):
+    with patch_open_with_data(old_format_server_data):
         servers = get_servers()
         assert [server.name for server in servers] == ['server 3', 'server 4']
 
 
-def test_duplicate_server_names_raises(duplicate_names_data, patch_open_with_data):
-    with patch_open_with_data(duplicate_names_data):
+def test_duplicate_server_names_raises(duplicate_names_server_data, patch_open_with_data):
+    with patch_open_with_data(duplicate_names_server_data):
         with pytest.raises(ValueError, match='Duplicate server names detected'):
             get_servers()
 
