@@ -1,6 +1,6 @@
 import pytest
 
-from wg_assistant.modules.messages import peers_message
+from wg_assistant.modules.message_builders import peers_message
 
 
 @pytest.mark.parametrize('peers, expected_message', [

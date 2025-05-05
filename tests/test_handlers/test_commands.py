@@ -5,7 +5,6 @@ import pytest
 from wg_assistant.handlers.commands import send_start, send_servers, send_settings
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize('username,expected_text', [
     ('test_user', 'Hello, test_user! 👋'),
     (None, 'Hello, %username%! 👋'),
@@ -20,7 +19,6 @@ async def test_send_start(username, expected_text):
     message.answer.assert_awaited_once_with(expected_text)
 
 
-@pytest.mark.asyncio
 @patch('wg_assistant.handlers.commands.servers_kb', return_value='mock_kb')
 async def test_send_servers(mock_servers_kb):
     message = MagicMock(answer=AsyncMock())
@@ -39,7 +37,6 @@ async def test_send_servers(mock_servers_kb):
     message.answer.assert_awaited_once_with('Server list:', reply_markup='mock_kb')
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize('log_level,expected_debug_log_enabled', [
     ('DEBUG', True),
     ('ANY_OTHER', False),

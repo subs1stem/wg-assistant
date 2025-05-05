@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery
 from wg_assistant.db.database import set_log_level
 from wg_assistant.modules.fsm_states import AddPeer, RenamePeer
 from wg_assistant.modules.keyboards import *
-from wg_assistant.modules.messages import peers_message
+from wg_assistant.modules.message_builders import peers_message
 from wg_assistant.wireguard.wireguard import WireGuard
 
 router = Router()
