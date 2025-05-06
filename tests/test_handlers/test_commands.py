@@ -1,8 +1,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, Chat
 
 from wg_assistant.handlers.commands import send_start, send_servers, send_settings
+from wg_assistant.models.servers import ServerModel
 
 
 @pytest.mark.parametrize('username,expected_text', [
@@ -10,8 +13,13 @@ from wg_assistant.handlers.commands import send_start, send_servers, send_settin
     (None, 'Hello, %username%! 👋'),
 ])
 async def test_send_start(username, expected_text):
-    message = MagicMock(answer=AsyncMock(), chat=MagicMock(username=username))
-    state = MagicMock(clear=AsyncMock())
+    message = MagicMock(
+        spec=Message,
+        answer=AsyncMock(),
+        chat=MagicMock(spec=Chat, username=username),
+    )
+
+    state = MagicMock(spec=FSMContext, clear=AsyncMock())
 
     await send_start(message, state)
 
@@ -21,12 +29,12 @@ async def test_send_start(username, expected_text):
 
 @patch('wg_assistant.handlers.commands.servers_kb', return_value='mock_kb')
 async def test_send_servers(mock_servers_kb):
-    message = MagicMock(answer=AsyncMock())
-    state = MagicMock(clear=AsyncMock())
+    message = MagicMock(spec=Message, answer=AsyncMock())
+    state = MagicMock(spec=FSMContext, clear=AsyncMock())
 
-    server1 = MagicMock()
+    server1 = MagicMock(spec=ServerModel)
     server1.name = 'server1'
-    server2 = MagicMock()
+    server2 = MagicMock(spec=ServerModel)
     server2.name = 'server2'
     servers = [server1, server2]
 
@@ -44,7 +52,7 @@ async def test_send_servers(mock_servers_kb):
 @patch('wg_assistant.handlers.commands.bot_settings_kb', return_value='mock_kb')
 @patch('wg_assistant.handlers.commands.get_log_level')
 async def test_send_settings(mock_get_log_level, mock_bot_settings_kb, log_level, expected_debug_log_enabled):
-    message = MagicMock(answer=AsyncMock())
+    message = MagicMock(spec=Message, answer=AsyncMock())
     mock_get_log_level.return_value = log_level
 
     await send_settings(message)
