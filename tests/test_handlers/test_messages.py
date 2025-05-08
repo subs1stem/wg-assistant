@@ -1,16 +1,53 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from aiogram import Bot
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, Chat
 
-from wg_assistant.handlers.messages import check_new_name, send_unknown_message
+from wg_assistant.handlers.messages import check_peer_name, check_new_name, send_unknown_message
 from wg_assistant.wireguard.wireguard import WireGuard
 
 
-@pytest.mark.skip
-async def test_check_peer_name():
-    pass
+@patch('wg_assistant.handlers.messages.back_btn', return_value='mock_kb')
+@patch('wg_assistant.handlers.messages.qrcode.make')
+@patch('wg_assistant.handlers.messages.BufferedInputFile')
+async def test_check_peer_name(mock_buffered_input_file, mock_qrcode_make, mock_back_btn):
+    mock_image = MagicMock()
+    mock_image.save.side_effect = lambda buf: buf.write(b'qr_code_bytes')
+    mock_qrcode_make.return_value = mock_image
+
+    message = MagicMock(
+        spec=Message,
+        text='test_peer',
+        chat=MagicMock(spec=Chat, id=123),
+        bot=MagicMock(spec=Bot, send_chat_action=AsyncMock()),
+        answer_photo=AsyncMock(),
+    )
+
+    state = MagicMock(spec=FSMContext, set_state=AsyncMock())
+    server = MagicMock(spec=WireGuard, add_peer=MagicMock(return_value='peer_config'))
+
+    await check_peer_name(message, state, server)
+
+    message.bot.send_chat_action.assert_awaited_once_with(123, action='upload_photo')
+    server.add_peer.assert_called_once_with('test_peer')
+
+    mock_qrcode_make.assert_called_once_with(
+        'peer_config',
+        image_factory=mock_qrcode_make.call_args.kwargs['image_factory'],
+    )
+
+    mock_buffered_input_file.assert_called_once_with(b'qr_code_bytes', 'qr')
+    mock_back_btn.assert_called_once_with('config_peers')
+
+    message.answer_photo.assert_awaited_once_with(
+        photo=mock_buffered_input_file.return_value,
+        caption='peer_config',
+        reply_markup='mock_kb',
+    )
+
+    state.set_state.assert_awaited_once()
 
 
 @pytest.mark.parametrize('peer_pubkey,expected_peer_enabled', [
@@ -24,13 +61,13 @@ async def test_check_new_name(mock_peer_action_kb, peer_pubkey, expected_peer_en
     state = MagicMock(
         spec=FSMContext,
         get_data=AsyncMock(return_value={'pubkey': peer_pubkey}),
-        set_state=AsyncMock()
+        set_state=AsyncMock(),
     )
 
     server = MagicMock(
         spec=WireGuard,
         rename_peer=MagicMock(),
-        get_peer_enabled=MagicMock(return_value=expected_peer_enabled)
+        get_peer_enabled=MagicMock(return_value=expected_peer_enabled),
     )
 
     await check_new_name(message, state, server)
