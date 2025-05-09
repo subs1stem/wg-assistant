@@ -46,10 +46,11 @@ def test_servers_kb():
     assert row2[0].callback_data == 'server:eggs'
 
 
-@pytest.mark.parametrize('interface_is_up,expected_button_text,expected_callback', [
-    (True, 'Disable interface ⬇️', 'wg_state:down'),
-    (False, 'Enable interface ⬆️', 'wg_state:up'),
-])
+@pytest.mark.parametrize(
+    'interface_is_up,expected_button_text,expected_callback',
+    [(True, 'Disable interface ⬇️', 'wg_state:down'), (False, 'Enable interface ⬆️', 'wg_state:up')],
+    ids=['enabled interface', 'disabled interface'],
+)
 def test_wg_options_kb(interface_is_up, expected_button_text, expected_callback):
     kb = wg_options_kb(interface_is_up).inline_keyboard
 
@@ -123,10 +124,11 @@ def test_peers_kb(name_pubkey_peer_list):
     assert row5[0].callback_data == 'server:'
 
 
-@pytest.mark.parametrize('peer_is_enabled,expected_button_text,expected_callback', [
-    (True, 'Disable 📵', f'selected_peer:off:{PUBLIC_KEY}'),
-    (False, 'Enable ✅', f'selected_peer:on:{PUBLIC_KEY}'),
-])
+@pytest.mark.parametrize(
+    'peer_is_enabled,expected_button_text,expected_callback',
+    [(True, 'Disable 📵', f'selected_peer:off:{PUBLIC_KEY}'), (False, 'Enable ✅', f'selected_peer:on:{PUBLIC_KEY}')],
+    ids=['enabled peer', 'disabled peer'],
+)
 def test_peer_action_kb(peer_is_enabled, expected_button_text, expected_callback):
     kb = peer_action_kb(PUBLIC_KEY, peer_is_enabled).inline_keyboard
 
@@ -148,10 +150,11 @@ def test_peer_action_kb(peer_is_enabled, expected_button_text, expected_callback
     assert row3[0].callback_data == 'config_peers'
 
 
-@pytest.mark.parametrize('debug_log_enabled,expected_button_text,expected_callback', [
-    (True, 'Disable debug log ⏹', 'debug_log:disable'),
-    (False, 'Enable debug log 🐞', 'debug_log:enable'),
-])
+@pytest.mark.parametrize(
+    'debug_log_enabled,expected_button_text,expected_callback',
+    [(True, 'Disable debug log ⏹', 'debug_log:disable'), (False, 'Enable debug log 🐞', 'debug_log:enable')],
+    ids=['enabled debug log', 'disabled debug log'],
+)
 def test_bot_settings_kb(debug_log_enabled, expected_button_text, expected_callback):
     kb = bot_settings_kb(debug_log_enabled).inline_keyboard
     row1 = kb[0]

@@ -22,7 +22,7 @@ from wg_assistant.modules.message_builders import peers_message
             '<b>Transfer:</b> 181.22 MiB / 2.59 GiB \n\n'
     ),
     ({'peer2': {}}, '<ins><b>peer2</b></ins>\nunconnected\n\n'),
-])
+], ids=['inactive interface', 'connected peer', 'unconnected peer'])
 def test_peers_message(peers, expected_message):
     result = peers_message(peers)
     assert result == expected_message

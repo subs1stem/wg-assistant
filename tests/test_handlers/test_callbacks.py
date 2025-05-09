@@ -31,10 +31,11 @@ async def test_send_servers(mock_servers_kb):
     callback.message.edit_text.assert_awaited_once_with(text='Server list:', reply_markup='mock_kb')
 
 
-@pytest.mark.parametrize('server_name,expected_wg_enabled', [
-    ('server1', True),
-    ('server2', False),
-])
+@pytest.mark.parametrize(
+    'server_name,expected_wg_enabled',
+    [('server1', True), ('server2', False)],
+    ids=['enabled wg', 'disabled wg'],
+)
 @patch('wg_assistant.handlers.callbacks.wg_options_kb', return_value='mock_kb')
 async def test_send_server_menu(mock_wg_options_kb, server_name, expected_wg_enabled):
     callback = MagicMock(

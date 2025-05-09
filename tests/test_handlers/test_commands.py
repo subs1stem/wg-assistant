@@ -8,10 +8,11 @@ from wg_assistant.handlers.commands import send_start, send_servers, send_settin
 from wg_assistant.models.servers import ServerModel
 
 
-@pytest.mark.parametrize('username,expected_text', [
-    ('test_user', 'Hello, test_user! 👋'),
-    (None, 'Hello, %username%! 👋'),
-])
+@pytest.mark.parametrize(
+    'username,expected_text',
+    [('test_user', 'Hello, test_user! 👋'), (None, 'Hello, %username%! 👋')],
+    ids=['with username', 'without username'],
+)
 async def test_send_start(username, expected_text):
     message = MagicMock(
         spec=Message,
@@ -45,10 +46,11 @@ async def test_send_servers(mock_servers_kb):
     message.answer.assert_awaited_once_with('Server list:', reply_markup='mock_kb')
 
 
-@pytest.mark.parametrize('log_level,expected_debug_log_enabled', [
-    ('DEBUG', True),
-    ('ANY_OTHER', False),
-])
+@pytest.mark.parametrize(
+    'log_level,expected_debug_log_enabled',
+    [('DEBUG', True), ('ANY_OTHER', False)],
+    ids=['debug log level', 'any other log level'],
+)
 @patch('wg_assistant.handlers.commands.bot_settings_kb', return_value='mock_kb')
 @patch('wg_assistant.handlers.commands.get_log_level')
 async def test_send_settings(mock_get_log_level, mock_bot_settings_kb, log_level, expected_debug_log_enabled):

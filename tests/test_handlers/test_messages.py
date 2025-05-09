@@ -50,10 +50,11 @@ async def test_check_peer_name(mock_buffered_input_file, mock_qrcode_make, mock_
     state.set_state.assert_awaited_once()
 
 
-@pytest.mark.parametrize('peer_pubkey,expected_peer_enabled', [
-    ('IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', True),
-    ('2FOgBVysbAX/2WQQpcQbVb2VyA2wdOZXTDbh/F6RxUQ=', False),
-])
+@pytest.mark.parametrize(
+    'peer_pubkey,expected_peer_enabled',
+    [('IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', True), ('2FOgBVysbAX/2WQQpcQbVb2VyA2wdOZXTDbh/F6RxUQ=', False)],
+    ids=['with enabled peer', 'with disabled peer'],
+)
 @patch('wg_assistant.handlers.messages.peer_action_kb', return_value='mock_kb')
 async def test_check_new_name(mock_peer_action_kb, peer_pubkey, expected_peer_enabled):
     message = MagicMock(spec=Message, text='new_name', answer=AsyncMock())
