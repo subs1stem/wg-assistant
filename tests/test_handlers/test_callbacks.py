@@ -127,9 +127,30 @@ async def test_send_peer_list(mock_peer_list_kb, mock_peers_message, name_pubkey
     callback.message.edit_text.assert_awaited_once_with(text='peers_message', reply_markup='mock_kb')
 
 
-@pytest.mark.skip
-async def test_send_raw_config():
-    pass
+@patch('wg_assistant.handlers.callbacks.back_btn', return_value='mock_kb')
+async def test_send_raw_config(mock_back_btn):
+    callback = MagicMock(
+        spec=CallbackQuery,
+        answer=AsyncMock(),
+        message=MagicMock(spec=Message, edit_text=AsyncMock()),
+    )
+
+    server = MagicMock(
+        spec=WireGuard,
+        get_config=MagicMock(return_value='raw_server_config'),
+    )
+
+    server_name = 'test_server'
+
+    await send_raw_config(callback, server, server_name)
+
+    callback.answer.assert_awaited_once_with('Requesting configuration...')
+    server.get_config.assert_called_once_with()
+    mock_back_btn.assert_called_once_with(f'server:{server_name}')
+    callback.message.edit_text.assert_awaited_once_with(
+        text='<code>raw_server_config</code>',
+        reply_markup='mock_kb',
+    )
 
 
 @pytest.mark.skip
