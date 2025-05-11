@@ -180,9 +180,21 @@ async def test_change_wg_state(mock_wg_options_kb, callback_data, expected_enabl
     callback.message.edit_reply_markup.assert_awaited_once_with(reply_markup='mock_kb')
 
 
-@pytest.mark.skip
-async def test_add_peer():
-    pass
+@patch('wg_assistant.handlers.callbacks.AddPeer.waiting_for_peer_name')
+@patch('wg_assistant.handlers.callbacks.cancel_btn', return_value='mock_kb')
+async def test_add_peer(mock_cancel_btn, mock_waiting_for_peer_name):
+    callback = MagicMock(
+        spec=CallbackQuery,
+        message=MagicMock(spec=Message, edit_text=AsyncMock()),
+    )
+
+    state = MagicMock(spec=FSMContext, set_state=AsyncMock())
+
+    await add_peer(callback, state)
+
+    mock_cancel_btn.assert_called_once_with('config_peers')
+    callback.message.edit_text.assert_awaited_once_with(text="Send me the client's name", reply_markup='mock_kb')
+    state.set_state.assert_awaited_once_with(mock_waiting_for_peer_name)
 
 
 @pytest.mark.skip
