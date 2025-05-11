@@ -153,9 +153,31 @@ async def test_send_raw_config(mock_back_btn):
     )
 
 
-@pytest.mark.skip
-async def test_change_wg_state():
-    pass
+@pytest.mark.parametrize(
+    'callback_data,expected_enabled',
+    (['wg_state:up', True], ['wg_state:down', False]),
+    ids=['up', 'down'],
+)
+@patch('wg_assistant.handlers.callbacks.wg_options_kb', return_value='mock_kb')
+async def test_change_wg_state(mock_wg_options_kb, callback_data, expected_enabled):
+    callback = MagicMock(
+        spec=CallbackQuery,
+        answer=AsyncMock(),
+        data=callback_data,
+        message=MagicMock(spec=Message, edit_reply_markup=AsyncMock()),
+    )
+
+    server = MagicMock(
+        spec=WireGuard,
+        set_wg_enabled=MagicMock(),
+    )
+
+    await change_wg_state(callback, server)
+
+    callback.answer.assert_awaited_once_with('Processing...')
+    server.set_wg_enabled.assert_called_once_with(expected_enabled)
+    mock_wg_options_kb.assert_called_once_with(expected_enabled)
+    callback.message.edit_reply_markup.assert_awaited_once_with(reply_markup='mock_kb')
 
 
 @pytest.mark.skip
