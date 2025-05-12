@@ -1,9 +1,9 @@
+from copy import deepcopy
 from unittest.mock import patch, MagicMock, AsyncMock
 
 import pytest
 from aiogram.types import Message
 
-from conftest import name_pubkey_peer_list
 from wg_assistant.handlers.callbacks import *
 from wg_assistant.models.servers import ServerModel
 from wg_assistant.wireguard.wireguard import WireGuard
@@ -197,9 +197,42 @@ async def test_add_peer(mock_cancel_btn, mock_waiting_for_peer_name):
     state.set_state.assert_awaited_once_with(mock_waiting_for_peer_name)
 
 
-@pytest.mark.skip
-async def test_config_peers():
-    pass
+@pytest.mark.parametrize('has_photo', [True, False], ids=['photo', 'no photo'])
+@patch('wg_assistant.handlers.callbacks.peers_kb', return_value='mock_kb')
+async def test_config_peers(mock_peers_kb, has_photo, server_config_as_dict, name_pubkey_peer_list):
+    callback = MagicMock(
+        spec=CallbackQuery,
+        answer=AsyncMock(),
+        message=MagicMock(
+            spec=Message,
+            photo=has_photo,
+            delete=AsyncMock(),
+            answer=AsyncMock(),
+            edit_text=AsyncMock(),
+        ),
+    )
+
+    server = MagicMock(
+        spec=WireGuard,
+        get_config=MagicMock(return_value=deepcopy(server_config_as_dict)),
+    )
+
+    state = MagicMock(spec=FSMContext, set_state=AsyncMock())
+    text = 'Choose a client:'
+    reply_markup = 'mock_kb'
+
+    await config_peers(callback, server, state)
+
+    state.set_state.assert_awaited_once_with()
+    callback.answer.assert_awaited_once_with('Requesting a list of peers...')
+    server.get_config.assert_called_once_with(as_dict=True)
+    mock_peers_kb.assert_called_once_with(name_pubkey_peer_list)
+
+    if has_photo:
+        callback.message.delete.assert_awaited_once_with()
+        callback.message.answer.assert_awaited_once_with(text=text, reply_markup=reply_markup)
+    else:
+        callback.message.edit_text.assert_awaited_once_with(text=text, reply_markup=reply_markup)
 
 
 @pytest.mark.skip
