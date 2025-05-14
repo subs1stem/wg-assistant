@@ -1,4 +1,5 @@
 from copy import deepcopy
+from logging import Logger
 from unittest.mock import patch, MagicMock, AsyncMock
 
 import pytest
@@ -235,9 +236,31 @@ async def test_config_peers(mock_peers_kb, has_photo, server_config_as_dict, nam
         callback.message.edit_text.assert_awaited_once_with(text=text, reply_markup=reply_markup)
 
 
-@pytest.mark.skip
-async def test_show_peer():
-    pass
+@pytest.mark.parametrize(
+    'callback_data,peer_pubkey,expected_peer_enabled',
+    [
+        ('peer:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', 'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', True),
+        ('peer:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', 'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', False),
+    ],
+    ids=['enabled peer', 'disabled peer'],
+)
+@patch('wg_assistant.handlers.callbacks.peer_action_kb', return_value='mock_kb')
+async def test_show_peer(mock_peer_action_kb, callback_data, peer_pubkey, expected_peer_enabled):
+    callback = MagicMock(
+        spec=CallbackQuery,
+        data=callback_data,
+        message=MagicMock(spec=Message, edit_text=AsyncMock()),
+    )
+
+    server = MagicMock(spec=WireGuard, get_peer_enabled=MagicMock(return_value=expected_peer_enabled))
+    state = MagicMock(spec=FSMContext, set_state=AsyncMock())
+
+    await show_peer(callback, server, state)
+
+    state.set_state.assert_awaited_once_with()
+    server.get_peer_enabled.assert_called_once_with(peer_pubkey)
+    mock_peer_action_kb.assert_called_once_with(peer_pubkey, expected_peer_enabled)
+    callback.message.edit_text.assert_awaited_once_with(text=f'Choose an action:', reply_markup='mock_kb')
 
 
 @pytest.mark.skip
@@ -250,6 +273,34 @@ async def test_delete_peer():
     pass
 
 
-@pytest.mark.skip
-async def test_set_debug_log_state():
-    pass
+@pytest.mark.parametrize(
+    'callback_data,state,log_level',
+    [('debug_log:enable', True, 'DEBUG'), ('debug_log:disable', False, 'INFO')],
+    ids=['enable', 'disable'],
+)
+@patch('wg_assistant.handlers.callbacks.logging.getLogger')
+@patch('wg_assistant.handlers.callbacks.set_log_level')
+@patch('wg_assistant.handlers.callbacks.bot_settings_kb', return_value='mock_kb')
+async def test_set_debug_log_state(
+        mock_bot_settings_kb,
+        mock_set_log_level,
+        mock_get_logger,
+        callback_data,
+        state,
+        log_level,
+):
+    callback = MagicMock(
+        spec=CallbackQuery,
+        data=callback_data,
+        message=MagicMock(spec=Message, edit_reply_markup=AsyncMock()),
+    )
+
+    mock_logger = MagicMock(spec=Logger)
+    mock_get_logger.return_value = mock_logger
+
+    await set_debug_log_state(callback)
+
+    mock_set_log_level.assert_called_once_with(log_level)
+    mock_logger.setLevel.assert_called_once_with(log_level)
+    mock_bot_settings_kb.assert_called_once_with(state)
+    callback.message.edit_reply_markup.assert_awaited_once_with(reply_markup='mock_kb')
