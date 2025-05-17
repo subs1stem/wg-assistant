@@ -240,7 +240,7 @@ async def test_config_peers(mock_peers_kb, has_photo, server_config_as_dict, nam
     'callback_data,peer_pubkey,expected_peer_enabled',
     [
         ('peer:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', 'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', True),
-        ('peer:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', 'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=', False),
+        ('peer:2FOgBVysbAX/2WQQpcQbVb2VyA2wdOZXTDbh/F6RxUQ=', '2FOgBVysbAX/2WQQpcQbVb2VyA2wdOZXTDbh/F6RxUQ=', False),
     ],
     ids=['enabled peer', 'disabled peer'],
 )
@@ -268,9 +268,46 @@ async def test_process_peer_action():
     pass
 
 
-@pytest.mark.skip
-async def test_delete_peer():
-    pass
+@pytest.mark.parametrize(
+    'callback_data,deletion_confirmed,pubkey',
+    [
+        (
+                'confirm_peer_del:y:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+                True,
+                'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+        ),
+        (
+                'confirm_peer_del:n:2FOgBVysbAX/2WQQpcQbVb2VyA2wdOZXTDbh/F6RxUQ=',
+                False,
+                '2FOgBVysbAX/2WQQpcQbVb2VyA2wdOZXTDbh/F6RxUQ=',
+        ),
+    ],
+    ids=['confirmed', 'canceled'],
+)
+@patch('wg_assistant.handlers.callbacks.show_peer')
+@patch('wg_assistant.handlers.callbacks.config_peers')
+async def test_delete_peer(mock_config_peers, mock_show_peer, callback_data, deletion_confirmed, pubkey):
+    callback = MagicMock(
+        spec=CallbackQuery,
+        data=callback_data,
+        answer=AsyncMock(),
+    )
+
+    state = MagicMock(spec=FSMContext)
+    server = MagicMock(spec=WireGuard, delete_peer=MagicMock())
+
+    await delete_peer(callback, state, server)
+
+    if deletion_confirmed:
+        callback.answer.assert_awaited_once_with('Deleting...')
+        server.delete_peer.assert_called_once_with(pubkey)
+        mock_config_peers.assert_awaited_once_with(callback, server, state)
+        mock_show_peer.assert_not_awaited()
+    else:
+        mock_show_peer.assert_awaited_once_with(callback, server, state)
+        callback.answer.assert_not_awaited()
+        server.delete_peer.assert_not_called()
+        mock_config_peers.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
