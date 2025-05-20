@@ -263,9 +263,96 @@ async def test_show_peer(mock_peer_action_kb, callback_data, peer_pubkey, expect
     callback.message.edit_text.assert_awaited_once_with(text=f'Choose an action:', reply_markup='mock_kb')
 
 
-@pytest.mark.skip
-async def test_process_peer_action():
-    pass
+@pytest.mark.parametrize(
+    'callback_data,action,pubkey',
+    [
+        (
+                'selected_peer:name:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+                'name',
+                'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+        ),
+        (
+                'selected_peer:off:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+                'off',
+                'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+        ),
+        (
+                'selected_peer:on:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+                'on',
+                'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+        ),
+        (
+                'selected_peer:del:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+                'del',
+                'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+        ),
+        (
+                'selected_peer:unknown_action:IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+                'unknown_action',
+                'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
+        ),
+    ],
+    ids=['change name', 'disable', 'enable', 'delete', 'unknown_action'],
+)
+@patch('wg_assistant.handlers.callbacks.show_peer')
+@patch('wg_assistant.handlers.callbacks.RenamePeer.waiting_for_new_name')
+@patch('wg_assistant.handlers.callbacks.yes_no_kb', return_value='mock_yes_no_keyboard')
+@patch('wg_assistant.handlers.callbacks.cancel_btn', return_value='mock_cancel_button')
+async def test_process_peer_action(
+        mock_cancel_button,
+        mock_yes_no_keyboard,
+        mock_waiting_for_new_name_state,
+        mock_show_peer,
+        callback_data,
+        action,
+        pubkey,
+):
+    callback = MagicMock(
+        spec=CallbackQuery,
+        data=callback_data,
+        answer=AsyncMock(),
+        message=MagicMock(spec=Message, edit_text=AsyncMock()),
+    )
+
+    state = MagicMock(
+        spec=FSMContext,
+        update_data=AsyncMock(),
+        set_state=AsyncMock(),
+    )
+
+    server = MagicMock(spec=WireGuard, set_peer_enabled=MagicMock())
+
+    await process_peer_action(callback, state, server)
+
+    match action:
+        case 'name':
+            callback.answer.assert_awaited_once_with()
+            mock_cancel_button.assert_called_once_with(f'peer:{pubkey}')
+
+            callback.message.edit_text.assert_awaited_once_with(
+                text='Send me the new client name',
+                reply_markup='mock_cancel_button',
+            )
+
+            state.update_data.assert_awaited_once_with({'pubkey': pubkey})
+            state.set_state.assert_awaited_once_with(mock_waiting_for_new_name_state)
+        case 'off':
+            callback.answer.assert_awaited_once_with('Disabling...')
+            server.set_peer_enabled.assert_called_once_with(pubkey, False)
+            mock_show_peer.assert_awaited_once_with(callback, server, state)
+        case 'on':
+            callback.answer.assert_awaited_once_with('Enabling...')
+            server.set_peer_enabled.assert_called_once_with(pubkey, True)
+            mock_show_peer.assert_awaited_once_with(callback, server, state)
+        case 'del':
+            mock_yes_no_keyboard.assert_called_once_with('confirm_peer_del', pubkey)
+            callback.message.edit_text.assert_awaited_once_with(
+                text='Are you sure you want to delete the peer? This action cannot be reversed!',
+                reply_markup='mock_yes_no_keyboard',
+            )
+        case _:
+            callback.answer.assert_awaited_once_with('Unknown action!', show_alert=True)
+            mock_show_peer.assert_awaited_once_with(callback, server, state)
 
 
 @pytest.mark.parametrize(
