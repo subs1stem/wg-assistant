@@ -292,7 +292,7 @@ async def test_show_peer(mock_peer_action_kb, callback_data, peer_pubkey, expect
                 'IHgQ6Xdym0Z8+apaEJTgi6WclMREVvY4RKrck/2Nalw=',
         ),
     ],
-    ids=['change name', 'disable', 'enable', 'delete', 'unknown_action'],
+    ids=['change name', 'disable', 'enable', 'delete', 'unknown action'],
 )
 @patch('wg_assistant.handlers.callbacks.show_peer')
 @patch('wg_assistant.handlers.callbacks.RenamePeer.waiting_for_new_name')
@@ -336,23 +336,46 @@ async def test_process_peer_action(
 
             state.update_data.assert_awaited_once_with({'pubkey': pubkey})
             state.set_state.assert_awaited_once_with(mock_waiting_for_new_name_state)
+
+            server.set_peer_enabled.assert_not_called()
+            mock_show_peer.assert_not_awaited()
         case 'off':
             callback.answer.assert_awaited_once_with('Disabling...')
             server.set_peer_enabled.assert_called_once_with(pubkey, False)
             mock_show_peer.assert_awaited_once_with(callback, server, state)
+
+            callback.message.edit_text.assert_not_awaited()
+            state.update_data.assert_not_awaited()
+            state.set_state.assert_not_awaited()
         case 'on':
             callback.answer.assert_awaited_once_with('Enabling...')
             server.set_peer_enabled.assert_called_once_with(pubkey, True)
             mock_show_peer.assert_awaited_once_with(callback, server, state)
+
+            callback.message.edit_text.assert_not_awaited()
+            state.update_data.assert_not_awaited()
+            state.set_state.assert_not_awaited()
         case 'del':
             mock_yes_no_keyboard.assert_called_once_with('confirm_peer_del', pubkey)
+            
             callback.message.edit_text.assert_awaited_once_with(
                 text='Are you sure you want to delete the peer? This action cannot be reversed!',
                 reply_markup='mock_yes_no_keyboard',
             )
-        case _:
+
+            callback.answer.assert_not_awaited()
+            state.update_data.assert_not_awaited()
+            state.set_state.assert_not_awaited()
+            server.set_peer_enabled.assert_not_called()
+            mock_show_peer.assert_not_awaited()
+        case 'unknown_action':
             callback.answer.assert_awaited_once_with('Unknown action!', show_alert=True)
             mock_show_peer.assert_awaited_once_with(callback, server, state)
+
+            callback.message.edit_text.assert_not_awaited()
+            state.update_data.assert_not_awaited()
+            state.set_state.assert_not_awaited()
+            server.set_peer_enabled.assert_not_called()
 
 
 @pytest.mark.parametrize(
