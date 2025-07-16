@@ -6,7 +6,7 @@ import pytest
 from aiogram.types import Message
 
 from wg_assistant.handlers.callbacks import *
-from wg_assistant.models.servers import ServerModel
+from wg_assistant.models.server import ServerModel
 from wg_assistant.wireguard.wireguard import WireGuard
 
 
@@ -357,7 +357,7 @@ async def test_process_peer_action(
             state.set_state.assert_not_awaited()
         case 'del':
             mock_yes_no_keyboard.assert_called_once_with('confirm_peer_del', pubkey)
-            
+
             callback.message.edit_text.assert_awaited_once_with(
                 text='Are you sure you want to delete the peer? This action cannot be reversed!',
                 reply_markup='mock_yes_no_keyboard',

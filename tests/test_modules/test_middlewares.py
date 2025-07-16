@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiogram.types import TelegramObject, User, Message, CallbackQuery, Update
 
-from wg_assistant.models.servers import ServerModel
+from wg_assistant.models.server import ServerModel
 from wg_assistant.modules.middlewares import LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware
 from wg_assistant.servers.server_factory import ServerFactory
 

@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from wg_assistant.config.servers import get_servers
-from wg_assistant.models.servers import ServerModel
+from wg_assistant.models.server import ServerModel
 
 
 def test_valid_server_config_loads(valid_server_data, patch_open_with_data):

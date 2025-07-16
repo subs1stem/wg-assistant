@@ -1,4 +1,4 @@
-from wg_assistant.models.servers import Protocol, ServerType, ServerModel
+from wg_assistant.models.server import Protocol, ServerType, ServerModel
 from wg_assistant.wireguard.client.local import LocalClient
 from wg_assistant.wireguard.client.remote import RemoteClient
 from wg_assistant.wireguard.linux import Linux

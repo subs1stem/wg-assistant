@@ -4,7 +4,7 @@ from typing import Callable, Dict, Awaitable, Any
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 
-from wg_assistant.models.servers import ServerModel
+from wg_assistant.models.server import ServerModel
 from wg_assistant.servers.server_factory import ServerFactory
 
 

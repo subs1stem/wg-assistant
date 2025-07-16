@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, Chat
 
 from wg_assistant.handlers.commands import send_start, send_servers, send_settings
-from wg_assistant.models.servers import ServerModel
+from wg_assistant.models.server import ServerModel
 
 
 @pytest.mark.parametrize(

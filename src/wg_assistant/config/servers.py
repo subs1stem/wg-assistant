@@ -1,7 +1,7 @@
 import json
 import logging
 
-from wg_assistant.models.servers import ServerModel
+from wg_assistant.models.server import ServerModel
 from wg_assistant.paths import SERVERS_FILE
 
 
