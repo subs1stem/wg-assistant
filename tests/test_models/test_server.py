@@ -24,22 +24,22 @@ def test_defaults_for_routeros():
 
 
 def test_default_port_linux():
-    model = ServerModel(name='test', type=ServerType.LINUX, server='1.2.3.4')  # noqa
+    model = ServerModel(name='test', type=ServerType.LINUX, server='1.2.3.4')  # type: ignore
     assert model.port == DEFAULT_PORT_SSH
 
 
 def test_default_port_routeros():
-    model = ServerModel(name='test', type=ServerType.ROUTEROS, server='wg.example.com')  # noqa
+    model = ServerModel(name='test', type=ServerType.ROUTEROS, server='wg.example.com')  # type: ignore
     assert model.port == DEFAULT_PORT_ROUTEROS_API
 
 
 def test_dns_parsing_single():
-    model = ServerModel(name='test', dns='1.1.1.1')  # noqa
+    model = ServerModel(name='test', dns='1.1.1.1')  # type: ignore
     assert model.dns == IPv4Address('1.1.1.1')
 
 
 def test_dns_parsing_multiple():
-    model = ServerModel(name='test', dns='1.1.1.1, 8.8.8.8 ')  # noqa
+    model = ServerModel(name='test', dns='1.1.1.1, 8.8.8.8 ')  # type: ignore
     assert model.dns == [IPv4Address('1.1.1.1'), IPv4Address('8.8.8.8')]
 
 
@@ -50,13 +50,13 @@ def test_defaults_dns_none(input_value):
 
 
 def test_dns_serialization_single():
-    model = ServerModel(name='test', dns='8.8.8.8')  # noqa
+    model = ServerModel(name='test', dns='8.8.8.8')  # type: ignore
     data = model.model_dump(mode='json')
     assert data['dns'] == '8.8.8.8'
 
 
 def test_dns_serialization_multiple():
-    model = ServerModel(name='test', dns='1.1.1.1, 1.0.0.1')  # noqa
+    model = ServerModel(name='test', dns='1.1.1.1, 1.0.0.1')  # type: ignore
     data = model.model_dump(mode='json')
     assert data['dns'] == '1.1.1.1,1.0.0.1'
 
@@ -70,7 +70,7 @@ def test_dns_serialization_none():
 @pytest.mark.parametrize('input_value', ['1.1.1', 'abc', '999.999.999.999', '1.1.1.1, not-an-ip'])
 def test_dns_invalid(input_value):
     with pytest.raises(ValidationError):
-        ServerModel(name='test', dns=input_value)  # noqa
+        ServerModel(name='test', dns=input_value)  # type: ignore
 
 
 def test_alias_paths_flat():
@@ -78,8 +78,8 @@ def test_alias_paths_flat():
         name='flat_aliases',
         interface_name='wg0',
         path_to_config='/etc/wireguard/wg0.conf',
-        endpoint='wg.example.com',  # noqa
-        server='1.2.3.4',  # noqa
+        endpoint='wg.example.com',  # type: ignore
+        server='1.2.3.4',  # type: ignore
         port=51820,
         username='root',
         password='toor',
