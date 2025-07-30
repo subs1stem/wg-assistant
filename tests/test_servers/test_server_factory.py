@@ -10,6 +10,48 @@ from wg_assistant.wireguard.linux import Linux
 from wg_assistant.wireguard.protocol.amnezia_wg import AmneziaWGProtocol
 from wg_assistant.wireguard.protocol.wireguard import WireguardProtocol
 from wg_assistant.wireguard.routeros import RouterOS
+from wg_assistant.wireguard.wireguard import WireGuard
+
+
+def test_server_factory_singleton():
+    ServerFactory._instance = None
+
+    instance1 = ServerFactory()
+    assert isinstance(instance1, ServerFactory)
+
+    instance2 = ServerFactory()
+    assert instance2 is instance1
+
+
+@pytest.mark.parametrize(
+    'existing_servers,server_name,is_existing',
+    [
+        ({'test1': MagicMock(spec=WireGuard)}, 'test1', True),
+        ({'test1': MagicMock(spec=WireGuard)}, 'new_server', False),
+    ],
+    ids=['returns existing', 'creates new'],
+)
+@patch('wg_assistant.servers.server_factory.ServerFactory._get_protocol', autospec=True, return_value='mock_protocol')
+@patch(
+    'wg_assistant.servers.server_factory.ServerFactory._create_instance',
+    autospec=True,
+    return_value=MagicMock(spec=WireGuard)
+)
+def test_create_server_instance(mock_create_instance, mock_get_protocol, existing_servers, server_name, is_existing):
+    ServerFactory._created_servers = existing_servers.copy()
+    model = ServerModel(name=server_name)
+
+    instance = ServerFactory.create_server_instance(model)
+
+    if is_existing:
+        assert instance == existing_servers[server_name]
+        mock_get_protocol.assert_not_called()
+        mock_create_instance.assert_not_called()
+    else:
+        mock_get_protocol.assert_called_once_with(model)
+        mock_create_instance.assert_called_once_with(model, 'mock_protocol')
+        assert ServerFactory._created_servers[server_name] == instance
+        assert isinstance(instance, WireGuard)
 
 
 @pytest.mark.parametrize(
