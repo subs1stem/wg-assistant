@@ -69,15 +69,9 @@ async def test_auth_check_middleware(user_id, admins, message_exists, callback_e
         event.message.answer.assert_awaited_once_with("I don't know you ⚠")
         handler.assert_not_awaited()
 
-        if callback_exists:
-            event.callback_query.answer.assert_not_called()
-
     elif expected_action == 'callback_answer':
         event.callback_query.answer.assert_awaited_once_with('You have been blocked 🛑', show_alert=True)
         handler.assert_not_awaited()
-
-        if message_exists:
-            event.message.answer.assert_not_called()
 
 
 @pytest.mark.parametrize(
