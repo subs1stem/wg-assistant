@@ -72,6 +72,7 @@ def test_parse_config_to_dict():
 def test_add_peer():
     wg_config = WGConfig('/tmp/test.conf')
     wg_config.contents = '[Interface]\nAddress = 10.0.0.1/24\n'
+
     protocol = WireguardProtocol()
 
     updated = protocol.add_peer(wg_config, 'pubkey', 'TestPeer')
@@ -80,11 +81,14 @@ def test_add_peer():
 
 def test_rename_peer_simple_comment():
     wg_config = WGConfig('/tmp/test.conf')
+
     wg_config.lines = [
         '# OldName\n',
-        'PublicKey = pubkey123\n'
+        'PublicKey = pubkey\n'
     ]
+
     wg_config.get_sectioninfo = lambda key: (0, 2)
+
     protocol = WireguardProtocol()
 
     updated = protocol.rename_peer(wg_config, 'pubkey', 'NewName')
@@ -93,11 +97,14 @@ def test_rename_peer_simple_comment():
 
 def test_rename_peer_with_hash_bang_comment():
     wg_config = WGConfig('/tmp/test.conf')
+
     wg_config.lines = [
         '#! # OldName\n',
-        'PublicKey = pubkey123\n'
+        'PublicKey = pubkey\n'
     ]
+
     wg_config.get_sectioninfo = lambda key: (0, 2)
+
     protocol = WireguardProtocol()
 
     updated = protocol.rename_peer(wg_config, 'pubkey', 'NewName')
