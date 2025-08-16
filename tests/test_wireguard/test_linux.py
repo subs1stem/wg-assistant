@@ -58,54 +58,50 @@ def test_sync_config(mock_client, mock_protocol, linux):
     )
 
 
-def test_get_external_ip_parses_ipv4(mock_client, linux):
+def test_get_external_ip(mock_client, linux):
     mock_client.execute.return_value = (
-        0,
-        io.StringIO('1.1.1.1 via 198.51.100.1 dev eth0 src 192.0.2.10 uid 0\n'),
-        io.StringIO('')
+        None,
+        io.StringIO('1.1.1.1 via 198.51.100.1 dev eth0 src 198.51.100.42 uid 0\n'),
+        None,
     )
     result = linux.get_external_ip()
-    assert str(result) == '192.0.2.10'
+    assert str(result) == '198.51.100.42'
 
 
-def test_reboot_host_calls_execute(mock_client, linux):
+def test_reboot_host(mock_client, linux):
     linux.reboot_host()
     mock_client.execute.assert_called_once_with('reboot')
 
 
-def test_get_config_as_str(mock_client, linux):
+@pytest.mark.parametrize(
+    'as_dict,expected',
+    [
+        (False, '[Interface]\nPrivateKey = privkey\nAddress = 10.0.0.1/24\n'),
+        (True, {'Interface': {'PrivateKey': 'privkey'}}),
+    ],
+    ids=['raw', 'as dict'],
+)
+def test_get_config(mock_client, mock_protocol, linux, as_dict, expected):
     mock_client.execute.return_value = (
-        0,
-        io.StringIO('[Interface]\nPrivateKey = abc\nAddress = 10.0.0.1/24\n'),
-        io.StringIO('')
-    )
-    cfg = linux.get_config(as_dict=False)
-    assert cfg == '[Interface]\nPrivateKey = abc\nAddress = 10.0.0.1/24\n'
-
-
-def test_get_config_as_dict(mock_client, mock_protocol, linux):
-    mock_client.execute.return_value = (
-        0,
-        io.StringIO('[Interface]\nPrivateKey = privkey\n'),
-        io.StringIO('')
-    )
-    res = linux.get_config(as_dict=True)
-    assert res == {'Interface': {'PrivateKey': 'privkey'}}
-    mock_protocol.parse_config_to_dict.assert_called_once()
-
-
-def test_set_wg_enabled_up(mock_client, mock_protocol, linux):
-    linux.set_wg_enabled(True)
-    mock_client.execute.assert_called_once_with(
-        f'{mock_protocol.get_quick_command()} up {linux.interface_name}'
+        None,
+        io.StringIO('[Interface]\nPrivateKey = privkey\nAddress = 10.0.0.1/24\n'),
+        None,
     )
 
+    config = linux.get_config(as_dict=as_dict)
 
-def test_set_wg_enabled_down(mock_client, mock_protocol, linux):
-    linux.set_wg_enabled(False)
-    mock_client.execute.assert_called_once_with(
-        f'{mock_protocol.get_quick_command()} down {linux.interface_name}'
-    )
+    assert config == expected
+
+    if as_dict:
+        mock_protocol.parse_config_to_dict.assert_called_once()
+    else:
+        mock_protocol.parse_config_to_dict.assert_not_called()
+
+
+@pytest.mark.parametrize('is_enabled,command', [(True, 'up'), (False, 'down')], ids=['true', 'false'])
+def test_set_wg_enabled(mock_client, mock_protocol, linux, is_enabled, command):
+    linux.set_wg_enabled(is_enabled)
+    mock_client.execute.assert_called_once_with(f'wg-quick {command} wg0')
 
 
 def test_get_wg_enabled_true(mock_client, mock_protocol, linux):
