@@ -99,35 +99,27 @@ def test_get_config(mock_client, mock_protocol, linux, as_dict, expected):
 
 
 @pytest.mark.parametrize('is_enabled,command', [(True, 'up'), (False, 'down')], ids=['true', 'false'])
-def test_set_wg_enabled(mock_client, mock_protocol, linux, is_enabled, command):
+def test_set_wg_enabled(mock_client, linux, is_enabled, command):
     linux.set_wg_enabled(is_enabled)
     mock_client.execute.assert_called_once_with(f'wg-quick {command} wg0')
 
 
-def test_get_wg_enabled_true(mock_client, mock_protocol, linux):
-    mock_client.execute.return_value = (0, io.StringIO('something\n'), io.StringIO(''))
-    assert linux.get_wg_enabled() is True
-    mock_client.execute.assert_called_once_with(
-        f'{mock_protocol.get_command()} show {linux.interface_name}'
-    )
+@pytest.mark.parametrize('is_enabled,stdout', [(True, 'peers'), (False, '')], ids=['true', 'false'])
+def test_get_wg_enabled(mock_client, linux, is_enabled, stdout):
+    mock_client.execute.return_value = (None, io.StringIO(stdout), None)
+    assert linux.get_wg_enabled() == is_enabled
+    mock_client.execute.assert_called_once_with('wg show wg0')
 
 
-def test_get_wg_enabled_false(mock_client, mock_protocol, linux):
-    mock_client.execute.return_value = (0, io.StringIO(''), io.StringIO(''))
-    assert linux.get_wg_enabled() is False
-
-
-def test_get_server_pubkey_ok(mock_client, mock_protocol, linux):
-    mock_client.execute.return_value = (0, io.StringIO('pubkey123\n'), io.StringIO(''))
-    assert linux.get_server_pubkey() == 'pubkey123'
-    mock_client.execute.assert_called_once_with(
-        f'{mock_protocol.get_command()} show {linux.interface_name} public-key'
-    )
-
-
-def test_get_server_pubkey_none_on_stderr(mock_client, mock_protocol, linux):
-    mock_client.execute.return_value = (0, io.StringIO('ignored\n'), io.StringIO('error\n'))
-    assert linux.get_server_pubkey() is None
+@pytest.mark.parametrize(
+    'stdout,stderr,pubkey',
+    [('pubkey\n', '', 'pubkey'), ('', 'error\n', None)],
+    ids=['ok', 'error'],
+)
+def test_get_server_pubkey(mock_client, linux, stdout, stderr, pubkey):
+    mock_client.execute.return_value = (None, io.StringIO(stdout), io.StringIO(stderr))
+    assert linux.get_server_pubkey() == pubkey
+    mock_client.execute.assert_called_once_with('wg show wg0 public-key')
 
 
 def _wg_show_output(interface='wg0'):
