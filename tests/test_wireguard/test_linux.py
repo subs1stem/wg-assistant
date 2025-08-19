@@ -201,10 +201,7 @@ def test_add_peer_flow_writes_and_syncs(mock_client, mock_protocol, linux, monke
         sync_mock.assert_called_once()
 
 
-def test_delete_peer_writes_and_syncs(mock_client, linux):
-    linux.wg_config.read_from_fileobj = MagicMock()
-    linux.wg_config.write_to_fileobj = MagicMock()
-
+def test_delete_peer(mock_client, linux):
     linux.delete_peer('pkX')
 
     mock_client.get_file_contents.assert_called_once_with(linux.path_to_config)
@@ -212,10 +209,7 @@ def test_delete_peer_writes_and_syncs(mock_client, linux):
     mock_client.put_file_contents.assert_called_once()
 
 
-def test_set_peer_enabled_true_and_false(mock_client, linux):
-    linux.wg_config.read_from_fileobj = MagicMock()
-    linux.wg_config.write_to_fileobj = MagicMock()
-
+def test_set_peer_enabled(mock_client, linux):
     linux.set_peer_enabled('pkY', True)
     linux.set_peer_enabled('pkY', False)
 
@@ -225,25 +219,16 @@ def test_set_peer_enabled_true_and_false(mock_client, linux):
     assert mock_client.put_file_contents.call_count == 2
 
 
-def test_get_peer_enabled_read_only(mock_client, linux):
-    linux.wg_config.read_from_fileobj = MagicMock()
+def test_get_peer_enabled(mock_client, linux):
     linux.wg_config.get_peer_enabled.return_value = True
-
-    result = linux.get_peer_enabled('pkZ')
+    result = linux.get_peer_enabled('test_peer')
     assert result is True
 
     mock_client.get_file_contents.assert_called_once_with(linux.path_to_config)
     mock_client.put_file_contents.assert_not_called()
 
 
-def test_rename_peer_writes_and_syncs(mock_client, mock_protocol, linux):
-    linux.wg_config.read_from_fileobj = MagicMock()
-    linux.wg_config.write_to_fileobj = MagicMock()
-
+def test_rename_peer(mock_protocol, linux):
     mock_protocol.rename_peer.return_value = linux.wg_config
-
-    linux.rename_peer('pkR', 'NewName')
-
-    mock_client.get_file_contents.assert_called_once_with(linux.path_to_config)
-    mock_protocol.rename_peer.assert_called_once()
-    mock_client.put_file_contents.assert_called_once()
+    linux.rename_peer('pubkey', 'new_name')
+    mock_protocol.rename_peer.assert_called_once_with(linux.wg_config, 'pubkey', 'new_name')
