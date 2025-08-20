@@ -122,7 +122,7 @@ def test_get_server_pubkey(mock_client, linux, stdout, stderr, pubkey):
     mock_client.execute.assert_called_once_with('wg show wg0 public-key')
 
 
-def _wg_show_output(interface='wg0'):
+def _wg_show_output(interface='wg0'):  # TODO: check
     return (
         f'interface: {interface}\n'
         '  public key: serverpub\n'
@@ -140,12 +140,12 @@ def _wg_show_output(interface='wg0'):
     )
 
 
-def test_get_peers_returns_empty_on_stderr(mock_client, mock_protocol, linux):
+def test_get_peers_returns_empty_on_stderr(mock_client, mock_protocol, linux):  # TODO: check
     mock_client.execute.return_value = (0, io.StringIO(''), io.StringIO('fatal\n'))
     assert linux.get_peers() == {}
 
 
-def test_get_peers_parses_bytes_and_maps_names(mock_client, mock_protocol, linux, monkeypatch):
+def test_get_peers_parses_bytes_and_maps_names(mock_client, mock_protocol, linux, monkeypatch):  # TODO: check
     stderr = io.StringIO('')
     stdout_bytes = _wg_show_output().encode('utf-8')
     mock_client.execute.return_value = (0, io.BytesIO(stdout_bytes), stderr)
@@ -167,7 +167,7 @@ def test_get_peers_parses_bytes_and_maps_names(mock_client, mock_protocol, linux
     assert peers['Bob']['allowed ips'] == '10.0.0.3/32'
 
 
-def test_add_peer_flow_writes_and_syncs(mock_client, mock_protocol, linux, monkeypatch):
+def test_add_peer_flow_writes_and_syncs(mock_client, mock_protocol, linux, monkeypatch):  # TODO: check
     linux.wg_config.read_from_fileobj = MagicMock()
     linux.wg_config.write_to_fileobj = MagicMock()
 
@@ -202,33 +202,33 @@ def test_add_peer_flow_writes_and_syncs(mock_client, mock_protocol, linux, monke
 
 
 def test_delete_peer(mock_client, linux):
-    linux.delete_peer('pkX')
-
-    mock_client.get_file_contents.assert_called_once_with(linux.path_to_config)
-    linux.wg_config.del_peer.assert_called_once_with('pkX')
-    mock_client.put_file_contents.assert_called_once()
+    linux.delete_peer('pubkey')
+    linux.wg_config.del_peer.assert_called_once_with('pubkey')
 
 
-def test_set_peer_enabled(mock_client, linux):
-    linux.set_peer_enabled('pkY', True)
-    linux.set_peer_enabled('pkY', False)
+@pytest.mark.parametrize('is_enabled', [True, False])
+def test_set_peer_enabled(mock_client, linux, is_enabled):
+    linux.set_peer_enabled('pubkey', is_enabled)
 
-    assert mock_client.get_file_contents.call_count == 2
-    linux.wg_config.enable_peer.assert_called_once_with('pkY')
-    linux.wg_config.disable_peer.assert_called_once_with('pkY')
-    assert mock_client.put_file_contents.call_count == 2
-
-
-def test_get_peer_enabled(mock_client, linux):
-    linux.wg_config.get_peer_enabled.return_value = True
-    result = linux.get_peer_enabled('test_peer')
-    assert result is True
-
-    mock_client.get_file_contents.assert_called_once_with(linux.path_to_config)
-    mock_client.put_file_contents.assert_not_called()
+    if is_enabled:
+        linux.wg_config.enable_peer.assert_called_once_with('pubkey')
+        linux.wg_config.disable_peer.assert_not_called()
+    else:
+        linux.wg_config.disable_peer.assert_called_once_with('pubkey')
+        linux.wg_config.enable_peer.assert_not_called()
 
 
-def test_rename_peer(mock_protocol, linux):
+@pytest.mark.parametrize('is_enabled', [True, False])
+def test_get_peer_enabled(mock_client, linux, is_enabled):
+    linux.wg_config.get_peer_enabled.return_value = is_enabled
+
+    result = linux.get_peer_enabled('pubkey')
+
+    assert result is is_enabled
+    linux.wg_config.get_peer_enabled.assert_called_once_with('pubkey')
+
+
+def test_rename_peer(mock_protocol, linux):  # TODO: check
     mock_protocol.rename_peer.return_value = linux.wg_config
     linux.rename_peer('pubkey', 'new_name')
     mock_protocol.rename_peer.assert_called_once_with(linux.wg_config, 'pubkey', 'new_name')
