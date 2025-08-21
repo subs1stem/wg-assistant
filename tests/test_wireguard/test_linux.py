@@ -2,6 +2,7 @@ import io
 from unittest.mock import MagicMock, patch, call
 
 import pytest
+from wgconfig import WGConfig
 
 from wg_assistant.wireguard.client.base import BaseClient
 from wg_assistant.wireguard.linux import Linux
@@ -228,7 +229,12 @@ def test_get_peer_enabled(mock_client, linux, is_enabled):
     linux.wg_config.get_peer_enabled.assert_called_once_with('pubkey')
 
 
-def test_rename_peer(mock_protocol, linux):  # TODO: check
-    mock_protocol.rename_peer.return_value = linux.wg_config
+def test_rename_peer(mock_protocol, linux):
+    old_config = linux.wg_config
+    new_config = MagicMock(spec=WGConfig)
+    mock_protocol.rename_peer.return_value = new_config
+
     linux.rename_peer('pubkey', 'new_name')
-    mock_protocol.rename_peer.assert_called_once_with(linux.wg_config, 'pubkey', 'new_name')
+
+    mock_protocol.rename_peer.assert_called_once_with(old_config, 'pubkey', 'new_name')
+    assert linux.wg_config is new_config
