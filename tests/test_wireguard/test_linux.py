@@ -1,5 +1,5 @@
 import io
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch, call, ANY
 
 import pytest
 from wgconfig import WGConfig
@@ -64,6 +64,31 @@ def test_generate_key_pair(mock_client, mock_protocol, linux):
         call('wg genkey'),
         call('echo "privkey" | wg pubkey'),
     ])
+
+
+@pytest.mark.parametrize('rewrite_config', [True, False], ids=['with config rewriting', 'without config rewriting'])
+def test_config_operation(mock_client, linux, rewrite_config):
+    linux.sync_config = MagicMock()
+
+    def dummy_method(_, x):
+        return x * 3
+
+    decorated = linux._config_operation(rewrite_config=rewrite_config)(dummy_method)
+
+    result = decorated(linux, 4)
+
+    assert result == 12
+    mock_client.get_file_contents.assert_called_once_with('/etc/wireguard/wg0.conf')
+    linux.wg_config.read_from_fileobj.assert_called_once_with(ANY)
+
+    if rewrite_config:
+        linux.wg_config.write_to_fileobj.assert_called_once_with(ANY)
+        mock_client.put_file_contents.assert_called_once_with('/etc/wireguard/wg0.conf', ANY)
+        linux.sync_config.assert_called_once_with()
+    else:
+        linux.wg_config.write_to_fileobj.assert_not_called()
+        mock_client.put_file_contents.assert_not_called()
+        linux.sync_config.assert_not_called()
 
 
 def test_sync_config(mock_client, mock_protocol, linux):
