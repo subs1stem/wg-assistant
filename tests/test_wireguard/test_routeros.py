@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 import pytest
 from routeros_api.api import RouterOsApi, RouterOsApiPool
@@ -9,9 +9,7 @@ from wg_assistant.wireguard.routeros import RouterOS
 
 @pytest.fixture
 def mock_api():
-    api = MagicMock(spec=RouterOsApi)
-    api.get_resource.return_value.get.return_value = []
-    return api
+    return MagicMock(spec=RouterOsApi)
 
 
 @pytest.fixture
@@ -61,8 +59,12 @@ def test_format_config_as_string():
 )
 def test_get_interface(routeros, mock_api, mock_return, expected):
     mock_api.get_resource.return_value.get.return_value = mock_return
+
     result = routeros._get_interface()
+
     assert result == expected
+    mock_api.get_resource.assert_called_once_with('/interface/wireguard')
+    mock_api.get_resource.return_value.get.assert_called_once_with(name='wireguard1')
 
 
 @pytest.mark.parametrize(
@@ -75,5 +77,55 @@ def test_get_interface(routeros, mock_api, mock_return, expected):
 )
 def test_get_peer(routeros, mock_api, mock_return, expected):
     mock_api.get_resource.return_value.get.return_value = mock_return
+
     result = routeros._get_peer('pubkey')
+
     assert result == expected
+    mock_api.get_resource.assert_called_once_with('/interface/wireguard/peers')
+    mock_api.get_resource.return_value.get.assert_called_once_with(public_key='pubkey')
+
+
+@pytest.mark.parametrize(
+    'route,ip,expected',
+    [
+        ([{'immediate-gw': '1.2.3.4%ether1'}], [{'address': '1.2.3.4/24'}], '1.2.3.4'),
+        ([{'immediate-gw': 'fe80::1%ether1'}], [{'address': 'fe80::1/64'}], 'fe80::1'),
+    ],
+    ids=['ipv4', 'ipv6'],
+)
+def test_get_external_ip(routeros, mock_api, route, ip, expected):
+    mock_api.get_resource.return_value.get.side_effect = [route, ip]
+    result = routeros.get_external_ip()
+
+    assert str(result) == expected
+
+    mock_api.get_resource.return_value.get.assert_has_calls([
+        call(dst_address='0.0.0.0/0'),
+        call(interface='ether1'),
+    ])
+
+
+def test_reboot_host(routeros, mock_api):
+    routeros.reboot_host()
+
+    mock_api.get_binary_resource.assert_called_once_with('/')
+    mock_api.get_binary_resource.return_value.call.assert_called_once_with('system/reboot')
+
+
+def test_get_config():
+    pass  # TODO
+
+
+@pytest.mark.parametrize('interface', [{'id': 123}, None], ids=['interface exists', 'interface missing'])
+@pytest.mark.parametrize('is_enabled,disabled', [(True, 'no'), (False, 'yes')], ids=['true', 'false'])
+def test_set_wg_enabled(routeros, mock_api, is_enabled, disabled, interface):
+    routeros._get_interface = MagicMock(return_value=interface)
+
+    routeros.set_wg_enabled(is_enabled)
+
+    if interface:
+        mock_api.get_resource.assert_called_once_with('/interface/wireguard')
+        mock_api.get_resource.return_value.set.assert_called_once_with(id=123, disabled=disabled)
+    else:
+        mock_api.get_resource.assert_not_called()
+        mock_api.get_resource.return_value.set.assert_not_called()
