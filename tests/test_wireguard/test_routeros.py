@@ -129,3 +129,79 @@ def test_set_wg_enabled(routeros, mock_api, is_enabled, disabled, interface):
     else:
         mock_api.get_resource.assert_not_called()
         mock_api.get_resource.return_value.set.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    'interface,expected',
+    [
+        ({'disabled': 'false'}, True),
+        ({'disabled': 'true'}, False),
+        ({}, False),
+        (None, False),
+    ],
+    ids=['interface enabled', 'interface disabled', 'param missing', 'interface missing'],
+)
+def test_get_wg_enabled(routeros, interface, expected):
+    routeros._get_interface = MagicMock(return_value=interface)
+    result = routeros.get_wg_enabled()
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    'interface,expected',
+    [
+        ({'public-key': 'pubkey'}, 'pubkey'),
+        ({}, None),
+        (None, None),
+    ],
+    ids=['pubkey exists', 'pubkey missing', 'interface missing'],
+)
+def test_get_server_pubkey(routeros, interface, expected):
+    routeros._get_interface = MagicMock(return_value=interface)
+    result = routeros.get_server_pubkey()
+    assert result == expected
+
+
+def test_get_peers():
+    pass  # TODO
+
+
+def test_add_peer():
+    pass  # TODO
+
+
+@pytest.mark.parametrize('peer', [{'id': 123}, None], ids=['peer exists', 'peer missing'])
+def test_delete_peer(routeros, mock_api, peer):
+    routeros._get_peer = MagicMock(return_value=peer)
+    routeros.delete_peer('pubkey')
+    routeros._get_peer.assert_called_once_with('pubkey')
+
+    if peer:
+        mock_api.get_resource.assert_called_once_with('/interface/wireguard/peers')
+        mock_api.get_resource.return_value.remove.assert_called_once_with(id=123)
+    else:
+        mock_api.get_resource.assert_not_called()
+        mock_api.get_resource.return_value.remove.assert_not_called()
+
+
+@pytest.mark.parametrize('peer', [{'id': 123}, None], ids=['peer exists', 'peer missing'])
+@pytest.mark.parametrize('is_enabled,disabled', [(True, 'no'), (False, 'yes')], ids=['true', 'false'])
+def test_set_peer_enabled(routeros, mock_api, is_enabled, disabled, peer):
+    routeros._get_peer = MagicMock(return_value=peer)
+    routeros.set_peer_enabled('pubkey', is_enabled)
+    routeros._get_peer.assert_called_once_with('pubkey')
+
+    if peer:
+        mock_api.get_resource.assert_called_once_with('/interface/wireguard/peers')
+        mock_api.get_resource.return_value.set.assert_called_once_with(id=123, disabled=disabled)
+    else:
+        mock_api.get_resource.assert_not_called()
+        mock_api.get_resource.return_value.set.assert_not_called()
+
+
+def test_get_peer_enabled():
+    pass  # TODO
+
+
+def test_rename_peer():
+    pass  # TODO
