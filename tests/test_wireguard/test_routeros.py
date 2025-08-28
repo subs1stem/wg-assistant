@@ -162,8 +162,41 @@ def test_get_server_pubkey(routeros, interface, expected):
     assert result == expected
 
 
-def test_get_peers():
-    pass  # TODO
+def test_get_peers(routeros, mock_api):
+    mock_api.get_resource.return_value.get.return_value = [
+        {
+            'name': 'Rick',
+            'current-endpoint-address': '1.2.3.4',
+            'current-endpoint-port': '43276',
+            'allowed-address': '172.16.2.3/32',
+            'last-handshake': '1d3h12m46s',
+            'rx': '1279682488',
+            'tx': '562232384',
+        },
+        {
+            'name': 'Daryl',
+        },
+    ]
+
+    result = routeros.get_peers()
+
+    assert result == {
+        'Rick': {
+            'endpoint': '1.2.3.4:43276',
+            'allowed ips': '172.16.2.3/32',
+            'latest handshake': '1d3h12m46s',
+            'transfer': '1.2 GiB , 536.2 MiB',
+        },
+        'Daryl': {
+            'endpoint': 'None:None',
+            'allowed ips': None,
+            'latest handshake': None,
+            'transfer': '0 Bytes , 0 Bytes',
+        },
+    }
+
+    mock_api.get_resource.assert_called_once_with('/interface/wireguard/peers')
+    mock_api.get_resource.return_value.get.assert_called_once_with(interface='wireguard1')
 
 
 def test_add_peer():
