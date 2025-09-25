@@ -112,8 +112,21 @@ def test_reboot_host(routeros, mock_api):
     mock_api.get_binary_resource.return_value.call.assert_called_once_with('system/reboot')
 
 
-def test_get_config():
-    pass  # TODO
+def test_get_config(routeros, mock_api):
+    routeros._get_interface = MagicMock(return_value={'private-key': 'privkey', 'listen-port': 12345})
+    mock_api.get_resource.return_value.get.side_effect = [{'address': '1.2.3.4'}]
+
+    result = routeros.get_config()
+
+    mock_api.get_resource.assert_has_calls([
+        call('/ip/address'),
+        call('/interface/wireguard/peers'),
+    ])
+
+    mock_api.get_resource.return_value.get.assert_has_calls([
+        call(interface='ether1'),
+        call(interface='ether1'),
+    ])
 
 
 @pytest.mark.parametrize('interface', [{'id': 123}, None], ids=['interface exists', 'interface missing'])
