@@ -114,18 +114,23 @@ def test_reboot_host(routeros, mock_api):
 
 def test_get_config(routeros, mock_api):
     routeros._get_interface = MagicMock(return_value={'private-key': 'privkey', 'listen-port': 12345})
-    mock_api.get_resource.return_value.get.side_effect = [{'address': '1.2.3.4'}]
+    mock_api.get_resource.return_value.get.side_effect = [
+        [
+            {'address': '1.2.3.4'}
+        ],
+        [
+            {'name': 'Rick', 'public-key': 'pubkey1', 'allowed-address': '172.16.2.2/32'},
+            {'name': 'Daryl', 'public-key': 'pubkey2', 'allowed-address': '172.16.2.3/32'},
+        ],
+    ]
 
     result = routeros.get_config()
 
     mock_api.get_resource.assert_has_calls([
         call('/ip/address'),
+        call().get(interface='wireguard1'),
         call('/interface/wireguard/peers'),
-    ])
-
-    mock_api.get_resource.return_value.get.assert_has_calls([
-        call(interface='ether1'),
-        call(interface='ether1'),
+        call().get(interface='wireguard1'),
     ])
 
 
