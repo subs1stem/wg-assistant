@@ -112,8 +112,11 @@ def test_reboot_host(routeros, mock_api):
     mock_api.get_binary_resource.return_value.call.assert_called_once_with('system/reboot')
 
 
-def test_get_config(routeros, mock_api):
+@pytest.mark.parametrize('as_dict', [True, False], ids=['as dict', 'as string'])
+def test_get_config(routeros, mock_api, as_dict):
     routeros._get_interface = MagicMock(return_value={'private-key': 'privkey', 'listen-port': 12345})
+    routeros._format_config_as_string = MagicMock(return_value='config_as_string')
+
     mock_api.get_resource.return_value.get.side_effect = [
         [
             {'address': '1.2.3.4'}
@@ -124,7 +127,23 @@ def test_get_config(routeros, mock_api):
         ],
     ]
 
-    result = routeros.get_config()
+    expected_config = {
+        'Interface': {
+            'PrivateKey': 'privkey',
+            'ListenPort': 12345,
+            'Address': '1.2.3.4',
+        },
+        'Rick': {
+            'PublicKey': 'pubkey1',
+            'AllowedIPs': '172.16.2.2/32',
+        },
+        'Daryl': {
+            'PublicKey': 'pubkey2',
+            'AllowedIPs': '172.16.2.3/32',
+        }
+    }
+
+    result = routeros.get_config(as_dict)
 
     mock_api.get_resource.assert_has_calls([
         call('/ip/address'),
@@ -132,6 +151,14 @@ def test_get_config(routeros, mock_api):
         call('/interface/wireguard/peers'),
         call().get(interface='wireguard1'),
     ])
+
+    expected = expected_config if as_dict else 'config_as_string'
+    assert result == expected
+
+    if as_dict:
+        routeros._format_config_as_string.assert_not_called()
+    else:
+        routeros._format_config_as_string.assert_called_once_with(expected_config)
 
 
 @pytest.mark.parametrize('interface', [{'id': 123}, None], ids=['interface exists', 'interface missing'])
