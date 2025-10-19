@@ -244,8 +244,50 @@ def test_get_peers(routeros, mock_api):
     mock_api.get_resource.return_value.get.assert_called_once_with(interface='wireguard1')
 
 
-def test_add_peer():
-    pass  # TODO
+def test_add_peer(routeros):
+    routeros.get_config = MagicMock(return_value={'dummy': 'config'})
+    routeros._get_interface = MagicMock(return_value={'listen-port': 51820})
+    routeros.get_available_ip = MagicMock(return_value='172.16.0.2/32')
+    routeros.get_server_pubkey = MagicMock(return_value='pubkey')
+    routeros.get_external_ip = MagicMock(return_value='1.2.3.4')
+
+    mock_peers = MagicMock()
+    mock_peers.get.return_value = [{
+        'private-key': 'privkey',
+        'allowed-address': '172.16.0.2/32',
+    }]
+    mock_api = MagicMock()
+    mock_api.get_resource.return_value = mock_peers
+    routeros.api = mock_api
+
+    expected_result = 'client_config'
+    routeros.protocol.build_client_config = MagicMock(return_value=expected_result)
+
+    result = routeros.add_peer('test_peer')
+
+    assert result == expected_result
+
+    routeros.get_config.assert_called_once_with(as_dict=True)
+    routeros._get_interface.assert_called_once()
+    routeros.get_available_ip.assert_called_once_with({'dummy': 'config'})
+
+    mock_api.get_resource.assert_called_once_with('/interface/wireguard/peers')
+    mock_peers.add.assert_called_once_with(
+        name='test_peer',
+        interface=routeros.interface_name,
+        private_key='auto',
+        allowed_address='172.16.0.2/32',
+    )
+    mock_peers.get.assert_called_once_with(name='test_peer')
+
+    routeros.protocol.build_client_config.assert_called_once_with(
+        privkey='privkey',
+        address='172.16.0.2/32',
+        server_pubkey='pubkey',
+        server_port=51820,
+        server_external_ip='1.2.3.4',
+        server_config={'dummy': 'config'},
+    )
 
 
 @pytest.mark.parametrize('peer', [{'id': 123}, None], ids=['peer exists', 'peer missing'])
