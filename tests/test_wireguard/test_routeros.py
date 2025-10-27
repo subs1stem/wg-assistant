@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch, call
 
 import pytest
 from routeros_api.api import RouterOsApi, RouterOsApiPool
+from routeros_api.exceptions import RouterOsApiConnectionError
 
 from wg_assistant.wireguard.protocol.base import BaseProtocol
 from wg_assistant.wireguard.routeros import RouterOS
@@ -83,6 +84,38 @@ def test_get_peer(routeros, mock_api, mock_return, expected):
     assert result == expected
     mock_api.get_resource.assert_called_once_with('/interface/wireguard/peers')
     mock_api.get_resource.return_value.get.assert_called_once_with(public_key='pubkey')
+
+
+@patch('wg_assistant.wireguard.routeros.RouterOsApiPool')
+@pytest.mark.parametrize(
+    'side_effect,should_raise,expected_message',
+    [
+        (None, False, None),
+        (RouterOsApiConnectionError('boom'), True, 'Error connecting to RouterOS API: boom'),
+    ],
+    ids=['success', 'connection error'],
+)
+def test_connect(mock_routeros_api_pool, routeros, side_effect, should_raise, expected_message):
+    mock_connection = MagicMock()
+    mock_routeros_api_pool.return_value = mock_connection
+    mock_connection.get_api.side_effect = side_effect
+
+    if should_raise:
+        with pytest.raises(ConnectionError, match=expected_message):
+            routeros.connect()
+    else:
+        routeros.connect()
+        mock_connection.get_api.assert_called_once_with()
+        assert routeros.api == mock_connection.get_api.return_value
+
+    mock_routeros_api_pool.assert_called_once_with(
+        host=routeros.server,
+        username=routeros.username,
+        password=routeros.password,
+        port=routeros.port,
+        plaintext_login=True,
+    )
+    mock_connection.set_timeout.assert_called_once_with(5)
 
 
 @pytest.mark.parametrize(
