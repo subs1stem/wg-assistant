@@ -31,6 +31,46 @@ def routeros(mock_api):
         return routeros
 
 
+def test_exception_handler_success(routeros):
+    fn = MagicMock(return_value='ok')
+    wrapped = RouterOS._exception_handler(fn)
+    routeros.connect = MagicMock()
+
+    result = wrapped(routeros)
+
+    assert result == 'ok'
+    routeros.connect.assert_not_called()
+
+
+def test_exception_handler_retries_on_connection_error(routeros):
+    fn = MagicMock(side_effect=[RouterOsApiConnectionError('boom'), 'ok'])
+    wrapped = RouterOS._exception_handler(fn)
+    routeros.connect = MagicMock()
+
+    with patch('logging.warning') as mock_warning:
+        result = wrapped(routeros)
+
+    assert result == 'ok'
+    assert fn.call_count == 2
+    routeros.connect.assert_called_once()
+    mock_warning.assert_called_once_with('RouterOS API connection error, reconnecting...')
+    assert 'reconnecting' in mock_warning.call_args[0][0]
+
+
+def test_exception_handler_logs_other_exceptions_and_returns_none(routeros, monkeypatch):
+    fn = MagicMock(side_effect=Exception('fatal'))
+    wrapped = RouterOS._exception_handler(fn)
+    routeros.connect = MagicMock()
+
+    with patch('logging.exception') as mock_exception:
+        result = wrapped(routeros)
+
+    assert result is None
+    routeros.connect.assert_not_called()
+    mock_exception.assert_called_once_with('An unexpected error occurred: fatal')
+    assert 'unexpected error' in mock_exception.call_args[0][0]
+
+
 def test_format_config_as_string():
     config = {
         'Interface': {'PrivateKey': 'privkey', 'Address': '10.0.0.1/24'},
