@@ -1,4 +1,4 @@
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, Mock
 
 from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand
@@ -13,7 +13,7 @@ from wg_assistant.modules.middlewares import LoggingMiddleware, ServerCreateMidd
 @patch('wg_assistant.main.get_bot_admins', return_value=[1, 2])
 @patch('wg_assistant.main.get_servers', return_value={'server': 1})
 @patch('wg_assistant.main.Bot', return_value=AsyncMock())
-@patch('wg_assistant.main.Dispatcher', return_value=AsyncMock())
+@patch('wg_assistant.main.Dispatcher')
 async def test_main_success(
         mock_dispatcher,
         mock_bot,
@@ -22,8 +22,14 @@ async def test_main_success(
         mock_get_bot_token,
         mock_storage,
 ):
+    dp = Mock()
+    dp.update = Mock()
+    dp.update.middleware = Mock()
+    dp.include_routers = Mock()
+    dp.start_polling = AsyncMock()
+    mock_dispatcher.return_value = dp
+
     bot = mock_bot.return_value
-    dp = mock_dispatcher.return_value
 
     await main()
 
