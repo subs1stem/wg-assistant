@@ -1,7 +1,9 @@
 from unittest.mock import patch, AsyncMock, Mock
 
+import pytest
 from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand
+from pydantic import ValidationError
 
 from wg_assistant.handlers import commands, callbacks, messages, errors
 from wg_assistant.main import main
@@ -60,3 +62,27 @@ async def test_main_success(
 
     bot.delete_webhook.assert_awaited_once_with(drop_pending_updates=True)
     dp.start_polling.assert_awaited_once_with(bot)
+
+
+@patch('wg_assistant.main.logging')
+@patch('wg_assistant.main.sys.exit', side_effect=SystemExit)
+async def test_main_runtime_error(mock_exit, mock_logging):
+    with patch('wg_assistant.main.get_bot_token', side_effect=RuntimeError('no token')):
+        with pytest.raises(SystemExit):
+            await main()
+
+    mock_logging.critical.assert_called_once_with('Error loading environment variables: no token')
+    mock_exit.assert_called_once_with(1)
+
+
+@patch('wg_assistant.main.logging')
+@patch('wg_assistant.main.sys.exit', side_effect=SystemExit)
+async def test_main_validation_error(mock_exit, mock_logging):
+    validation_error = ValidationError('', [])
+
+    with patch('wg_assistant.main.get_servers', side_effect=validation_error):
+        with pytest.raises(SystemExit):
+            await main()
+
+    mock_logging.critical.assert_called_once_with('Validation error while loading servers: []')
+    mock_exit.assert_called_once_with(1)
