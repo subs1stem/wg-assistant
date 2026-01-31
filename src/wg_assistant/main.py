@@ -65,7 +65,11 @@ async def main():
     await dp.start_polling(bot)
 
 
-if __name__ == '__main__':
+def run():
     init_db()
     setup_logging(get_log_level())
     asyncio.run(main())
+
+
+if __name__ == '__main__':  # pragma: no cover
+    run()

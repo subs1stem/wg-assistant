@@ -6,7 +6,7 @@ from aiogram.types import BotCommand
 from pydantic import ValidationError
 
 from wg_assistant.handlers import commands, callbacks, messages, errors
-from wg_assistant.main import main
+from wg_assistant.main import main, run
 from wg_assistant.modules.middlewares import LoggingMiddleware, ServerCreateMiddleware, AuthCheckMiddleware
 
 
@@ -78,7 +78,7 @@ async def test_main_runtime_error(mock_exit, mock_logging):
 @patch('wg_assistant.main.logging')
 @patch('wg_assistant.main.sys.exit', side_effect=SystemExit)
 async def test_main_validation_error(mock_exit, mock_logging):
-    validation_error = ValidationError('', [])
+    validation_error = ValidationError.from_exception_data(title='error', line_errors=[])
 
     with patch('wg_assistant.main.get_servers', side_effect=validation_error):
         with pytest.raises(SystemExit):
@@ -86,3 +86,27 @@ async def test_main_validation_error(mock_exit, mock_logging):
 
     mock_logging.critical.assert_called_once_with('Validation error while loading servers: []')
     mock_exit.assert_called_once_with(1)
+
+
+@patch('wg_assistant.main.logging')
+@patch('wg_assistant.main.sys.exit', side_effect=SystemExit)
+async def test_main_value_error(mock_exit, mock_logging):
+    with patch('wg_assistant.main.get_servers', side_effect=ValueError('line 8 column 13')):
+        with pytest.raises(SystemExit):
+            await main()
+
+    mock_logging.critical.assert_called_once_with('Servers file contains invalid data: line 8 column 13')
+    mock_exit.assert_called_once_with(1)
+
+
+@patch('wg_assistant.main.main', new_callable=AsyncMock)
+@patch('wg_assistant.main.get_log_level', return_value='WARNING')
+@patch('wg_assistant.main.setup_logging')
+@patch('wg_assistant.main.init_db')
+def test_run(mock_init_db, mock_setup_logging, mock_get_log_level, mock_main):
+    run()
+
+    mock_init_db.assert_called_once_with()
+    mock_get_log_level.assert_called_once_with()
+    mock_setup_logging.assert_called_once_with('WARNING')
+    mock_main.assert_awaited_once_with()
