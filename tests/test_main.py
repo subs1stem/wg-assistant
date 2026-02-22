@@ -77,25 +77,37 @@ async def test_main_runtime_error(mock_exit, mock_logging):
 
 @patch('wg_assistant.main.logging')
 @patch('wg_assistant.main.sys.exit', side_effect=SystemExit)
-async def test_main_validation_error(mock_exit, mock_logging):
-    validation_error = ValidationError.from_exception_data(title='error', line_errors=[])
-
-    with patch('wg_assistant.main.get_servers', side_effect=validation_error):
+@patch('wg_assistant.main.get_bot_token', return_value='token')
+@patch('wg_assistant.main.get_bot_admins', return_value=[1, 2])
+@pytest.mark.parametrize(
+    'servers_error, expected_log',
+    [
+        (
+                ValidationError.from_exception_data(title='error', line_errors=[]),
+                'Validation error while loading servers: []',
+        ),
+        (
+                ValueError('line 8 column 13'),
+                'Servers file contains invalid data: line 8 column 13',
+        ),
+    ],
+    ids=['validation error', 'value error'],
+)
+async def test_main_server_errors(
+        mock_get_bot_admins,
+        mock_get_bot_token,
+        mock_exit,
+        mock_logging,
+        servers_error,
+        expected_log,
+):
+    with patch('wg_assistant.main.get_servers', side_effect=servers_error):
         with pytest.raises(SystemExit):
             await main()
 
-    mock_logging.critical.assert_called_once_with('Validation error while loading servers: []')
-    mock_exit.assert_called_once_with(1)
-
-
-@patch('wg_assistant.main.logging')
-@patch('wg_assistant.main.sys.exit', side_effect=SystemExit)
-async def test_main_value_error(mock_exit, mock_logging):
-    with patch('wg_assistant.main.get_servers', side_effect=ValueError('line 8 column 13')):
-        with pytest.raises(SystemExit):
-            await main()
-
-    mock_logging.critical.assert_called_once_with('Servers file contains invalid data: line 8 column 13')
+    mock_get_bot_token.assert_called_once_with()
+    mock_get_bot_admins.assert_called_once_with()
+    mock_logging.critical.assert_called_once_with(expected_log)
     mock_exit.assert_called_once_with(1)
 
 
