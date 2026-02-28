@@ -43,9 +43,7 @@ async def test_main_success(
     mock_dispatcher.assert_called_once_with(storage=mock_storage.return_value, admins=[1, 2], servers={'server': 1})
 
     calls = [call.args[0] for call in dp.update.middleware.mock_calls]
-    assert any(isinstance(m, LoggingMiddleware) for m in calls)
-    assert any(isinstance(m, AuthCheckMiddleware) for m in calls)
-    assert any(isinstance(m, ServerCreateMiddleware) for m in calls)
+    assert [type(m) for m in calls] == [LoggingMiddleware, AuthCheckMiddleware, ServerCreateMiddleware]
 
     dp.include_routers.assert_called_once_with(
         commands.router,
@@ -66,12 +64,46 @@ async def test_main_success(
 
 @patch('wg_assistant.main.logging')
 @patch('wg_assistant.main.sys.exit', side_effect=SystemExit)
-async def test_main_runtime_error(mock_exit, mock_logging):
-    with patch('wg_assistant.main.get_bot_token', side_effect=RuntimeError('no token')):
+@patch('wg_assistant.main.get_servers')
+@patch('wg_assistant.main.Bot')
+@patch('wg_assistant.main.Dispatcher')
+@pytest.mark.parametrize(
+    'error_source, expected_log',
+    [
+        ('token', 'Error loading environment variables: no token'),
+        ('admins', 'Error loading environment variables: no admins'),
+    ],
+    ids=['token error', 'admins error'],
+)
+async def test_main_runtime_error(
+        mock_dispatcher,
+        mock_bot,
+        mock_get_servers,
+        mock_exit,
+        mock_logging,
+        error_source,
+        expected_log,
+):
+    token_patch = (
+        patch('wg_assistant.main.get_bot_token', side_effect=RuntimeError('no token'))
+        if error_source == 'token'
+        else patch('wg_assistant.main.get_bot_token', return_value='token')
+    )
+
+    admins_patch = (
+        patch('wg_assistant.main.get_bot_admins', side_effect=RuntimeError('no admins'))
+        if error_source == 'admins'
+        else patch('wg_assistant.main.get_bot_admins', return_value=[1, 2])
+    )
+
+    with token_patch, admins_patch:
         with pytest.raises(SystemExit):
             await main()
 
-    mock_logging.critical.assert_called_once_with('Error loading environment variables: no token')
+    mock_get_servers.assert_not_called()
+    mock_bot.assert_not_called()
+    mock_dispatcher.assert_not_called()
+    mock_logging.critical.assert_called_once_with(expected_log)
     mock_exit.assert_called_once_with(1)
 
 
@@ -79,6 +111,8 @@ async def test_main_runtime_error(mock_exit, mock_logging):
 @patch('wg_assistant.main.sys.exit', side_effect=SystemExit)
 @patch('wg_assistant.main.get_bot_token', return_value='token')
 @patch('wg_assistant.main.get_bot_admins', return_value=[1, 2])
+@patch('wg_assistant.main.Bot')
+@patch('wg_assistant.main.Dispatcher')
 @pytest.mark.parametrize(
     'servers_error, expected_log',
     [
@@ -94,6 +128,8 @@ async def test_main_runtime_error(mock_exit, mock_logging):
     ids=['validation error', 'value error'],
 )
 async def test_main_server_errors(
+        mock_dispatcher,
+        mock_bot,
         mock_get_bot_admins,
         mock_get_bot_token,
         mock_exit,
@@ -107,6 +143,8 @@ async def test_main_server_errors(
 
     mock_get_bot_token.assert_called_once_with()
     mock_get_bot_admins.assert_called_once_with()
+    mock_bot.assert_not_called()
+    mock_dispatcher.assert_not_called()
     mock_logging.critical.assert_called_once_with(expected_log)
     mock_exit.assert_called_once_with(1)
 
